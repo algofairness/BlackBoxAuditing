@@ -16,4 +16,3 @@ class AbstractRepairer(object):
   @abstractmethod
   def repair(data_to_repair):
     pass
-
