@@ -23,15 +23,15 @@ class GradientFeatureAuditor(object):
       conf_tables.append( (repair_level, conf_table) )
 
     with open(output_file, "a") as f:
-      f.write("GFA Audit for \"{}\"\n")
+      f.write("GFA Audit for \"{}\"\n".format(feature_to_repair))
       for repair_level, conf_table in conf_tables:
-        f.write("{}:{}\n".format(feature_to_repair, conf_tables))
+        f.write("{}:{}\n".format(repair_level, conf_table))
 
   def audit(self):
     output_files = []
 
     for feature in self.headers:
-      output_file = "{}/{}_{}.dump".format(self.OUTPUT_DIR, feature, time.time())
+      output_file = "{}/{}_{}.audit".format(self.OUTPUT_DIR, feature, time.time())
       self.audit_feature(feature, output_file)
       output_files.append(output_file)
 
@@ -40,10 +40,10 @@ class GradientFeatureAuditor(object):
 
 def test():
   class MockModel(object):
-    def test(self, test_set):
+    def test(self, test_set, response_col=0):
       conf_table = {}
       for entry in test_set:
-        actual = entry[0]
+        actual = entry[response_col]
         guess = actual
 
         if not actual in conf_table:
@@ -56,9 +56,9 @@ def test():
       return conf_table
 
   model = MockModel()
-  headers = ["response", "duplicate", "negative", "constant"]
-  train = [[i,i,-i,1] for i in xrange(100)]
-  test = [[i,i,-i,1] for i in xrange(100)]
+  headers = ["response", "duplicate", "constant"]
+  train = [[i,i,1] for i in xrange(100)]
+  test = train[:] # Copy the training data.
   gfa = GradientFeatureAuditor(model, headers, train, test)
   output_files = gfa.audit()
 
