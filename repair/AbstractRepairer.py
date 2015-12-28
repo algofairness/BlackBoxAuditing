@@ -14,5 +14,5 @@ class AbstractRepairer(object):
     self.repair_level = repair_level
 
   @abstractmethod
-  def repair(data_to_repair):
+  def repair(self, data_to_repair):
     pass
