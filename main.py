@@ -1,5 +1,7 @@
 # CAUTION: THIS IS MEANT AS A GUIDELINE AND WILL NOT WORK AT THE MOMENT.
 
+from DRP.load_data import load_data
+from DRP.ModelFactory import ModelFactory
 
 headers, train_set, test_set = load_data() #TODO: Implement this.
 

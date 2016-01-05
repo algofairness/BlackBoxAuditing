@@ -2,8 +2,8 @@ from repair.GeneralRepairer import Repairer
 import time
 
 class GradientFeatureAuditor(object):
-  def __init__(self, model, headers, train_set, test_set, repair_steps=10):
-    self.repair_steps = repair_steps
+  def __init__(self, model, headers, train_set, test_set, repair_step=10):
+    self.repair_step = repair_step
     self.model = model
     self.train_set = train_set
     self.test_set = test_set
@@ -13,7 +13,7 @@ class GradientFeatureAuditor(object):
   def audit_feature(self, feature_to_repair, output_file):
     conf_tables = []
 
-    for repair_level in xrange(0,101,self.repair_steps):
+    for repair_level in xrange(0,101,self.repair_step):
       all_data = [self.headers] + self.train_set + self.test_set
       repairer = Repairer(all_data, feature_to_repair, repair_level)
       rep_test = repairer.repair(self.test_set)

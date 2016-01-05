@@ -1,2 +1,2 @@
-audits/*.audit
+audits/*
 *.pyc
