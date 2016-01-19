@@ -16,10 +16,10 @@ def test():
   from BinSizes import FreedmanDiaconisBinSize as bsc
   bins = make_histogram_bins(bsc, data, 0)
 
-  t1 = (len(bins[0]) == len(bins[-1]) == 21)
-  t2 = (len(bins) == 4)
+  print "make_histogram_bins -- no features lost --", (len(bins[0]) == len(bins[-1]) == 21)
 
-  print "make_histogram_bins tests pass?", t1, t2
+  print "make_histogram_bins -- correct # of bins --", (len(bins) == 4)
+
 
 
 
