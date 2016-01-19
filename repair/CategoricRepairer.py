@@ -175,8 +175,8 @@ def test_ricci():
   repairer = Repairer(data, feature_to_repair, repair_level, features_to_ignore=ignored_features)
   repaired_data = repairer.repair(data)
 
-  print "CategoricRepairer no rows lost:", len(repaired_data) == len(data)
-  print "CategoricRepairer features repaired for level=1.0:", repaired_data != data
+  print "CategoricRepairer -- no rows lost:", len(repaired_data) == len(data)
+  print "CategoricRepairer -- features repaired for level=1.0:", repaired_data != data
 
 
 if __name__== "__main__":

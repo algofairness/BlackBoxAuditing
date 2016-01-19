@@ -8,15 +8,17 @@
 #   ...
 #
 
-echo "Running all *.py files now."
-echo "No tests should be False nor should there be Traceback exceptions."
-echo "_______________________________________"
+echo "#########################################################################"
+echo "### Running all *.py files now. #########################################"
+echo "### No tests should be False nor should there be Traceback exceptions. ##"
+echo "#########################################################################"
+
 # Loop largely based on: http://stackoverflow.com/questions/15065010/how-to-perform-a-for-each-file-loop-by-using-find-in-shell-bash
 find . -type f -iname "*.py" -print0 | while IFS= read -r -d $'\0' line; do
   if [[ ! $line =~ .*__init__.py ]]; then
+    echo "________________________________"
     echo "Running tests for: $line"
     python "$line"
-    echo "________________________________"
   fi
 done
 
