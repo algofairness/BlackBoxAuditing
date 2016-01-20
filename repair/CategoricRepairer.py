@@ -136,11 +136,22 @@ class Repairer(AbstractRepairer):
             data_dict[col_id][index] = repaired_value
 
     repaired_data = []
+    mode = get_mode([row[self.feature_to_repair] for row in data_to_repair])
     for i, orig_row in enumerate(data_to_repair):
       new_row = [orig_row[j] if j in self.features_to_ignore else data_dict[j][i] for j in col_ids]
+
+      # Replace the "feature_to_replace" column with the mode value.
+      new_row[self.feature_to_repair] = mode
       repaired_data.append(new_row)
 
     return repaired_data
+
+def get_mode(values):
+  counts = {}
+  for value in values:
+    counts[value] = 1 if value not in counts else counts[value]+1
+  mode_tuple = max(counts.items(), key=lambda tup: tup[1])
+  return mode_tuple[0]
 
 
 
@@ -150,13 +161,17 @@ def test():
 
 def test_minimal():
   class_1 = [[float(i),"A"] for i in xrange(0, 100)]
-  class_2 = [[float(i),"B"] for i in xrange(101, 200)]
+  class_2 = [[float(i),"B"] for i in xrange(101, 200)] # Thus, "A" is mode class.
   data = class_1 + class_2
 
   feature_to_repair = 1
   repairer = Repairer(data, feature_to_repair, 0.5)
   repaired_data = repairer.repair(data)
   print "CategoricRepairer -- Minimal Dataset -- repaired_data altered?", repaired_data != data
+
+  mode = get_mode([row[feature_to_repair] for row in data])
+  print "CategoricalRepairer -- Minimal Dataset -- mode is true mode?", mode=="A"
+  print "CategoricRepairer -- Minimal Dataset -- mode value as feature_to_repair?", all(row[feature_to_repair] == mode for row in repaired_data)
 
 def test_ricci():
   import csv
