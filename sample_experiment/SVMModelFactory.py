@@ -22,8 +22,7 @@ class ModelFactory(AbstractModelFactory):
     list_to_arff_file(arff_types, train_set, train_arff_file)
 
     # Call WEKA to generate the model file.
-    kernel = "-K \"weka.classifiers.functions.supportVector.Puk -O 0.5 -S 7\" "
-    command = "java weka.classifiers.functions.SMO -t {} -d {} {}-p 0".format(train_arff_file, model_file, kernel)
+    command = "java weka.classifiers.functions.SMO -t {} -d {} -p 0".format(train_arff_file, model_file)
     run_weka_command(command)
 
     response_index = self.headers.index(self.response_header)
@@ -72,6 +71,7 @@ class ModelVisitor(AbstractModelVisitor):
 
 def run_weka_command(command):
   set_path = "export CLASSPATH=$CLASSPATH:{}; ".format(WEKA_PATH)
+  print set_path + command
   subprocess.check_output(set_path + command, shell=True)
 
 
@@ -94,6 +94,7 @@ def list_to_arff_file(arff_type_dict, data, arff_file_output):
   for attribute, types in arff_type_dict.items():
     if type(types) == list:
       types = "{" + ",".join(str(entry) for entry in types) + "}"
+    attribute = attribute.replace(" ","_")
     arff_header += "@attribute {} {}\n".format(attribute, types)
 
   arff_header += "\n@data\n"

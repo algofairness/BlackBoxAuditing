@@ -1,5 +1,5 @@
 # Run this file with bash to run all Python files in this directory and in sub-directories.
-# Note: excludes __init__.py files.
+# Note: excludes "__init__.py" files, "Abstract" files, and the "main.py" file.
 
 # To implement a test, use the following format in the file-to-test:
 #
@@ -17,9 +17,11 @@ echo "#########################################################################"
 find . -type f -iname "*.py" -print0 | while IFS= read -r -d $'\0' line; do
   if [[ ! $line =~ .*__init__.py ]]; then
     if [[ ! $line =~ .*Abstract.+.py ]]; then
-      echo "________________________________"
-      echo "Running tests for: $line"
-      python "$line"
+      if [[ ! $line =~ ./main.py ]]; then
+        echo "________________________________"
+        echo "Running tests for: $line"
+        python "$line"
+      fi
     fi
   fi
 done
