@@ -71,7 +71,6 @@ class ModelVisitor(AbstractModelVisitor):
 
 def run_weka_command(command):
   set_path = "export CLASSPATH=$CLASSPATH:{}; ".format(WEKA_PATH)
-  print set_path + command
   subprocess.check_output(set_path + command, shell=True)
 
 

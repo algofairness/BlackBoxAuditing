@@ -1,8 +1,8 @@
 
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-from sample_models.load_data import load_data
-from sample_models.SVMModelFactory import ModelFactory
+from sample_experiment.load_data import load_data
+from sample_experiment.SVMModelFactory import ModelFactory
 response_header = "Outcome"
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
