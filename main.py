@@ -25,7 +25,9 @@ def run():
 
   from gradient_feature_auditing import GradientFeatureAuditor
   auditor = GradientFeatureAuditor(model, headers, train_set, test_set)
-  auditor.audit()
+  output_files = auditor.audit()
+
+  print output_files #TODO: Turn these files into nice graphs.
 
 if __name__=="__main__":
   run()

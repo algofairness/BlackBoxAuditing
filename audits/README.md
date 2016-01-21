@@ -12,8 +12,8 @@ Each confusion table should be represented as a dictionary in the following form
   {"actual-1":{"guess-1":occurrences, "guess-2":occurrences, ...}
    "actual-2":{"guess-1":occurrences, "guess-2":occurrences, ...}}
 
-For example, if a model had two possible outcomes (1, 2) for 1000 data points and guessed correctly 9/10 times, we might see a confusion table like this...
+For example, if a model had two possible outcomes (A and B) for 1000 data points and guessed correctly 9/10 times, we might see a confusion table like this...
 
-  {1:{1:450, 2:50}, 2:{1:50, 2:450}}
+  {A:{A:450, B:50}, B:{A:50, B:450}}
 
 
