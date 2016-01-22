@@ -1,5 +1,6 @@
 from repair.GeneralRepairer import Repairer #TODO: Build the GeneralRepairer...
 import time
+import os
 
 class GradientFeatureAuditor(object):
   def __init__(self, model, headers, train_set, test_set, repair_steps=10):
@@ -26,7 +27,7 @@ class GradientFeatureAuditor(object):
       repair_level += repair_increase_per_step
 
     with open(output_file, "a") as f:
-      f.write("GFA Audit for \"{}\"\n".format(feature_to_repair))
+      f.write("GFA Audit for: {}\n".format(feature_to_repair))
       for repair_level, conf_table in conf_tables:
         f.write("{}:{}\n".format(repair_level, conf_table))
 
@@ -34,9 +35,11 @@ class GradientFeatureAuditor(object):
     output_files = []
 
     for feature in self.headers:
-      output_file = "{}/{}_{}.audit".format(self.OUTPUT_DIR, feature, time.time())
-      self.audit_feature(feature, output_file)
-      output_files.append(output_file)
+      cleaned_feature_name = feature.replace(".","_").replace(" ","_")
+      output_file = "{}_{}.audit".format(cleaned_feature_name, time.time())
+      full_filepath = self.OUTPUT_DIR + "/" + output_file
+      self.audit_feature(feature, full_filepath)
+      output_files.append(full_filepath)
 
     return output_files
 
@@ -72,7 +75,6 @@ def test():
   with open(output_files[0]) as f:
     print "GradientFeatureAuditor -- correct # of lines per file? --", len(f.readlines()) == repair_steps+2 # +1 for the header-line and +1 for the level=0 step.
 
-  import os
   files_not_empty = all(os.stat(f).st_size!=0 for f in output_files)
   print "GradientFeatureAuditor -- all audit files not empty? --", files_not_empty
 

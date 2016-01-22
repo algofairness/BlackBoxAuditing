@@ -3,11 +3,16 @@
 #       across experiments on different datasets and ML model types.
 from sample_experiment.load_data import load_data
 from sample_experiment.SVMModelFactory import ModelFactory
+from measurements import accuracy
 response_header = "Outcome"
+graph_measurements = [accuracy]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # NOTE: You should not need to change anything below this point.
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+from gradient_feature_auditing import GradientFeatureAuditor
+from audit_reading import graph_audit
 
 def run():
   headers, train_set, test_set = load_data()
@@ -23,11 +28,14 @@ def run():
   model_factory = ModelFactory(all_data, headers, response_header)
   model = model_factory.build(train_set)
 
-  from gradient_feature_auditing import GradientFeatureAuditor
+  # Perform the Gradient Feature Audit and dump the audit results into files.
   auditor = GradientFeatureAuditor(model, headers, train_set, test_set)
-  output_files = auditor.audit()
+  audit_filenames = auditor.audit()
 
-  print output_files #TODO: Turn these files into nice graphs.
+  # Graph the audit files.
+  for audit_filename in audit_filenames:
+    audit_image_filename = audit_filename + ".png"
+    graph_audit(audit_filename, graph_measurements, audit_image_filename)
 
 if __name__=="__main__":
   run()
