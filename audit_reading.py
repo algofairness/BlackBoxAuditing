@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import json
 import os
 import random
+import csv
 
 def graph_audit(filename, measurement_calculators, output_image_file):
   with open(filename) as audit_file:
@@ -22,17 +23,28 @@ def graph_audit(filename, measurement_calculators, output_image_file):
   confusion_matrices.sort(key = lambda pair: pair[0])
 
   x_axis = [repair_level for repair_level, _ in confusion_matrices]
+  y_axes = []
 
   # Graph the results for each requested measurement.
   for calculator in measurement_calculators:
     y_axis = [calculator(matrix) for _, matrix in confusion_matrices]
     plt.plot(x_axis, y_axis, label=calculator.__name__)
+    y_axes.append(y_axis)
 
+  # Format and save the graph to an image file.
   plt.title(header_line)
   plt.axis([0,1,0,1.1]) # Make all the plots consistently sized.
   plt.xlabel("Repair Level")
   plt.legend()
   plt.savefig(output_image_file)
+
+  # Save the data used to generate that image file.
+  with open(output_image_file + ".data", "w") as f:
+    writer = csv.writer(f)
+    headers = ["Repair Level"] + [calc.__name__ for calc in measurement_calculators]
+    writer.writerow(headers)
+    for i, repair_level in enumerate(x_axis):
+      writer.writerow([repair_level] + [y_axis[i] for y_axis in y_axes])
 
 
 def test():
@@ -56,6 +68,9 @@ def test():
 
   file_not_empty = os.path.getsize(output_image) > 0
   print "GradientFeatureAuditor -- image file generated? --", file_not_empty
+
+  file_not_empty = os.path.getsize(output_image + ".data") > 0
+  print "GradientFeatureAuditor -- data file generated? --", file_not_empty
 
 
 

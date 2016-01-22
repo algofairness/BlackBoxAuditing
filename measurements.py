@@ -1,5 +1,3 @@
-import random
-
 def accuracy(conf_matrix):
   total, correct = 0.0, 0.0
   for true_response, guess_dict in conf_matrix.items():
@@ -9,16 +7,11 @@ def accuracy(conf_matrix):
       total += count
   return correct/total
 
-def precision(conf_matrix):
-  return random.random() #TODO
-
-def recall(conf_matrix):
-  return random.random() #TODO
-
-
 
 def test():
-  pass
+  conf_matrix = {"A":{"A":10}, "B":{"A":5,"B":5}}
+
+  print "measurements -- accuracy correct? -- ", accuracy(conf_matrix) == 0.75
 
 if __name__=="__main__":
   test()
