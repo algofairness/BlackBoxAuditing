@@ -6,6 +6,9 @@ from AbstractRepairer import AbstractRepairer
 from collections import defaultdict
 from copy import deepcopy
 
+import networkx as nx
+import random
+
 class Repairer(AbstractRepairer):
   def repair(self, data_to_repair):
     col_ids = range(len(data_to_repair[0]))
@@ -203,6 +206,55 @@ class Feature:
           d[key] = avgval   
       self.bin_data_repaired = d #This is our temporary desired distribution (number of observation in each category)
 
+def create_graph(feature): #creates graph given a Feature object
+  DG=nx.DiGraph() #using networkx package
+  bin_list = feature.bin_data.items()  
+  repair_bin_list = feature.bin_data_repaired.items()
+  k = feature.num_bins
+  DG.add_node('s')
+  DG.add_node('t')
+  for i in range(0, k): #lefthand side nodes have capacity = number of observations in category i
+    DG.add_node(i)
+    DG.add_edge('s', i, {'capacity' : bin_list[i][1], 'weight' : 0})
+  for i in range(k, 2*k): #righthand side nodes have capacity = DESIRED number of observations in category i
+    DG.add_node(i)
+    DG.add_edge(i, 't', {'capacity' : repair_bin_list[i-k][1], 'weight' : 0})
+  for i in range(0, k):
+    for j in range(k,2*k): #for each edge from a lefthand side node to a righhand side node:
+      if (i+k)==j:  #IF they represent the same category, the edge weight is 0
+        DG.add_edge(i, j, {'weight' : 0})
+      else: #IF they represent different categories, the edge weight is 1
+        DG.add_edge(i, j, {'weight' : 1})
+    #THIS IS THE OVERFLOW NODE!!
+    DG.add_edge(i, 2*k, {'weight' : 2})
+  return DG
+
+def repair_feature(feature, DG): #new_feature = repair_feature(feature, create_graph(feature))
+  mincostFlow = nx.max_flow_min_cost(DG, 's', 't') #max_flow_min_cost returns Dictionary of dictionaries. Keyed by nodes such that mincostFlow[u][v] is the flow edge (u,v)
+  bin_dict = feature.bin_fulldata
+  index_dict = feature.bin_index_dict_reverse
+  size_data = len(feature.data)
+  repair_bin_dict = {} 
+  repair_data = [0]*size_data #initialize repaired data
+  k = feature.num_bins
+  for i in range(0,k): #for each lefthand side node i
+    for j in range(k, 2*k): #for each righthand side node j
+      edgeflow = mincostFlow[i][j] #get the int (edgeflow) representing the amount of observations going from node i to j
+      group = random.sample(bin_dict[i], edgeflow) #randomly sample x (edgeflow) unique elements from the list of observations in that category. 
+      q=j-k #q is the category index for a righhand side node
+      for elem in group: #for each element in the randomly selected group list
+        bin_dict[i].remove(elem) #remove the element from the list of observation in that category
+        repair_data[elem] = index_dict[q] #Mutate repair data at the index of the observation (elem) with its new category (it was 0) which is the category index for the righthand side node it flows to
+      if q in repair_bin_dict: #if the category index is already keyed
+        repair_bin_dict[q].extend(group) #extend the list of observations with a new list of observations in that category
+      else: 
+        repair_bin_dict[q] = group #otherwise key that category index and set it's value as the group list in that category
+  new_feature = Feature(repair_data) #initialize our new_feature (repaired feature)
+  new_feature.categorical = True 
+  new_feature.name = feature.name
+  new_feature.bin_fulldata = repair_bin_dict
+  return new_feature
+  
 def test():
   all_data = [ 
   ["x","A"],
