@@ -3,10 +3,8 @@ from collections import defaultdict
 
 from AbstractRepairer import AbstractRepairer
 
-################################
-#ADDED FOR CATEGORICALTOCATEGORICALREPAIR
-from classes import Feature
-###############################
+from collections import defaultdict
+from copy import deepcopy
 
 class Repairer(AbstractRepairer):
   def repair(self, data_to_repair):
@@ -31,13 +29,12 @@ class Repairer(AbstractRepairer):
 
     # Extract column values for each attribute in data
     # Begin by initializing keys and values in dictionary
-    data_dict = {col_id: [] for col_id in col_ids}
+    data_dict = {col_id: [] for col_id in col_ids if col_id in Y_col_ids}
+    
     # Populate each attribute with its column values
     for row in data_to_repair:
       for i in col_ids:
         if i in Y_col_ids:
-          data_dict[i].append(float(row[i]))
-        else:
           data_dict[i].append(row[i])
 
 
@@ -94,112 +91,140 @@ class Repairer(AbstractRepairer):
       for col_id in data_dict:
         stratified_col_values = sorted([(data_dict[col_id][i], i) for i in stratified_group_indices[group]], key=lambda vals: vals[0])
         stratified_group_data[group][col_id] = stratified_col_values
-
-
-  #######################################
-  #ADDED FOR CATEGORICALTOCATEGORICALREPAIR
-  #Imagine two categories A and B, and groups X,Y,Z.
-  #
-  features = {}
-  categories = {}
-  for col_id in data_dict:
-    #data_dict[col_id] should be a list containing the values for all observations
-    values = data_dict(col_id)
-    feature = Feature(values, True)
-    feature.categorize()
-    num_bins = feature.num_bins()
-    categories[col_id] = []
-    for key,value in num_bins:
-       categories[col_id].append(key)
-
-  for group in all_stratified_groups:
+    features = {}
+    categories = {}
+    categories_count = {}
+    desired_categories_count = {}
+    print data_dict 
     for col_id in data_dict:
-      values = stratified_group_data[group][col_id]
+      #data_dict[col_id] should be a list containing the values for all observations
+      values = data_dict[col_id]
       feature = Feature(values, True)
       feature.categorize()
-      features[(group,col_id)] = feature.category_count
-  for col_id in data_dict:
+      bin_index_dict = feature.bin_index_dict
+      print bin_index_dict
+      categories[col_id] = []
+      for key,value in bin_index_dict:
+         categories[col_id].append(key)
+
     for group in all_stratified_groups:
-      category_count = features[(group,col_id)]
-      for category in 
-   feature.desired_distribution = desired_distributions
-  ########################################      
-
-    # Find the combination with the fewest data points. This will determine what the quantiles are.
-    num_quantiles = min(filter(lambda x: x, sizes.values()))
-
-    # Repair Data and retrieve the results
-
-    quantile_unit = 1.0/num_quantiles
-    for col_id in filter(lambda x: col_type_dict[x] == "Y", col_ids):
-      # which bucket value we're repairing
-      group_offsets = {group: 0 for group in all_stratified_groups}
-      col = data_dict[col_id]
-      for quantile in range(num_quantiles):
-        values_at_quantile = []
-        indices_per_group = {}
-        for group in all_stratified_groups:
-          offset = int(round(group_offsets[group]*sizes[group]))
-          number_to_get = int(round((group_offsets[group] + quantile_unit)*sizes[group]) - offset)
-          group_offsets[group] += quantile_unit
-
-          # get data at this quantile from this Y column such that stratified X = group
-          group_data_at_col = stratified_group_data[group][col_id]
-          # (val, index) -> tuple
-          indices_per_group[group] = [x[1] for x in group_data_at_col[offset:offset+number_to_get]]
-
-          values =  [x[0] for x in group_data_at_col[offset:offset+number_to_get]]
-        # Find this group's median value at this quantile
-          values_at_quantile.append(sorted([float(x) for x in values])[len(values)/2])
-
-        # Find the median value of all groups at this quantile (chosen from each group's medians)
-        median = sorted(values_at_quantile)[len(values_at_quantile)/2]
-        median_val_pos = index_lookup[col_id][median]
-
-        # Update values to repair the dataset!
-        for group in all_stratified_groups:
-          for index in indices_per_group[group]:
-            original_value = col[index]
-
-            current_val_pos = index_lookup[col_id][original_value]
-            distance = median_val_pos - current_val_pos # distance between indices
-            distance_to_repair = int(round(distance * self.repair_level))
-            index_of_repair_value = current_val_pos + distance_to_repair
-            repaired_value = unique_col_vals[col_id][index_of_repair_value]
-
-            # Update data to repaired valued
-            data_dict[col_id][index] = repaired_value
-
-    repaired_data = []
-    mode = get_mode([row[self.feature_to_repair] for row in data_to_repair])
-    for i, orig_row in enumerate(data_to_repair):
-      new_row = [orig_row[j] if j in self.features_to_ignore else data_dict[j][i] for j in col_ids]
-
-      # Replace the "feature_to_replace" column with the mode value.
-      new_row[self.feature_to_repair] = mode
-      repaired_data.append(new_row)
-
-    return repaired_data
-
-def get_mode(values):
-  counts = {}
-  for value in values:
-    counts[value] = 1 if value not in counts else counts[value]+1
-  mode_tuple = max(counts.items(), key=lambda tup: tup[1])
-  return mode_tuple[0]
-
-#######################################
-  #ADDED FOR CATEGORICALTOCATEGORICALREPAIR
-def get_desired_distributions(values):
-  feature = Feature(values,True)
-  feature.categorize()
+      for col_id in data_dict:
+        values = stratified_group_data[group][col_id]
+        feature = Feature(values, True)
+        feature.categorize()
+        features[col_id][group] = feature.category_count
+    for col_id in data_dict:
+      for group in all_stratified_groups:
+        category_count = features[col_id][group]
+        for category in categories[col_id]:
+          if category in category_count:
+            categories_count[category][group] += category_count[category]
+      for category in categories[col_id]:
+        median = sorted(categories_count[category])[len(values_at_quantile)/2]
+        desired_categories_count[category] = median
+      for group in all_stratified_groups:
+        feature = features[col_id][group]
+        feature.desired_categories_count = desired_categories_count
+        DG=create_graph(feature)
+        new_feature = repair_feature(feature,DG)
+ 
 
 
-###########################################
+class Feature:
+  def __init__(self, data, categorical=False, name="no_name"):
+    #data is an array of the data, with length n (# of observations)
+    self.data = data
+    #categorical is binary, True if categorical data 
+    self.categorical = categorical
+    #name of the feature column
+    self.name = name
+    #The following are initialized in categorize()
+    #number of bins (number of categories)
+    self.num_bins = None
+    #bin_index_dict is type defaultdict(int), KEY: category, VALUE: category index
+    self.bin_index_dict = None
+    #bin_index_dict_reverse is type defaultdict(int), KEY: category index, VALUE: category
+    self.bin_index_dict_reverse = None
+    #bin data is type defaultdict(int), Key: category index, VALUE: number of observations with that category
+    self.bin_data = None
+    #bin full data is type defaultdict(list), Key: category index, VALUE: array of indices i, where data[i] is in that category
+    
+    self.bin_fulldata = None
+    #The following are initialized in repair()
+    #bin_data_repaired is type defaultdict(int), Key: category index, VALUE: number of desired observations with that category 
+    self.bin_data_repaired = None
+    self.desired_category_count = None
+
+    self.category_count=None
+    
+  def categorize(self):
+    if self.categorical: 
+      d1=defaultdict(int) #bin_data
+      d2=defaultdict(int) #bin_index_dict
+      d3=defaultdict(list) #bin_fulldata
+      d4=defaultdict(int) #bin_index_dict_reverse
+      d5=defaultdict(int) #category_count
+      n = len(self.data)
+      count = 0
+      for i in range(0,n):
+        obs = self.data[i]
+        if obs in d2: pass  # if obs (i.e. category) is alreay a KEY in bin_index_data then don't do anything
+        else:
+          d2[obs] = count #bin_index_dict inits the KEY: category, with VALUE: count
+          d4[count] = obs #bin_index_dict_reverse does the opposite
+          count += 1
+        bin_idx = d2[obs]
+        d1[bin_idx] += 1 #add 1 to the obs category idex in bin_data
+        d5[obs] += 1 #add 1 to the obs category NAME in category_count
+        d3[bin_idx].append(i) #add obs to the list of obs with that category in bin_fulldata
+      self.bin_data = d1 
+      self.category_count = d5 
+      self.num_bins = len(d1.items())
+      self.bin_fulldata = d3
+      self.bin_index_dict = d2
+      self.bin_index_dict_reverse = d4
+    else:
+      print "error: not categorical data"
+
+  def repair(self, repaird_data={}, protected_attribute =[]): #We have to make a design choice here (discussion in README)
+    if (not self.bin_data): self.categorize() #checks to make the feature has run through categorize()
+    else:
+      d = deepcopy(self.bin_data) #deepcopy ensures that self.bin_data does not get mutated
+      sumvals=0
+      for key, value in d.items(): #we get the number of observations
+        sumvals += value
+      avgval = sumvals/len(d.items()) #divide number of observations by number of categorues
+      remainder = sumvals % len(d.items()) 
+      for key, value in d.items(): #evenly distribute the number of observations across categories
+        if remainder > 0:
+          d[key] = avgval +1
+          remainder -= 1
+        else:
+          d[key] = avgval   
+      self.bin_data_repaired = d #This is our temporary desired distribution (number of observation in each category)
 
 def test():
-
-
+  all_data = [ 
+  ["x","A"],
+  ["x","A"],
+  ["x","B"],
+  ["x","B"],
+  ["x","B"],
+  ["y","A"],
+  ["y","A"],
+  ["y","A"],
+  ["y","B"],
+  ["z","A"],
+  ["z","A"],
+  ["z","A"],
+  ["z","A"],
+  ["z","A"],
+  ["z","B"]]
+  #feature_to_repair is really feature to repair ON
+  feature_to_repair = 0
+  repair_level=1
+  repairer = Repairer(all_data, feature_to_repair, repair_level)
+  print repairer.repair(all_data)
 
 if __name__== "__main__":
   test()
