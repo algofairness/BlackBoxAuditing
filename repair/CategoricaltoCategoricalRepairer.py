@@ -32,13 +32,12 @@ class Repairer(AbstractRepairer):
 
     # Extract column values for each attribute in data
     # Begin by initializing keys and values in dictionary
-    data_dict = {col_id: [] for col_id in col_ids if col_id in Y_col_ids}
+    data_dict = {col_id: [] for col_id in col_ids}
     
     # Populate each attribute with its column values
     for row in data_to_repair:
       for i in col_ids:
-        if i in Y_col_ids:
-          data_dict[i].append(row[i])
+        data_dict[i].append(row[i])
 
 
     # Create unique value structures:
@@ -94,43 +93,62 @@ class Repairer(AbstractRepairer):
       for col_id in data_dict:
         stratified_col_values = sorted([(data_dict[col_id][i], i) for i in stratified_group_indices[group]], key=lambda vals: vals[0])
         stratified_group_data[group][col_id] = stratified_col_values
+    
     features = {}
     categories = {}
     categories_count = {}
     desired_categories_count = {}
     print data_dict 
     for col_id in data_dict:
-      #data_dict[col_id] should be a list containing the values for all observations
-      values = data_dict[col_id]
-      feature = Feature(values, True)
-      feature.categorize()
-      bin_index_dict = feature.bin_index_dict
-      print bin_index_dict
-      categories[col_id] = []
-      for key,value in bin_index_dict:
-         categories[col_id].append(key)
-
-    for group in all_stratified_groups:
-      for col_id in data_dict:
-        values = stratified_group_data[group][col_id]
+      if col_id in Y_col_ids:
+        #data_dict[col_id] should be a list containing the values for all observations
+        values = data_dict[col_id]
         feature = Feature(values, True)
         feature.categorize()
-        features[col_id][group] = feature.category_count
+        bin_index_dict = feature.bin_index_dict
+        print feature.bin_data
+        print bin_index_dict
+        categories[col_id] = []
+        for key,value in bin_index_dict.items():
+           categories[col_id].append(key)
+        print categories
+
     for col_id in data_dict:
-      for group in all_stratified_groups:
-        category_count = features[col_id][group]
+      if col_id in Y_col_ids:
+        features[col_id] = {}
+        for group in all_stratified_groups:
+          #values is a list like: [('A',0),('A',1),('B',2),('B',3),('B',4)], where the second element in the tuple is the index of the observation
+          tuple_values = stratified_group_data[group][col_id]
+          values=[]
+          for tuple_value in tuple_values:
+            values.append(tuple_value[0]) 
+          feature = Feature(values, True)
+          feature.categorize()
+          print "Group " + str(group) + " has the following category counts: " + str(feature.category_count)
+          features[col_id][group] = feature
+    for col_id in data_dict:
+      if col_id in Y_col_ids:
+        categories_count[col_id]={category: [] for category in categories[col_id]}
+        for group in all_stratified_groups:
+          category_count = features[col_id][group].category_count
+          for category in categories[col_id]:
+            if category in category_count:
+              count=category_count[category]
+              categories_count[col_id][category].append(count)
+            else:
+              categories_count[col_id][category].append(0)
+
+        desired_categories_count[col_id]={}
         for category in categories[col_id]:
-          if category in category_count:
-            categories_count[category][group] += category_count[category]
-      for category in categories[col_id]:
-        median = sorted(categories_count[category])[len(values_at_quantile)/2]
-        desired_categories_count[category] = median
-      for group in all_stratified_groups:
-        feature = features[col_id][group]
-        feature.desired_categories_count = desired_categories_count
-        DG=create_graph(feature)
-        new_feature = repair_feature(feature,DG)
- 
+          median = sorted(categories_count[col_id][category])[len(categories_count[col_id][category])/2]
+          desired_categories_count[col_id][category] = median
+        for group in all_stratified_groups:
+          feature = features[col_id][group]
+          feature.desired_category_count = desired_categories_count[col_id]
+          print feature.desired_category_count
+          DG=create_graph(feature)
+          [new_feature,overflow] = repair_feature(feature,DG)
+          new_feature = handle_overflow(new_feature,overflow)
 
 
 class Feature:
@@ -146,7 +164,7 @@ class Feature:
     self.num_bins = None
     #bin_index_dict is type defaultdict(int), KEY: category, VALUE: category index
     self.bin_index_dict = None
-    #bin_index_dict_reverse is type defaultdict(int), KEY: category index, VALUE: category
+    #bin_index_dict_reverse is type defaultdict(int), KEY: category index, VALUE: category 
     self.bin_index_dict_reverse = None
     #bin data is type defaultdict(int), Key: category index, VALUE: number of observations with that category
     self.bin_data = None
@@ -209,7 +227,8 @@ class Feature:
 def create_graph(feature): #creates graph given a Feature object
   DG=nx.DiGraph() #using networkx package
   bin_list = feature.bin_data.items()  
-  repair_bin_list = feature.bin_data_repaired.items()
+  bin_index_dict_reverse = feature.bin_index_dict_reverse
+  desired_category_count = feature.desired_category_count
   k = feature.num_bins
   DG.add_node('s')
   DG.add_node('t')
@@ -218,7 +237,11 @@ def create_graph(feature): #creates graph given a Feature object
     DG.add_edge('s', i, {'capacity' : bin_list[i][1], 'weight' : 0})
   for i in range(k, 2*k): #righthand side nodes have capacity = DESIRED number of observations in category i
     DG.add_node(i)
-    DG.add_edge(i, 't', {'capacity' : repair_bin_list[i-k][1], 'weight' : 0})
+    cat = bin_index_dict_reverse[i-k]
+    DG.add_edge(i, 't', {'capacity' : desired_category_count[cat], 'weight' : 0})
+  #Add special node to hold overflow
+  DG.add_node(2*k)
+  DG.add_edge(2*k, 't', {'weight' : 0})
   for i in range(0, k):
     for j in range(k,2*k): #for each edge from a lefthand side node to a righhand side node:
       if (i+k)==j:  #IF they represent the same category, the edge weight is 0
@@ -235,9 +258,11 @@ def repair_feature(feature, DG): #new_feature = repair_feature(feature, create_g
   index_dict = feature.bin_index_dict_reverse
   size_data = len(feature.data)
   repair_bin_dict = {} 
-  repair_data = [0]*size_data #initialize repaired data
+  repair_data = [0]*size_data #initialize repaired data to be 0. If there are zero's after we fill it in the those observations belong in the overflow, "no category"
   k = feature.num_bins
+  overflow = 0
   for i in range(0,k): #for each lefthand side node i
+    overflow += mincostFlow[i][2*k]
     for j in range(k, 2*k): #for each righthand side node j
       edgeflow = mincostFlow[i][j] #get the int (edgeflow) representing the amount of observations going from node i to j
       group = random.sample(bin_dict[i], edgeflow) #randomly sample x (edgeflow) unique elements from the list of observations in that category. 
@@ -249,11 +274,12 @@ def repair_feature(feature, DG): #new_feature = repair_feature(feature, create_g
         repair_bin_dict[q].extend(group) #extend the list of observations with a new list of observations in that category
       else: 
         repair_bin_dict[q] = group #otherwise key that category index and set it's value as the group list in that category
-  new_feature = Feature(repair_data) #initialize our new_feature (repaired feature)
-  new_feature.categorical = True 
-  new_feature.name = feature.name
+  new_feature = Feature(repair_data,True) #initialize our new_feature (repaired feature)
   new_feature.bin_fulldata = repair_bin_dict
-  return new_feature
+  return [new_feature,overflow]
+
+def handle_overflow(new_feature,overflow):
+  
   
 def test():
   all_data = [ 
