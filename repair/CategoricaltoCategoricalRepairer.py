@@ -142,13 +142,17 @@ class Repairer(AbstractRepairer):
         for category in categories[col_id]:
           median = sorted(categories_count[col_id][category])[len(categories_count[col_id][category])/2]
           desired_categories_count[col_id][category] = median
+        overflow=0
         for group in all_stratified_groups:
           feature = features[col_id][group]
           feature.desired_category_count = desired_categories_count[col_id]
           print feature.desired_category_count
           DG=create_graph(feature)
           [new_feature,overflow] = repair_feature(feature,DG)
-          new_feature = handle_overflow(new_feature,overflow)
+          total_overflow += overflow
+          features[col_id][group] = new_feature
+        assigned_overflow=handle_overflow(total_overflow,desired_categories_count[col_id])
+
 
 
 class Feature:
@@ -278,9 +282,9 @@ def repair_feature(feature, DG): #new_feature = repair_feature(feature, create_g
   new_feature.bin_fulldata = repair_bin_dict
   return [new_feature,overflow]
 
-def handle_overflow(new_feature,overflow):
-  
-  
+def handle_overflow(overflow, category_count):
+  #This would be where we'd uniformly distribute overflow observations based on the category_count
+
 def test():
   all_data = [ 
   ["x","A"],
