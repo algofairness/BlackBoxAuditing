@@ -3,6 +3,11 @@ from collections import defaultdict
 
 from AbstractRepairer import AbstractRepairer
 
+################################
+#ADDED FOR CATEGORICALTOCATEGORICALREPAIR
+from classes import Feature
+###############################
+
 class Repairer(AbstractRepairer):
   def repair(self, data_to_repair):
     col_ids = range(len(data_to_repair[0]))
@@ -90,6 +95,36 @@ class Repairer(AbstractRepairer):
         stratified_col_values = sorted([(data_dict[col_id][i], i) for i in stratified_group_indices[group]], key=lambda vals: vals[0])
         stratified_group_data[group][col_id] = stratified_col_values
 
+
+  #######################################
+  #ADDED FOR CATEGORICALTOCATEGORICALREPAIR
+  #Imagine two categories A and B, and groups X,Y,Z.
+  #
+  features = {}
+  categories = {}
+  for col_id in data_dict:
+    #data_dict[col_id] should be a list containing the values for all observations
+    values = data_dict(col_id)
+    feature = Feature(values, True)
+    feature.categorize()
+    num_bins = feature.num_bins()
+    categories[col_id] = []
+    for key,value in num_bins:
+       categories[col_id].append(key)
+
+  for group in all_stratified_groups:
+    for col_id in data_dict:
+      values = stratified_group_data[group][col_id]
+      feature = Feature(values, True)
+      feature.categorize()
+      features[(group,col_id)] = feature.category_count
+  for col_id in data_dict:
+    for group in all_stratified_groups:
+      category_count = features[(group,col_id)]
+      for category in 
+   feature.desired_distribution = desired_distributions
+  ########################################      
+
     # Find the combination with the fewest data points. This will determine what the quantiles are.
     num_quantiles = min(filter(lambda x: x, sizes.values()))
 
@@ -153,45 +188,17 @@ def get_mode(values):
   mode_tuple = max(counts.items(), key=lambda tup: tup[1])
   return mode_tuple[0]
 
+#######################################
+  #ADDED FOR CATEGORICALTOCATEGORICALREPAIR
+def get_desired_distributions(values):
+  feature = Feature(values,True)
+  feature.categorize()
 
+
+###########################################
 
 def test():
-  test_minimal()
-  test_ricci()
 
-def test_minimal():
-  class_1 = [[float(i),"A"] for i in xrange(0, 100)]
-  class_2 = [[float(i),"B"] for i in xrange(101, 200)] # Thus, "A" is mode class.
-  data = class_1 + class_2
-
-  feature_to_repair = 1
-  repairer = Repairer(data, feature_to_repair, 0.5)
-  repaired_data = repairer.repair(data)
-  print "CategoricRepairer -- Minimal Dataset -- repaired_data altered?", repaired_data != data
-
-  mode = get_mode([row[feature_to_repair] for row in data])
-  print "CategoricalRepairer -- Minimal Dataset -- mode is true mode?", mode=="A"
-  print "CategoricRepairer -- Minimal Dataset -- mode value as feature_to_repair?", all(row[feature_to_repair] == mode for row in repaired_data)
-
-def test_ricci():
-  import csv
-  filepath = "test_data/RicciDataMod.csv"
-  ignored_features = [0, 5] # Identifier columns and response columns.
-  feature_to_repair = 3
-  repair_level = 0.5
-
-  data = []
-  with open(filepath) as f:
-    for row in csv.reader(f):
-      data.append(row)
-
-  data.pop(0)
-
-  repairer = Repairer(data, feature_to_repair, repair_level, features_to_ignore=ignored_features)
-  repaired_data = repairer.repair(data)
-
-  print "CategoricRepairer -- no rows lost:", len(repaired_data) == len(data)
-  print "CategoricRepairer -- features repaired for level=1.0:", repaired_data != data
 
 
 if __name__== "__main__":
