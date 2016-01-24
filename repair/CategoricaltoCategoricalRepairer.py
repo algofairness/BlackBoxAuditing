@@ -208,6 +208,15 @@ class Repairer(AbstractRepairer):
               tally += value
             assigned_overflow[group][i] = categories[col_id][cat_index]
             print "\nThis observation in group "+str(group) + " got assigned to category " + str(assigned_overflow[group][i]) + " facing probabilities " + str(dist)
+        #Actually do the assignment
+          count = 0
+          for i in range(len(features[col_id][group].data)):
+            value = features[col_id][group].data
+            if value ==0:
+              (features[col_id][group].data)[i] = assigned_overflow[group][count]
+              count += 1
+        #Now we need to return our repaired feature in the form of our original dataset!!
+
 
 
 class Feature:
