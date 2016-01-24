@@ -167,11 +167,11 @@ def test_minimal():
   feature_to_repair = 1
   repairer = Repairer(data, feature_to_repair, 0.5)
   repaired_data = repairer.repair(data)
-  print "CategoricRepairer -- Minimal Dataset -- repaired_data altered?", repaired_data != data
+  print "Minimal Dataset -- repaired_data altered?", repaired_data != data
 
   mode = get_mode([row[feature_to_repair] for row in data])
-  print "CategoricalRepairer -- Minimal Dataset -- mode is true mode?", mode=="A"
-  print "CategoricRepairer -- Minimal Dataset -- mode value as feature_to_repair?", all(row[feature_to_repair] == mode for row in repaired_data)
+  print "Minimal Dataset -- mode is true mode?", mode=="A"
+  print "Minimal Dataset -- mode value as feature_to_repair?", all(row[feature_to_repair] == mode for row in repaired_data)
 
 def test_ricci():
   import csv
@@ -190,8 +190,8 @@ def test_ricci():
   repairer = Repairer(data, feature_to_repair, repair_level, features_to_ignore=ignored_features)
   repaired_data = repairer.repair(data)
 
-  print "CategoricRepairer -- no rows lost:", len(repaired_data) == len(data)
-  print "CategoricRepairer -- features repaired for level=1.0:", repaired_data != data
+  print "no rows lost:", len(repaired_data) == len(data)
+  print "features repaired for level=1.0:", repaired_data != data
 
 
 if __name__== "__main__":

@@ -1,12 +1,12 @@
 from AbstractRepairer import AbstractRepairer
-import CategoricRepairer
+import CategoricToNumericRepairer
 from binning.Binner import make_histogram_bins
 from binning.BinSizes import FreedmanDiaconisBinSize as bin_calculator
 
 class Repairer(AbstractRepairer):
   def __init__(self, *args, **kwargs):
     super(Repairer, self).__init__(*args, **kwargs)
-    self.categoric_repairer = CategoricRepairer.Repairer(*args, **kwargs)
+    self.categoric_repairer = CategoricToNumericRepairer.Repairer(*args, **kwargs)
 
   def repair(self, data_to_repair):
 
@@ -45,10 +45,10 @@ def test():
   feature_to_repair = 0
   repairer = Repairer(data, feature_to_repair, 0.5)
   repaired_data = repairer.repair(data)
-  print "NumericalRepairer -- repaired_data altered?", repaired_data != data
+  print "repaired_data altered?", repaired_data != data
 
   median = get_median([row[feature_to_repair] for row in data])
-  print "NumericalRepairer -- median replaces column?", all(row[feature_to_repair] == median for row in repaired_data)
+  print "median replaces column?", all(row[feature_to_repair] == median for row in repaired_data)
 
 
 if __name__=="__main__":
