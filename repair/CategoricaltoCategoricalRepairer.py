@@ -94,7 +94,6 @@ class Repairer(AbstractRepairer):
       for col_id in data_dict:
         stratified_col_values = sorted([(data_dict[col_id][i], i) for i in stratified_group_indices[group]], key=lambda vals: vals[0])
         stratified_group_data[group][col_id] = stratified_col_values
-    
     features = {}
     categories = {}
     categories_count = {}
@@ -211,11 +210,21 @@ class Repairer(AbstractRepairer):
         #Actually do the assignment
           count = 0
           for i in range(len(features[col_id][group].data)):
-            value = features[col_id][group].data
+            value = (features[col_id][group].data)[i]
             if value ==0:
               (features[col_id][group].data)[i] = assigned_overflow[group][count]
               count += 1
-        #Now we need to return our repaired feature in the form of our original dataset!!
+        #Now we need to return our repaired feature in the form of our original dataset!! 
+        for group in all_stratified_groups:
+          indices = stratified_group_indices[group]
+          count =0
+          for index in indices:
+            value = (features[col_id][group].data)[count]
+            count += 1
+            data_to_repair[index][col_id] = value
+    return data_to_repair
+        
+
 
 
 
