@@ -1,4 +1,5 @@
 from repair.GeneralRepairer import Repairer #TODO: Build the GeneralRepairer...
+import csv
 import time
 import os
 
@@ -13,7 +14,7 @@ class GradientFeatureAuditor(object):
     self.features_to_ignore = []
     self.OUTPUT_DIR = "audits"
 
-  def audit_feature(self, feature_to_repair, output_file):
+  def audit_feature(self, feature_to_repair, output_file, save_repaired_data=True):
     conf_tables = []
     repair_increase_per_step = 1.0/self.repair_steps
     repair_level = 0.0
@@ -24,6 +25,12 @@ class GradientFeatureAuditor(object):
       repairer = Repairer(all_data, index_to_repair, repair_level,
                           features_to_ignore=self.features_to_ignore)
       rep_test = repairer.repair(self.test_set)
+
+      if save_repaired_data:
+        with open(output_file + ".repaired_{}.data".format(repair_level), "w") as f:
+          writer = csv.writer(f)
+          for row in [[self.headers]]+rep_test:
+            writer.writerow(row)
 
       conf_table = self.model.test(rep_test)
 

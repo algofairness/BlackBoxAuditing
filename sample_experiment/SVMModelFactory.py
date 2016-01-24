@@ -1,5 +1,6 @@
 from AbstractModelFactory import AbstractModelFactory
 from AbstractModelVisitor import AbstractModelVisitor
+from collections import OrderedDict
 import subprocess
 import io
 import csv
@@ -76,7 +77,7 @@ def run_weka_command(command):
 
 def get_arff_type_dict(headers, data):
   values = {header:[row[i] for row in data] for i, header in enumerate(headers)}
-  arff_type = {}
+  arff_type = OrderedDict()
   for header in headers:
     if all( map(lambda x: isinstance(x, float), values[header]) ):
       arff_type[header] = "numeric"
