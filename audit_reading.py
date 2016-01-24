@@ -37,6 +37,7 @@ def graph_audit(filename, measurement_calculators, output_image_file):
   plt.xlabel("Repair Level")
   plt.legend()
   plt.savefig(output_image_file)
+  plt.clf() # Clear the entire figure so future plots are empty.
 
   # Save the data used to generate that image file.
   with open(output_image_file + ".data", "w") as f:

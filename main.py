@@ -6,6 +6,7 @@ from sample_experiment.SVMModelFactory import ModelFactory
 from measurements import accuracy
 response_header = "Outcome"
 graph_measurements = [accuracy]
+features_to_ignore = []
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # NOTE: You should not need to change anything below this point.
@@ -28,8 +29,12 @@ def run():
   model_factory = ModelFactory(all_data, headers, response_header)
   model = model_factory.build(train_set)
 
+  # Don't audit the response feature.
+  features_to_ignore.append(response_header)
+
   # Perform the Gradient Feature Audit and dump the audit results into files.
-  auditor = GradientFeatureAuditor(model, headers, train_set, test_set)
+  auditor = GradientFeatureAuditor(model, headers, train_set, test_set,
+                                   features_to_ignore=features_to_ignore)
   audit_filenames = auditor.audit()
 
   # Graph the audit files.

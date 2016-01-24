@@ -1,9 +1,9 @@
 def load_data():
   headers = ["Feature A", "Feature B", "Feature C", "Outcome"]
   train = [[i, 2*i, -i, "A"] for i in range(0,100)] + \
-          [[i, 2*i, -i, "B"] for i in range(1,200)]
+          [[i, 2*i, -i, "B"] for i in range(100,200)]
   test = [[i, 2*i, -i, "A"] for i in range(0,100)] + \
-          [[i, 2*i, -i, "B"] for i in range(1,200)]
+          [[i, 2*i, -i, "B"] for i in range(100,200)]
   return headers, train, test
 
 

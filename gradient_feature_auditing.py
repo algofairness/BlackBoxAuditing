@@ -3,12 +3,14 @@ import time
 import os
 
 class GradientFeatureAuditor(object):
-  def __init__(self, model, headers, train_set, test_set, repair_steps=10):
+  def __init__(self, model, headers, train_set, test_set, repair_steps=10,
+                features_to_ignore = []):
     self.repair_steps = repair_steps
     self.model = model
     self.train_set = train_set
     self.test_set = test_set
     self.headers = headers
+    self.features_to_ignore = []
     self.OUTPUT_DIR = "audits"
 
   def audit_feature(self, feature_to_repair, output_file):
@@ -19,7 +21,8 @@ class GradientFeatureAuditor(object):
     while repair_level <= 1.0:
       all_data = self.train_set + self.test_set
       index_to_repair = self.headers.index(feature_to_repair)
-      repairer = Repairer(all_data, index_to_repair, repair_level)
+      repairer = Repairer(all_data, index_to_repair, repair_level,
+                          features_to_ignore=self.features_to_ignore)
       rep_test = repairer.repair(self.test_set)
 
       conf_table = self.model.test(rep_test)
