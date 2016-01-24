@@ -18,7 +18,8 @@ class GradientFeatureAuditor(object):
 
     while repair_level <= 1.0:
       all_data = self.train_set + self.test_set
-      repairer = Repairer(all_data, feature_to_repair, repair_level)
+      index_to_repair = self.headers.index(feature_to_repair)
+      repairer = Repairer(all_data, index_to_repair, repair_level)
       rep_test = repairer.repair(self.test_set)
 
       conf_table = self.model.test(rep_test)

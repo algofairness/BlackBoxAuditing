@@ -1,12 +1,12 @@
 from AbstractRepairer import AbstractRepairer
-import CategoricToNumericRepairer
+import CategoricRepairer
 from binning.Binner import make_histogram_bins
 from binning.BinSizes import FreedmanDiaconisBinSize as bin_calculator
 
 class Repairer(AbstractRepairer):
   def __init__(self, *args, **kwargs):
     super(Repairer, self).__init__(*args, **kwargs)
-    self.categoric_repairer = CategoricToNumericRepairer.Repairer(*args, **kwargs)
+    self.categoric_repairer = CategoricRepairer.Repairer(*args, **kwargs)
 
   def repair(self, data_to_repair):
 
