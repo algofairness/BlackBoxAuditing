@@ -8,6 +8,7 @@ from copy import deepcopy
 
 import networkx as nx
 import random
+import math
 
 class Repairer(AbstractRepairer):
   def repair(self, data_to_repair):
@@ -98,6 +99,8 @@ class Repairer(AbstractRepairer):
     categories = {}
     categories_count = {}
     desired_categories_count = {}
+    group_size = {}
+    categories_count_norm = {}
     print data_dict 
     for col_id in data_dict:
       if col_id in Y_col_ids:
@@ -112,9 +115,9 @@ class Repairer(AbstractRepairer):
         for key,value in bin_index_dict.items():
            categories[col_id].append(key)
         print categories
-
     for col_id in data_dict:
       if col_id in Y_col_ids:
+        group_size[col_id] = {}
         features[col_id] = {}
         for group in all_stratified_groups:
           #values is a list like: [('A',0),('A',1),('B',2),('B',3),('B',4)], where the second element in the tuple is the index of the observation
@@ -125,6 +128,7 @@ class Repairer(AbstractRepairer):
           feature = Feature(values, True)
           feature.categorize()
           print "Group " + str(group) + " has the following category counts: " + str(feature.category_count)
+          group_size[col_id][group] = len(feature.data)
           features[col_id][group] = feature
     for col_id in data_dict:
       if col_id in Y_col_ids:
@@ -138,21 +142,72 @@ class Repairer(AbstractRepairer):
             else:
               categories_count[col_id][category].append(0)
 
-        desired_categories_count[col_id]={}
+    for col_id in data_dict:
+      if col_id in Y_col_ids:
+        categories_count_norm[col_id] = {}
         for category in categories[col_id]:
-          median = sorted(categories_count[col_id][category])[len(categories_count[col_id][category])/2]
-          desired_categories_count[col_id][category] = median
-        overflow=0
+          categories_count_norm[col_id][category]=[0]*len(categories_count[col_id][category])
+          for i in range(len(categories_count[col_id][category])):
+            print group_size
+            print all_stratified_groups
+            print categories_count[col_id][category]
+            group= all_stratified_groups[i]
+            orig_count = categories_count[col_id][category][i] 
+            categories_count_norm[col_id][category][i] = orig_count* (1.0/group_size[col_id][group])
+        print categories_count_norm
+        categories_count[col_id]={category: [] for category in categories[col_id]}
+        desired_categories_count[col_id]={}
+        median = {}
+        for category in categories[col_id]:
+          median[category] = sorted(categories_count_norm[col_id][category])[len(categories_count_norm[col_id][category])/2]
+        for group in all_stratified_groups:
+          desired_categories_count[col_id][group] = {}
+          for category in categories[col_id]:
+            med=median[category]
+            size = group_size[col_id][group] 
+            estimate = math.floor(med*(1.0*size))
+            desired_categories_count[col_id][group][category] = estimate 
+            print desired_categories_count
+
+        total_overflow=0
+        total_overflows={}
         for group in all_stratified_groups:
           feature = features[col_id][group]
-          feature.desired_category_count = desired_categories_count[col_id]
+          feature.desired_category_count = desired_categories_count[col_id][group]
+          print "\nMax Flow on group: " + str(group)
           print feature.desired_category_count
           DG=create_graph(feature)
           [new_feature,overflow] = repair_feature(feature,DG)
           total_overflow += overflow
+          total_overflows[group] = overflow
           features[col_id][group] = new_feature
-        assigned_overflow=handle_overflow(total_overflow,desired_categories_count[col_id])
-
+        print "\nTotal overflow: " + str(total_overflow)
+        
+        assigned_overflow = {}
+        distribution = {}
+        for i in range(len(all_stratified_groups)):
+          group = all_stratified_groups[i]
+          distribution[group] = {}
+          for j in range(len(categories[col_id])):
+            category = categories[col_id][j]
+            print categories_count_norm[col_id][category]
+            distribution[group][j] = categories_count_norm[col_id][category][i]
+        for group in all_stratified_groups:
+          assigned_overflow[group] = {}
+          for i in range(int(total_overflows[group])):
+            dist = distribution[group]
+            number = random.uniform(0, 1)
+            print number
+            cat_index = 0
+            tally = 0
+            for j in range(len(dist)):
+              value=dist[j]
+              if number < (tally+value):
+                cat_index = j
+                break
+              tally += value
+            assigned_overflow[group][i] = categories[col_id][cat_index]
+            print "\nThis observation in group "+str(group) + " got assigned to category " + str(assigned_overflow[group][i]) + " facing probabilities " + str(dist)
 
 
 class Feature:
@@ -269,7 +324,8 @@ def repair_feature(feature, DG): #new_feature = repair_feature(feature, create_g
     overflow += mincostFlow[i][2*k]
     for j in range(k, 2*k): #for each righthand side node j
       edgeflow = mincostFlow[i][j] #get the int (edgeflow) representing the amount of observations going from node i to j
-      group = random.sample(bin_dict[i], edgeflow) #randomly sample x (edgeflow) unique elements from the list of observations in that category. 
+      print "Flow from " + str(i) +" to " + str(j-k) + " of " + str(edgeflow)
+      group = random.sample(bin_dict[i], int(edgeflow)) #randomly sample x (edgeflow) unique elements from the list of observations in that category. 
       q=j-k #q is the category index for a righhand side node
       for elem in group: #for each element in the randomly selected group list
         bin_dict[i].remove(elem) #remove the element from the list of observation in that category
@@ -278,12 +334,11 @@ def repair_feature(feature, DG): #new_feature = repair_feature(feature, create_g
         repair_bin_dict[q].extend(group) #extend the list of observations with a new list of observations in that category
       else: 
         repair_bin_dict[q] = group #otherwise key that category index and set it's value as the group list in that category
+  print "Overflow of " + str(overflow)
   new_feature = Feature(repair_data,True) #initialize our new_feature (repaired feature)
   new_feature.bin_fulldata = repair_bin_dict
   return [new_feature,overflow]
 
-def handle_overflow(overflow, category_count):
-  #This would be where we'd uniformly distribute overflow observations based on the category_count
 
 def test():
   all_data = [ 
