@@ -11,7 +11,7 @@ import random
 import math
 
 class Repairer(AbstractRepairer):
-  def repair(self, data_to_repair):
+  def repair(self, data_to_repair, repair_amount):
     col_ids = range(len(data_to_repair[0]))
 
     # Get column type information
@@ -159,12 +159,14 @@ class Repairer(AbstractRepairer):
         median = {}
         for category in categories[col_id]:
           median[category] = sorted(categories_count_norm[col_id][category])[len(categories_count_norm[col_id][category])/2]
-        for group in all_stratified_groups:
+        for i in range(len(all_stratified_groups)):
+          group = all_stratified_groups[i]
           desired_categories_count[col_id][group] = {}
           for category in categories[col_id]:
             med=median[category]
             size = group_size[col_id][group] 
-            estimate = math.floor(med*(1.0*size))
+            temp=(1 - repair_amount)*categories_count_norm[col_id][category][i] + repair_amount*med
+            estimate = math.floor(temp*(1.0*size))
             desired_categories_count[col_id][group][category] = estimate 
             print desired_categories_count
 
@@ -378,8 +380,9 @@ def test():
   #feature_to_repair is really feature to repair ON
   feature_to_repair = 0
   repair_level=1
+  repair_amount = 1
   repairer = Repairer(all_data, feature_to_repair, repair_level)
-  print repairer.repair(all_data)
+  print repairer.repair(all_data, repair_amount)
 
 if __name__== "__main__":
   test()
