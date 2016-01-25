@@ -4,9 +4,9 @@ import os
 import random
 import csv
 
-def graph_audit(filename, measurement_calculators, output_image_file):
+def load_audit_confusion_matrices(filename):
   with open(filename) as audit_file:
-    header_line = audit_file.readline()[:-1] # Remove the trailing endline.
+    audit_file.next() # Skip the first line.
 
     # Extract the confusion matrices and repair levels from the audit file.
     confusion_matrices = []
@@ -21,6 +21,14 @@ def graph_audit(filename, measurement_calculators, output_image_file):
 
   # Sort the repair levels in case they are out of order for whatever reason.
   confusion_matrices.sort(key = lambda pair: pair[0])
+  return confusion_matrices
+
+
+def graph_audit(filename, measurement_calculators, output_image_file):
+  with open(filename) as audit_file:
+    header_line = audit_file.readline()[:-1] # Remove the trailing endline.
+
+  confusion_matrices = load_audit_confusion_matrices(filename)
 
   x_axis = [repair_level for repair_level, _ in confusion_matrices]
   y_axes = []
@@ -48,15 +56,37 @@ def graph_audit(filename, measurement_calculators, output_image_file):
       writer.writerow([repair_level] + [y_axis[i] for y_axis in y_axes])
 
 
+def rank_audit_files(filenames, measurement_calculator):
+  scores = []
+  for filename in filenames:
+    with open(filename) as audit_file:
+      header_line = audit_file.readline()[:-1] # Remove the trailing endline.
+      feature = header_line[header_line.index(":")+1:]
+
+    confusion_matrices = load_audit_confusion_matrices(filename)
+    _, start_matrix = confusion_matrices[0]
+    _, end_matrix = confusion_matrices[-1]
+    score_difference = measurement_calculator(start_matrix)-measurement_calculator(end_matrix)
+    scores.append( (feature, score_difference) )
+
+  scores.sort(key = lambda score_tup: score_tup[1], reverse=True)
+  return scores
+
+
+
 def test():
   TMP_DIR = "tmp"
   if not os.path.exists(TMP_DIR):
     os.makedirs(TMP_DIR)
 
-  # Prepare the sample audit.
-  audit_filename = TMP_DIR + "/test_audit.audit"
-  with open(audit_filename, "w") as f:
-    f.write("GFA Audit for: Test Feature\n0.0:{'A': {'B': 100}, 'B': {'B': 199}}\n0.1:{'A': {'B': 100}, 'B': {'B': 199}}\n0.2:{'A': {'B': 100}, 'B': {'B': 199}}\n0.3:{'A': {'B': 100}, 'B': {'B': 199}}\n0.4:{'A': {'B': 100}, 'B': {'B': 199}}\n0.5:{'A': {'B': 100}, 'B': {'B': 199}}\n0.6:{'A': {'B': 100}, 'B': {'B': 199}}\n0.7:{'A': {'B': 100}, 'B': {'B': 199}}\n0.8:{'A': {'B': 100}, 'B': {'B': 199}}\n0.9:{'A': {'B': 100}, 'B': {'B': 199}}\n1.0:{'A': {'B': 100}, 'B': {'B': 199}}\n")
+  test_contents = "GFA Audit for: Test Feature\n0.0:{'A': {'B': 100}, 'B': {'B': 199}}\n0.1:{'A': {'B': 100}, 'B': {'B': 199}}\n0.5:{'A': {'B': 100}, 'B': {'B': 199}}\n1.0:{'A': {'B': 100}, 'B': {'B': 199}}\n"
+  test_filenames = [TMP_DIR + "/test_audit_1.audit",
+                    TMP_DIR + "/test_audit_2.audit"]
+
+  # Prepare the sample audit files.
+  for filename in test_filenames:
+    with open(filename, "w") as f:
+      f.write(test_contents)
 
   # A mock measurement calculator that returns a random number.
   def mock_measurement(conf_matrix):
@@ -65,14 +95,16 @@ def test():
   # Perform the audit and save it an output image.
   calculators = [mock_measurement, mock_measurement]
   output_image = TMP_DIR + "/test_image.png"
-  graph_audit(audit_filename, calculators, output_image)
+  graph_audit(test_filenames[0], calculators, output_image) # Only need to test 1.
 
   file_not_empty = os.path.getsize(output_image) > 0
-  print "GradientFeatureAuditor -- image file generated? --", file_not_empty
+  print "image file generated? --", file_not_empty
 
   file_not_empty = os.path.getsize(output_image + ".data") > 0
-  print "GradientFeatureAuditor -- data file generated? --", file_not_empty
+  print "data file generated? --", file_not_empty
 
+  ranked_features = rank_audit_files(test_filenames, mock_measurement)
+  print "ranked features sorted? --", ranked_features[0] > ranked_features[1]
 
 
 if __name__=="__main__":

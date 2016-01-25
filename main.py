@@ -6,6 +6,7 @@ from sample_experiment.SVMModelFactory import ModelFactory
 from measurements import accuracy
 response_header = "Outcome"
 graph_measurements = [accuracy]
+rank_measurement = accuracy
 features_to_ignore = []
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -13,7 +14,7 @@ features_to_ignore = []
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 from gradient_feature_auditing import GradientFeatureAuditor
-from audit_reading import graph_audit
+from audit_reading import graph_audit, rank_audit_files
 
 def run():
   headers, train_set, test_set = load_data()
@@ -41,6 +42,9 @@ def run():
   for audit_filename in audit_filenames:
     audit_image_filename = audit_filename + ".png"
     graph_audit(audit_filename, graph_measurements, audit_image_filename)
+
+  ranked_features = rank_audit_files(audit_filenames, rank_measurement)
+  print ranked_features
 
 if __name__=="__main__":
   run()

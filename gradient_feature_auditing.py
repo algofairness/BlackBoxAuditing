@@ -11,7 +11,7 @@ class GradientFeatureAuditor(object):
     self.train_set = train_set
     self.test_set = test_set
     self.headers = headers
-    self.features_to_ignore = []
+    self.features_to_ignore = features_to_ignore
     self.OUTPUT_DIR = "audits"
 
   def audit_feature(self, feature_to_repair, output_file, save_repaired_data=True):
@@ -38,7 +38,7 @@ class GradientFeatureAuditor(object):
       repair_level += repair_increase_per_step
 
     with open(output_file, "a") as f:
-      f.write("GFA Audit for: {}\n".format(feature_to_repair))
+      f.write("GFA Audit for:{}\n".format(feature_to_repair))
       for repair_level, conf_table in conf_tables:
         f.write("{}:{}\n".format(repair_level, conf_table))
 
@@ -46,11 +46,12 @@ class GradientFeatureAuditor(object):
     output_files = []
 
     for feature in self.headers:
-      cleaned_feature_name = feature.replace(".","_").replace(" ","_")
-      output_file = "{}_{}.audit".format(cleaned_feature_name, time.time())
-      full_filepath = self.OUTPUT_DIR + "/" + output_file
-      self.audit_feature(feature, full_filepath)
-      output_files.append(full_filepath)
+      if feature not in self.features_to_ignore:
+        cleaned_feature_name = feature.replace(".","_").replace(" ","_")
+        output_file = "{}_{}.audit".format(cleaned_feature_name, time.time())
+        full_filepath = self.OUTPUT_DIR + "/" + output_file
+        self.audit_feature(feature, full_filepath)
+        output_files.append(full_filepath)
 
     return output_files
 
