@@ -7,7 +7,7 @@ from measurements import accuracy
 response_header = "Class"
 graph_measurements = [accuracy]
 rank_measurement = accuracy
-features_to_ignore = []
+features_to_ignore = ["Position"]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # NOTE: You should not need to change anything below this point.

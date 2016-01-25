@@ -29,7 +29,7 @@ class GradientFeatureAuditor(object):
       if save_repaired_data:
         with open(output_file + ".repaired_{}.data".format(repair_level), "w") as f:
           writer = csv.writer(f)
-          for row in [[self.headers]]+rep_test:
+          for row in [self.headers]+rep_test:
             writer.writerow(row)
 
       conf_table = self.model.test(rep_test)
