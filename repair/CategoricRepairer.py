@@ -21,7 +21,6 @@ class Repairer(AbstractRepairer):
 
     col_type_dict = {col_id: col_type for col_id, col_type in zip(col_ids, col_types)}
 
-    Y_col_ids = filter(lambda x: col_type_dict[x] == "Y", col_ids)
     not_I_col_ids = filter(lambda x: col_type_dict[x] != "I", col_ids)
 
     # To prevent potential perils with user-provided column names, map them to safe column names
@@ -34,18 +33,17 @@ class Repairer(AbstractRepairer):
     # Populate each attribute with its column values
     for row in data_to_repair:
       for i in col_ids:
-        try:
-          data_dict[i].append(float(row[i]))
-        except:
-          data_dict[i].append(row[i])
+        data_dict[i].append(row[i])
 
 
     repair_types = {}
     for col_id, values in data_dict.items():
       if all(isinstance(value, float) for value in values):
-        repair_types[col_id] = "Numeric"
+        repair_types[col_id] = float
+      elif all(isinstance(value, int) for value in values):
+        repair_types[col_id] = int
       else:
-        repair_types[col_id] = "Categoric"
+        repair_types[col_id] = str
 
     # Create unique value structures:
     # When performing repairs, we choose median values. If repair is partial, then values will
@@ -117,7 +115,7 @@ class Repairer(AbstractRepairer):
       group_offsets = {group: 0 for group in all_stratified_groups}
       col = data_dict[col_id]
 
-      if repair_types[col_id] == "Numeric":
+      if repair_types[col_id] in {int, float}:
         for quantile in range(num_quantiles):
           values_at_quantile = []
           indices_per_group = {}
@@ -153,7 +151,7 @@ class Repairer(AbstractRepairer):
               # Update data to repaired valued
               data_dict[col_id][index] = repaired_value
 
-      elif repair_types[col_id] == "Categoric":
+      elif repair_types[col_id] in {str}:
         feature = CategoricalFeature(col)
         categories_count_norm[col_id] = {}
         bin_index_dict = feature.bin_index_dict

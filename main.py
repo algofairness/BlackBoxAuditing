@@ -1,10 +1,10 @@
 
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-from sample_experiment.load_data import load_data
-from sample_experiment.SVMModelFactory import ModelFactory
+from ricci_experiment.load_data import load_data
+from ricci_experiment.SVMModelFactory import ModelFactory
 from measurements import accuracy
-response_header = "Outcome"
+response_header = "Class"
 graph_measurements = [accuracy]
 rank_measurement = accuracy
 features_to_ignore = []
