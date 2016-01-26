@@ -8,13 +8,13 @@ import os
 
 WEKA_PATH = "/usr/share/java/weka.jar"
 TMP_DIR = "tmp/"
+# Create the TMP_DIR if it does not already exist.
+if not os.path.exists(TMP_DIR):
+  os.makedirs(TMP_DIR)
 
 class ModelFactory(AbstractModelFactory):
 
   def build(self, train_set):
-    # Create the TMP_DIR if it does not already exist.
-    if not os.path.exists(TMP_DIR):
-      os.makedirs(TMP_DIR)
 
     # Prepare the ARFF file that will train the model.
     arff_types = get_arff_type_dict(self.headers, self.all_data)
@@ -22,11 +22,12 @@ class ModelFactory(AbstractModelFactory):
     train_arff_file = model_file + ".train.arff"
     list_to_arff_file(arff_types, train_set, train_arff_file)
 
+    response_index = self.headers.index(self.response_header)
+
     # Call WEKA to generate the model file.
-    command = "java weka.classifiers.functions.SMO -t {} -d {} -p 0".format(train_arff_file, model_file)
+    command = "java weka.classifiers.functions.SMO -t {} -d {} -p 0 -c {}".format(train_arff_file, model_file, response_index + 1)
     run_weka_command(command)
 
-    response_index = self.headers.index(self.response_header)
     return ModelVisitor(model_file, arff_types, response_index)
 
 

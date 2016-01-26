@@ -1,10 +1,16 @@
 from AbstractModelFactory import AbstractModelFactory
 from AbstractModelVisitor import AbstractModelVisitor
 
+import os
 import numpy as np
 import tensorflow as tf
 
 TMP_DIR = "tmp/"
+CHECKPOINT_DIR = "tmp/tensorflow_checkpoints/"
+for directory in [TMP_DIR, CHECKPOINT_DIR]:
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+
 
 class ModelFactory(AbstractModelFactory):
 
@@ -41,48 +47,43 @@ class ModelFactory(AbstractModelFactory):
     cross_entropy = -tf.reduce_sum(y_*tf.log(y))
     train_step = tf.train.GradientDescentOptimizer(0.01).minimize(cross_entropy)
 
-    return ModelVisitor(train_step, train_matrix, train_labels, self.num_epochs, self.batch_size, y, y_, x, self.response_index, self.num_labels)
+    saver = tf.train.Saver()  # defaults to saving all variables
+
+    # Create a local session to run this computation.
+    with tf.Session() as tf_session:
+      # For the test data, hold the entire dataset in one constant node.
+      tf.initialize_all_variables().run()
+
+      # Iterate and train.
+      for step in xrange(self.num_epochs * train_size // self.batch_size):
+
+          offset = (step * self.batch_size) % train_size
+          batch_data = train_matrix[offset:(offset + self.batch_size), :]
+          batch_labels = train_labels[offset:(offset + self.batch_size)]
+          train_step.run(feed_dict={x: batch_data, y_: batch_labels})
+
+          saver.save(tf_session, CHECKPOINT_DIR + 'model.ckpt', global_step=step+1)
+
+    return ModelVisitor(saver, self.response_index, self.num_labels, x, y_, y)
 
 
 class ModelVisitor(AbstractModelVisitor):
 
-  def __init__(self, train_step, train_matrix, train_labels, num_epochs, batch_size, y, y_, x, response_index, num_labels):
-    self.train_step = train_step
-    self.train_labels = train_labels
-    self.train_matrix = train_matrix
-    self.num_epochs = num_epochs
-    self.batch_size = batch_size
-    self.y = y
+  def __init__(self, model_saver, response_index, num_labels, x, y_, y):
+    self.model_saver = model_saver
+    self.response_index = response_index
+    self.num_labels = num_labels
     self.x = x
     self.y_ = y_
-    self.response_index = response_index
-    self.train_size, _ = train_matrix.shape
-    self.num_labels = num_labels
+    self.y = y
 
   def test(self, test_set):
-    # Create a local session to run this computation.
-    with tf.Session():
-        # For the test data, hold the entire dataset in one constant node.
-        test_matrix, test_labels = list_to_tf_input(test_set, self.response_index, self.num_labels)
+    test_matrix, test_labels = list_to_tf_input(test_set, self.response_index, self.num_labels)
 
-        tf.constant(test_matrix)
-        # Run all the initializers to prepare the trainable parameters.
-        correct_prediction = tf.equal(tf.argmax(self.y,1), tf.argmax(self.y_,1))
-        accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
-
-        tf.initialize_all_variables().run()
-
-        # Iterate and train.
-        for step in xrange(self.num_epochs * self.train_size // self.batch_size):
-
-            offset = (step * self.batch_size) % self.train_size
-            batch_data = self.train_matrix[offset:(offset + self.batch_size), :]
-            batch_labels = self.train_labels[offset:(offset + self.batch_size)]
-            self.train_step.run(feed_dict={self.x: batch_data, self.y_: batch_labels})
-
-        print "Accuracy:", accuracy.eval(feed_dict={self.x:test_matrix, self.y_: test_labels})
-
-        predictions = tf.argmax(self.y, 1).eval(feed_dict={self.x: test_matrix, self.y_:test_labels})
+    with tf.Session() as tf_session:
+      ckpt = tf.train.get_checkpoint_state(CHECKPOINT_DIR)
+      self.model_saver.restore(tf_session, ckpt.model_checkpoint_path)
+      predictions = tf.argmax(self.y, 1).eval(feed_dict={self.x: test_matrix, self.y_:test_labels}, session=tf_session)
 
     # Produce a confusion matrix in a dictionary format from those predictions.
     conf_table = {}
