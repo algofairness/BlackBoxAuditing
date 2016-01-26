@@ -6,6 +6,7 @@ from CategoricalFeature import CategoricalFeature
 
 import random
 import math
+from copy import deepcopy
 
 class Repairer(AbstractRepairer):
   def repair(self, data_to_repair):
@@ -329,10 +330,29 @@ def test_categorical():
   ["z","B"]]
   #feature_to_repair is really feature to repair ON
   feature_to_repair = 0
-  repair_level = 1
-  repairer = Repairer(all_data, feature_to_repair, repair_level)
-  repaired_data = repairer.repair(all_data)
-  print repaired_data
+  repair_level=1
+  random.seed(10)
+  data_copy=deepcopy(all_data)
+  repairer = Repairer(data_copy, feature_to_repair, repair_level)
+  repaired_data=repairer.repair(data_copy)
+  print "categorical repaired_data altered?", repaired_data != all_data
+  correct_repaired_data = [ 
+  ["z","A"],
+  ["z","A"],
+  ["z","B"],
+  ["z","A"],
+  ["z","A"],
+  ["z","A"],
+  ["z","A"],
+  ["z","A"],
+  ["z","B"],
+  ["z","A"],
+  ["z","A"],
+  ["z","A"],
+  ["z","A"],
+  ["z","B"],
+  ["z","B"]]
+  print  "categorical repaired_data correct?", repaired_data == correct_repaired_data
 
 
 if __name__== "__main__":
