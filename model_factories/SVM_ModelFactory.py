@@ -1,5 +1,6 @@
 from AbstractModelFactory import AbstractModelFactory
 from AbstractModelVisitor import AbstractModelVisitor
+from collections import OrderedDict
 import subprocess
 import io
 import csv
@@ -7,13 +8,13 @@ import os
 
 WEKA_PATH = "/usr/share/java/weka.jar"
 TMP_DIR = "tmp/"
+# Create the TMP_DIR if it does not already exist.
+if not os.path.exists(TMP_DIR):
+  os.makedirs(TMP_DIR)
 
 class ModelFactory(AbstractModelFactory):
 
   def build(self, train_set):
-    # Create the TMP_DIR if it does not already exist.
-    if not os.path.exists(TMP_DIR):
-      os.makedirs(TMP_DIR)
 
     # Prepare the ARFF file that will train the model.
     arff_types = get_arff_type_dict(self.headers, self.all_data)
@@ -21,12 +22,12 @@ class ModelFactory(AbstractModelFactory):
     train_arff_file = model_file + ".train.arff"
     list_to_arff_file(arff_types, train_set, train_arff_file)
 
+    response_index = self.headers.index(self.response_header)
+
     # Call WEKA to generate the model file.
-    kernel = "-K \"weka.classifiers.functions.supportVector.Puk -O 0.5 -S 7\" "
-    command = "java weka.classifiers.functions.SMO -t {} -d {} {}-p 0".format(train_arff_file, model_file, kernel)
+    command = "java weka.classifiers.functions.SMO -t {} -d {} -p 0 -c {}".format(train_arff_file, model_file, response_index + 1)
     run_weka_command(command)
 
-    response_index = self.headers.index(self.response_header)
     return ModelVisitor(model_file, arff_types, response_index)
 
 
@@ -77,7 +78,7 @@ def run_weka_command(command):
 
 def get_arff_type_dict(headers, data):
   values = {header:[row[i] for row in data] for i, header in enumerate(headers)}
-  arff_type = {}
+  arff_type = OrderedDict()
   for header in headers:
     if all( map(lambda x: isinstance(x, float), values[header]) ):
       arff_type[header] = "numeric"
@@ -119,11 +120,11 @@ def test():
 
   factory = ModelFactory(all_data, headers, "response", name_prefix="test")
   model = factory.build(train_set)
-  print "SVMModelFactory -- factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor)
+  print "factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor)
 
   predictions = model.test(test_set)
   intended_predictions = {'A': {'A': 49}, 'C': {'B': 49}}
-  print "SVMModelFactory -- predicting correctly? -- ", predictions == intended_predictions
+  print "predicting correctly? -- ", predictions == intended_predictions
 
 if __name__=="__main__":
   test()

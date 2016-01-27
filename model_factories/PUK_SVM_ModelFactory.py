@@ -1,6 +1,5 @@
 from AbstractModelFactory import AbstractModelFactory
 from AbstractModelVisitor import AbstractModelVisitor
-from collections import OrderedDict
 import subprocess
 import io
 import csv
@@ -22,8 +21,11 @@ class ModelFactory(AbstractModelFactory):
     train_arff_file = model_file + ".train.arff"
     list_to_arff_file(arff_types, train_set, train_arff_file)
 
+    response_index = self.headers.index(self.response_header)
+
     # Call WEKA to generate the model file.
-    command = "java weka.classifiers.functions.SMO -t {} -d {} -p 0".format(train_arff_file, model_file)
+    kernel = "-K \"weka.classifiers.functions.supportVector.Puk -O 0.5 -S 7\" "
+    command = "java weka.classifiers.functions.SMO -t {} -d {} {}-p 0 -c {}".format(train_arff_file, model_file, kernel, response_index+1)
     run_weka_command(command)
 
     response_index = self.headers.index(self.response_header)
@@ -77,7 +79,7 @@ def run_weka_command(command):
 
 def get_arff_type_dict(headers, data):
   values = {header:[row[i] for row in data] for i, header in enumerate(headers)}
-  arff_type = OrderedDict()
+  arff_type = {}
   for header in headers:
     if all( map(lambda x: isinstance(x, float), values[header]) ):
       arff_type[header] = "numeric"
@@ -119,11 +121,11 @@ def test():
 
   factory = ModelFactory(all_data, headers, "response", name_prefix="test")
   model = factory.build(train_set)
-  print "SVMModelFactory -- factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor)
+  print "factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor)
 
   predictions = model.test(test_set)
   intended_predictions = {'A': {'A': 49}, 'C': {'B': 49}}
-  print "SVMModelFactory -- predicting correctly? -- ", predictions == intended_predictions
+  print "predicting correctly? -- ", predictions == intended_predictions
 
 if __name__=="__main__":
   test()
