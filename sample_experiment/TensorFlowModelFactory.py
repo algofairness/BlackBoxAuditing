@@ -17,7 +17,7 @@ class ModelFactory(AbstractModelFactory):
   def __init__(self, *args, **kwargs):
     super(ModelFactory, self).__init__(*args, **kwargs)
 
-    self.num_epochs = 100
+    self.num_epochs = 500
     self.batch_size = 50
 
     self.response_index = self.headers.index(self.response_header)
@@ -25,10 +25,9 @@ class ModelFactory(AbstractModelFactory):
     possible_values = set(row[self.response_index] for row in self.all_data)
     self.num_labels = len(possible_values)
 
-    self.hidden_layer_sizes = [50, 25] # If empty, no hidden layers are used.
+    self.hidden_layer_sizes = [50] # If empty, no hidden layers are used.
     self.layer_types = [tf.nn.softmax,  # Input Layer
-                        tf.nn.tanh,     # 1st Hidden Layer
-                        tf.nn.tanh]     # 2nd Hidden Layer
+                        tf.nn.softmax]     # 2nd Hidden Layer
 
   def build(self, train_set):
     train_matrix, train_labels = list_to_tf_input(train_set, self.response_index, self.num_labels)
@@ -48,9 +47,9 @@ class ModelFactory(AbstractModelFactory):
       prev_layer = layers[-1]
       next_layer_size = layer_sizes[i+1]
 
-      # Create and train a new layer.
-      W = tf.Variable(tf.zeros([layer_size, next_layer_size]))
-      b = tf.Variable(tf.zeros([next_layer_size]))
+      # Create a new layer with initially random weights and biases.
+      W = tf.Variable(tf.random_normal([layer_size, next_layer_size]))
+      b = tf.Variable(tf.random_normal([next_layer_size]))
       new_layer = layer_type(tf.matmul(prev_layer, W) + b)
 
       layers.append( new_layer )
@@ -124,16 +123,14 @@ def list_to_tf_input(data, response_index, num_labels):
   return matrix, labels_onehot
 
 def test():
-  headers = ["predictor 1", "predictor 2", "response"]
-  response = "response"
-
   tf_matrix, tf_onehot = list_to_tf_input([[0,0],[0,1],[0,2]], 1, 3)
   correct_matrix, correct_onehot = [[0],[0],[0]], [[1,0,0], [0,1,0], [0,0,1]]
   print "list_to_tf_input matrix correct? --",np.array_equal(tf_matrix, correct_matrix)
   print "list_to_tf_input onehot correct? --",np.array_equal(tf_onehot, correct_onehot)
 
+  headers = ["predictor 1", "predictor 2", "response"]
+  response = "response"
   train_set = [[i,0,0] for i in range(1,50)] + [[0,i,1] for i in range(1,50)]
-  # Purposefully replace class "B" with "C" so that we *should* fail them.
   test_set = [[i,0,0] for i in range(1,50)] + [[0,i,1] for i in range(1,50)]
   all_data = train_set + test_set
 
@@ -147,7 +144,6 @@ def test():
   predictions = model.test(test_set)
   intended_predictions = {0: {0: 49}, 1: {1: 49}}
   print "predicting correctly? -- ", predictions == intended_predictions
-  print predictions
 
 if __name__=="__main__":
   test()
