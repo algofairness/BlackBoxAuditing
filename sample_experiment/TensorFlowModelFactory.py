@@ -17,31 +17,45 @@ class ModelFactory(AbstractModelFactory):
   def __init__(self, *args, **kwargs):
     super(ModelFactory, self).__init__(*args, **kwargs)
 
-    self.num_epochs = 50
-    self.batch_size = 100
+    self.num_epochs = 100
+    self.batch_size = 50
 
     self.response_index = self.headers.index(self.response_header)
 
     possible_values = set(row[self.response_index] for row in self.all_data)
     self.num_labels = len(possible_values)
 
+    self.hidden_layer_sizes = [50, 25] # If empty, no hidden layers are used.
+    self.layer_types = [tf.nn.softmax,  # Input Layer
+                        tf.nn.tanh,     # 1st Hidden Layer
+                        tf.nn.tanh]     # 2nd Hidden Layer
+
   def build(self, train_set):
     train_matrix, train_labels = list_to_tf_input(train_set, self.response_index, self.num_labels)
     train_size, num_features = train_matrix.shape
 
-    # This is where training samples and labels are fed to the graph.
-    # These placeholder nodes will be fed a batch of training data at each
-    # training step using the {feed_dict} argument to the Run() call below.
-    x = tf.placeholder("float", shape=[None, num_features])
-    y_ = tf.placeholder("float", shape=[None, self.num_labels])
+    # Construct the layer architecture.
+    x = tf.placeholder("float", shape=[None, num_features]) # Input
+    y_ = tf.placeholder("float", shape=[None, self.num_labels]) # Output.
 
-    # Define and initialize the network.
+    layer_sizes = [num_features] + self.hidden_layer_sizes + [self.num_labels]
+    # Generate a layer for the input and for each additional hidden layer.
+    layers = [x] # Count the input as the first layer.
+    for i in xrange(len(layer_sizes)-1):
+      layer_size = layer_sizes[i]
+      layer_type = self.layer_types[i]
 
-    # These are the weights that inform how much each feature contributes to
-    # the classification.
-    W = tf.Variable(tf.zeros([num_features,self.num_labels]))
-    b = tf.Variable(tf.zeros([self.num_labels]))
-    y = tf.nn.softmax(tf.matmul(x, W) + b)
+      prev_layer = layers[-1]
+      next_layer_size = layer_sizes[i+1]
+
+      # Create and train a new layer.
+      W = tf.Variable(tf.zeros([layer_size, next_layer_size]))
+      b = tf.Variable(tf.zeros([next_layer_size]))
+      new_layer = layer_type(tf.matmul(prev_layer, W) + b)
+
+      layers.append( new_layer )
+
+    y = layers[-1]
 
     # Optimization.
     cross_entropy = -tf.reduce_sum(y_*tf.log(y))
@@ -99,8 +113,6 @@ class ModelVisitor(AbstractModelVisitor):
       else:
         conf_table[actual][guess] += 1
 
-    print conf_table
-
     return conf_table
 
 def list_to_tf_input(data, response_index, num_labels):
@@ -112,19 +124,25 @@ def list_to_tf_input(data, response_index, num_labels):
   return matrix, labels_onehot
 
 def test():
-  headers = ["predictor", "response"]
-  train_set = [[i, 0.0] for i in range(1,50)] + [[i, 1.0] for i in range(51,100)]
+  headers = ["predictor 1", "predictor 2", "response"]
+  response = "response"
+
+  train_set = [[i,0,0] for i in range(1,50)] + [[0,i,1] for i in range(1,50)]
   # Purposefully replace class "B" with "C" so that we *should* fail them.
-  test_set = [[i, 0.0] for i in range(1,50)] + [[i, 2.0] for i in range(51,100)]
+  test_set = [[i,0,0] for i in range(1,50)] + [[0,i,1] for i in range(1,50)]
   all_data = train_set + test_set
 
-  factory = ModelFactory(all_data, headers, "response", name_prefix="test")
+  factory = ModelFactory(all_data, headers, response, name_prefix="test")
+  print "factory settings valid? -- ",len(factory.hidden_layer_sizes)+1 == len(factory.layer_types)
+
   model = factory.build(train_set)
   print "factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor)
 
+
   predictions = model.test(test_set)
-  intended_predictions = {0.0: {0.0: 49}, 2.0: {1.0: 49}}
+  intended_predictions = {0: {0: 49}, 1: {1: 49}}
   print "predicting correctly? -- ", predictions == intended_predictions
+  print predictions
 
 if __name__=="__main__":
   test()
