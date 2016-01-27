@@ -336,7 +336,7 @@ def test_categorical():
   repairer = Repairer(data_copy, feature_to_repair, repair_level)
   repaired_data=repairer.repair(data_copy)
   print "categorical repaired_data altered?", repaired_data != all_data
-  correct_repaired_data = [ 
+  correct_repaired_data = [
   ["z","A"],
   ["z","A"],
   ["z","B"],

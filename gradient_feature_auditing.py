@@ -52,13 +52,15 @@ class GradientFeatureAuditor(object):
   def audit(self):
     output_files = []
 
-    for feature in self.headers:
-      if feature not in self.features_to_ignore:
+    for i, feature in enumerate(self.headers):
+      if i not in self.features_to_ignore:
         cleaned_feature_name = feature.replace(".","_").replace(" ","_")
         output_file = "{}.audit".format(cleaned_feature_name)
         full_filepath = self.OUTPUT_DIR + "/" + output_file
         self.audit_feature(feature, full_filepath)
         output_files.append(full_filepath)
+
+    print "Audit files dumped to: {}".format(self.OUTPUT_DIR)
 
     return output_files
 

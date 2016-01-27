@@ -33,9 +33,12 @@ def run():
   # Don't audit the response feature.
   features_to_ignore.append(response_header)
 
+  # Translate the headers into indexes for the auditor.
+  feature_indexes_to_ignore = [headers.index(f) for f in features_to_ignore]
+
   # Perform the Gradient Feature Audit and dump the audit results into files.
   auditor = GradientFeatureAuditor(model, headers, train_set, test_set,
-                                   features_to_ignore=features_to_ignore)
+                                   features_to_ignore=feature_indexes_to_ignore)
   audit_filenames = auditor.audit()
 
   # Graph the audit files.
