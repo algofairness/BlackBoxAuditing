@@ -41,13 +41,13 @@ class ModelFactory(AbstractModelFactory):
     # the classification.
     W = tf.Variable(tf.zeros([num_features,self.num_labels]))
     b = tf.Variable(tf.zeros([self.num_labels]))
-    y = tf.nn.softmax(tf.matmul(x,W) + b)
+    y = tf.nn.softmax(tf.matmul(x, W) + b)
 
     # Optimization.
     cross_entropy = -tf.reduce_sum(y_*tf.log(y))
     train_step = tf.train.GradientDescentOptimizer(0.01).minimize(cross_entropy)
 
-    saver = tf.train.Saver()  # defaults to saving all variables
+    saver = tf.train.Saver()  # Defaults to saving all variables.
 
     # Create a local session to run this computation.
     with tf.Session() as tf_session:
@@ -57,12 +57,13 @@ class ModelFactory(AbstractModelFactory):
       # Iterate and train.
       for step in xrange(self.num_epochs * train_size // self.batch_size):
 
-          offset = (step * self.batch_size) % train_size
-          batch_data = train_matrix[offset:(offset + self.batch_size), :]
-          batch_labels = train_labels[offset:(offset + self.batch_size)]
-          train_step.run(feed_dict={x: batch_data, y_: batch_labels})
+        offset = (step * self.batch_size) % train_size
+        batch_data = train_matrix[offset:(offset + self.batch_size), :]
+        batch_labels = train_labels[offset:(offset + self.batch_size)]
+        train_step.run(feed_dict={x: batch_data, y_: batch_labels})
 
-          saver.save(tf_session, CHECKPOINT_DIR + 'model.ckpt', global_step=step+1)
+        # Save the model file each step.
+        saver.save(tf_session, CHECKPOINT_DIR + 'model.ckpt', global_step=step+1)
 
     return ModelVisitor(saver, self.response_index, self.num_labels, x, y_, y)
 
