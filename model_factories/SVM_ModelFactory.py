@@ -14,6 +14,12 @@ if not os.path.exists(TMP_DIR):
 
 class ModelFactory(AbstractModelFactory):
 
+  def __init__(self, *args, **kwargs):
+    super(ModelFactory, self).__init__(*args,**kwargs)
+
+    self.kernel = "" # Use Weka's default linear classifier.
+    #self.kernel = "weka.classifiers.functions.supportVector.Puk -O 0.5 -S 7"
+
   def build(self, train_set):
 
     # Prepare the ARFF file that will train the model.
@@ -26,6 +32,11 @@ class ModelFactory(AbstractModelFactory):
 
     # Call WEKA to generate the model file.
     command = "java weka.classifiers.functions.SMO -t {} -d {} -p 0 -c {}".format(train_arff_file, model_file, response_index + 1)
+
+    # If a kernel option is listed, include it in the command.
+    if self.kernel:
+      command += " -K \"{}\"".format(self.kernel)
+
     run_weka_command(command)
 
     return ModelVisitor(model_file, arff_types, response_index)

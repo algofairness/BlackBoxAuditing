@@ -1,4 +1,4 @@
-from repair.GeneralRepairer import Repairer #TODO: Build the GeneralRepairer...
+from repair.GeneralRepairer import Repairer
 import csv
 import time
 import os
@@ -12,7 +12,14 @@ class GradientFeatureAuditor(object):
     self.test_set = test_set
     self.headers = headers
     self.features_to_ignore = features_to_ignore
-    self.OUTPUT_DIR = "audits"
+    self.AUDIT_DIR = "audits"
+    self.OUTPUT_DIR = "{}/{}".format(self.AUDIT_DIR, time.time())
+
+    # Create any output directories that don't exist.
+    for directory in [self.AUDIT_DIR, self.OUTPUT_DIR]:
+      if not os.path.exists(directory):
+        os.makedirs(directory)
+
 
   def audit_feature(self, feature_to_repair, output_file, save_repaired_data=True):
     conf_tables = []
@@ -48,7 +55,7 @@ class GradientFeatureAuditor(object):
     for feature in self.headers:
       if feature not in self.features_to_ignore:
         cleaned_feature_name = feature.replace(".","_").replace(" ","_")
-        output_file = "{}_{}.audit".format(cleaned_feature_name, time.time())
+        output_file = "{}.audit".format(cleaned_feature_name)
         full_filepath = self.OUTPUT_DIR + "/" + output_file
         self.audit_feature(feature, full_filepath)
         output_files.append(full_filepath)
@@ -81,14 +88,14 @@ def test():
   gfa = GradientFeatureAuditor(model, headers, train, test, repair_steps=repair_steps)
   output_files = gfa.audit()
 
-  print "GradientFeatureAuditor -- correct # of audit files produced? --", len(output_files) == len(train[0]) # The number of features.
+  print "correct # of audit files produced? --", len(output_files) == len(train[0]) # The number of features.
 
 
   with open(output_files[0]) as f:
-    print "GradientFeatureAuditor -- correct # of lines per file? --", len(f.readlines()) == repair_steps+2 # +1 for the header-line and +1 for the level=0 step.
+    print "correct # of lines per file? --", len(f.readlines()) == repair_steps+2 # +1 for the header-line and +1 for the level=0 step.
 
   files_not_empty = all(os.stat(f).st_size!=0 for f in output_files)
-  print "GradientFeatureAuditor -- all audit files not empty? --", files_not_empty
+  print "all audit files not empty? --", files_not_empty
 
 if __name__=="__main__":
   test()
