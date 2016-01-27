@@ -127,6 +127,11 @@ def test():
   headers = ["predictor 1", "predictor 2", "response"]
   response = "response"
 
+  tf_matrix, tf_onehot = list_to_tf_input([[0,0],[0,1],[0,2]], 1, 3)
+  correct_matrix, correct_onehot = [[0],[0],[0]], [[1,0,0], [0,1,0], [0,0,1]]
+  print "list_to_tf_input matrix correct? --",np.array_equal(tf_matrix, correct_matrix)
+  print "list_to_tf_input onehot correct? --",np.array_equal(tf_onehot, correct_onehot)
+
   train_set = [[i,0,0] for i in range(1,50)] + [[0,i,1] for i in range(1,50)]
   # Purposefully replace class "B" with "C" so that we *should* fail them.
   test_set = [[i,0,0] for i in range(1,50)] + [[0,i,1] for i in range(1,50)]
