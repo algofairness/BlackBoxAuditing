@@ -14,7 +14,7 @@ def load_data():
         data[i][j] = correct_type(row[j])
 
     train = data[:len(data)/2]
-    test = data[:len(data)/2]
+    test = data[len(data)/2:]
   return headers, train, test
 
 

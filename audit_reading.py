@@ -55,17 +55,21 @@ def graph_audit(filename, measurers, output_image_file):
     for i, repair_level in enumerate(x_axis):
       writer.writerow([repair_level] + [y_axis[i] for y_axis in y_axes])
 
-
 def graph_audits(filenames, measurer, output_image_file):
+  features = []
+  y_axes = []
   for filename in filenames:
     with open(filename) as audit_file:
       header_line = audit_file.readline()[:-1] # Remove the trailing endline.
-      feature = header_line[header_line.index(":")+1:]
+      feature = header_line[header_line.index(":")+2:]
 
     confusion_matrices = load_audit_confusion_matrices(filename)
     x_axis = [repair_level for repair_level, _ in confusion_matrices]
     y_axis = [measurer(matrix) for _, matrix in confusion_matrices]
     plt.plot(x_axis, y_axis, label=feature)
+
+    features.append(feature)
+    y_axes.append(y_axis)
 
   # Format and save the graph to an image file.
   plt.title(measurer.__name__)
@@ -74,6 +78,15 @@ def graph_audits(filenames, measurer, output_image_file):
   plt.legend()
   plt.savefig(output_image_file)
   plt.clf() # Clear the entire figure so future plots are empty.
+
+  # Save the data used to generate that image file.
+  with open(output_image_file + ".data", "w") as f:
+    writer = csv.writer(f)
+    headers = ["Repair Level"] + features
+    writer.writerow(headers)
+    for i, repair_level in enumerate(x_axis):
+      writer.writerow([repair_level] + [y_axis[i] for y_axis in y_axes])
+
 
 
 def rank_audit_files(filenames, measurer):
