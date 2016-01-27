@@ -22,6 +22,7 @@ class ModelFactory(AbstractModelFactory):
   def build(self, train_set):
     train_matrix, train_labels = list_to_tf_input(train_set, self.response_index, self.num_labels)
     train_size, num_features = train_matrix.shape
+    layer1_size = 100
 
     # This is where training samples and labels are fed to the graph.
     # These placeholder nodes will be fed a batch of training data at each
@@ -33,9 +34,16 @@ class ModelFactory(AbstractModelFactory):
 
     # These are the weights that inform how much each feature contributes to
     # the classification.
-    W = tf.Variable(tf.zeros([num_features,self.num_labels]))
-    b = tf.Variable(tf.zeros([self.num_labels]))
-    y = tf.nn.softmax(tf.matmul(x,W) + b)
+
+    # Calculate the first hidden layer
+    W_hidden1 = tf.Variable(tf.zeros([num_features,layer1_size]))
+    b_hidden1 = tf.Variable(tf.zeros([layer1_size]))
+    hidden1 = tf.nn.softmax(tf.matmul(x,W_hidden1) + b_hidden1)
+
+    # Calculate the output
+    W_hidden2 = tf.Variable(tf.zeros([layer1_size,self.num_labels]))
+    b_hidden2 = tf.Variable(tf.zeros([self.num_labels]))
+    y = tf.nn.softmax(tf.matmul(hidden1,W_hidden2) + b_hidden2)
 
     # Optimization.
     cross_entropy = -tf.reduce_sum(y_*tf.log(y))
