@@ -276,6 +276,7 @@ def test():
   test_minimal()
   test_ricci()
   test_categorical()
+  #test_arrests()
 
 def test_minimal():
   class_1 = [[float(i),"A"] for i in xrange(0, 100)]
@@ -354,6 +355,25 @@ def test_categorical():
   ["z","B"]]
   print  "categorical repaired_data correct?", repaired_data == correct_repaired_data
 
+def test_arrests():
+  import csv
+  filepath = "test_data/arrests_full_categorical.csv"
+  ignored_features = [] # Identifier columns and response columns.
+  feature_to_repair = 0
+  repair_level = 1
+
+  data = []
+  with open(filepath) as f:
+    for row in csv.reader(f):
+      data.append(row)
+
+  data.pop(0)
+
+  repairer = Repairer(data, feature_to_repair, repair_level, features_to_ignore=ignored_features)
+  repaired_data = repairer.repair(data)
+
+  print "no rows lost:", len(repaired_data) == len(data)
+  print "features repaired for level=1.0:", repaired_data != data
 
 if __name__== "__main__":
   test()
