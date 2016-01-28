@@ -15,6 +15,7 @@ def load_data():
 
     train = data[:len(data)/2]
     test = data[len(data)/2:]
+
   return headers, train, test
 
 

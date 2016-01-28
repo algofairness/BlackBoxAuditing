@@ -108,9 +108,9 @@ class Repairer(AbstractRepairer):
 
     # Find the combination with the fewest data points. This will determine what the quantiles are.
     num_quantiles = min(filter(lambda x: x, sizes.values()))
+    quantile_unit = 1.0/num_quantiles
 
     # Repair Data and retrieve the results
-    quantile_unit = 1.0/num_quantiles
     for col_id in filter(lambda x: col_type_dict[x] == "Y", col_ids):
       # which bucket value we're repairing
       group_offsets = {group: 0 for group in all_stratified_groups}

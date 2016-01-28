@@ -39,7 +39,7 @@ class GradientFeatureAuditor(object):
           for row in [self.headers]+rep_test:
             writer.writerow(row)
 
-      conf_table = self.model.test(rep_test)
+      conf_table = self.model.test(rep_test) #TODO
 
       conf_tables.append( (repair_level, conf_table) )
       repair_level += repair_increase_per_step

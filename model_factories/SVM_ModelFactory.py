@@ -93,6 +93,8 @@ def get_arff_type_dict(headers, data):
   for header in headers:
     if all( map(lambda x: isinstance(x, float), values[header]) ):
       arff_type[header] = "numeric"
+    elif all( map(lambda x: isinstance(x, bool), values[header]) ):
+      arff_type[header] = [True,False]
     elif all( map(lambda x: isinstance(x, int), values[header]) ):
       arff_type[header] = "numeric"
     else:

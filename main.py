@@ -1,7 +1,7 @@
 
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-from ricci_experiment.load_data import load_data
+from experiments.ricci.load_data import load_data
 from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy
 response_header = "Class"
@@ -37,7 +37,7 @@ def run():
   feature_indexes_to_ignore = [headers.index(f) for f in features_to_ignore]
 
   # Perform the Gradient Feature Audit and dump the audit results into files.
-  auditor = GradientFeatureAuditor(model, headers, train_set, all_data, #TODO
+  auditor = GradientFeatureAuditor(model, headers, train_set, test_set,
                                    features_to_ignore=feature_indexes_to_ignore)
   audit_filenames = auditor.audit()
 
