@@ -287,10 +287,10 @@ def get_mode(values):
 
 
 def test():
-  #test_minimal()
-  #test_ricci()
+  test_minimal()
+  test_ricci()
   test_categorical()
-  #test_arrests()
+  test_arrests()
 
 def test_minimal():
   class_1 = [[float(i),"A"] for i in xrange(0, 100)]
@@ -308,7 +308,7 @@ def test_minimal():
 
 def test_ricci():
   import csv
-  filepath = "test_data/RicciDataMod.csv"
+  filepath = "../test_data/RicciDataMod.csv"
   ignored_features = [0, 5] # Identifier columns and response columns.
   feature_to_repair = 3
   repair_level = 0.5
@@ -350,7 +350,6 @@ def test_categorical():
   data_copy=deepcopy(all_data)
   repairer = Repairer(data_copy, feature_to_repair, repair_level)
   repaired_data=repairer.repair(data_copy)
-  print "categorical fully repaired_data altered?", repaired_data != all_data
   correct_repaired_data = [
   ["z","A"],
   ["z","A"],
@@ -367,18 +366,17 @@ def test_categorical():
   ["z","A"],
   ["z","B"],
   ["z","B"]]
+  print "categorical fully repaired_data altered?", repaired_data != all_data
   print  "categorical fully repaired_data correct?", repaired_data == correct_repaired_data
   repair_level=.1
   random.seed(10)
   repairer = Repairer(data_copy, feature_to_repair, repair_level)
   part_repaired_data=repairer.repair(data_copy) 
-  print part_repaired_data
-  print "categorical partially repaired_data altered?", part_repaired_data != all_data
   correct_part_repaired_data = [
   ["z","A"],
   ["z","A"],
   ["z","B"],
-  ["z","A"],
+  ["z","B"],
   ["z","A"],
   ["z","A"],
   ["z","A"],
@@ -390,7 +388,8 @@ def test_categorical():
   ["z","A"],
   ["z","B"],
   ["z","B"]]
-  print  "categorical partially repaired_data correct?", part_repaired_data == correct_repaired_data
+  print "categorical partially repaired_data altered?", part_repaired_data != all_data
+  print  "categorical partially repaired_data correct?", part_repaired_data == correct_part_repaired_data
 def test_arrests():
   import csv
   filepath = "../test_data/arrests_full_categorical.csv"
@@ -409,7 +408,7 @@ def test_arrests():
   repaired_data = repairer.repair(data)
 
   print "no rows lost:", len(repaired_data) == len(data)
-  print "features repaired for level=1.0:", repaired_data != data
+  print "features repaired for repair level ", str(repair_level),":", repaired_data != data
 
 if __name__== "__main__":
   test()
