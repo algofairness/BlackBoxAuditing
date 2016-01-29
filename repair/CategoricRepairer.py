@@ -103,6 +103,7 @@ class Repairer(AbstractRepairer):
     categories = {}
     categories_count = {}
     desired_categories_count = {}
+    desired_categories_dist = {}
     group_size = {}
     categories_count_norm = {}
 
@@ -181,9 +182,6 @@ class Repairer(AbstractRepairer):
               categories_count[col_id][category].append(count)
             else:
               categories_count[col_id][category].append(0)
-
-        for key,value in bin_index_dict.items():
-           categories[col_id].append(key)
         for category in categories[col_id]:
           categories_count_norm[col_id][category]=[0]*len(categories_count[col_id][category])
           for i in range(len(categories_count[col_id][category])):
@@ -192,19 +190,21 @@ class Repairer(AbstractRepairer):
             categories_count_norm[col_id][category][i] = orig_count* (1.0/group_size[col_id][group])
         categories_count[col_id]={category: [] for category in categories[col_id]}
         desired_categories_count[col_id]={}
+        desired_categories_dist[col_id]={}
         median = {}
         for category in categories[col_id]:
           median[category] = sorted(categories_count_norm[col_id][category])[len(categories_count_norm[col_id][category])/2]
         for i in range(len(all_stratified_groups)):
           group = all_stratified_groups[i]
           desired_categories_count[col_id][group] = {}
+          desired_categories_dist[col_id][group] = {}
           for category in categories[col_id]:
             med=median[category]
             size = group_size[col_id][group]
             temp=(1 - self.repair_level)*categories_count_norm[col_id][category][i] + self.repair_level*med
             estimate = math.floor(temp*(1.0*size))
             desired_categories_count[col_id][group][category] = estimate
-
+            desired_categories_dist[col_id][group][category] = temp
         total_overflow=0
         total_overflows={}
         for group in all_stratified_groups:
@@ -217,17 +217,18 @@ class Repairer(AbstractRepairer):
           features[col_id][group] = new_feature
 
         assigned_overflow = {}
-        distribution = {}
-        for i in range(len(all_stratified_groups)):
-          group = all_stratified_groups[i]
-          distribution[group] = {}
-          for j in range(len(categories[col_id])):
-            category = categories[col_id][j]
-            distribution[group][j] = categories_count_norm[col_id][category][i]
+        distribution = deepcopy(desired_categories_dist) #distribution is desired_categories_dist but with the category counts as proportions and listed
+        for group in all_stratified_groups:
+          dist=[]
+          for category in categories[col_id]:
+            dist.append(desired_categories_dist[col_id][group][category])
+          for i in range(len(dist)):
+            dist[i] = dist[i]/float(sum(dist))
+          distribution[col_id][group] = dist
         for group in all_stratified_groups:
           assigned_overflow[group] = {}
           for i in range(int(total_overflows[group])):
-            dist = distribution[group]
+            dist = distribution[col_id][group]
             number = random.uniform(0, 1)
             cat_index = 0
             tally = 0
@@ -273,8 +274,8 @@ def get_mode(values):
 
 
 def test():
-  test_minimal()
-  test_ricci()
+  #test_minimal()
+  #test_ricci()
   test_categorical()
   #test_arrests()
 
@@ -336,7 +337,7 @@ def test_categorical():
   data_copy=deepcopy(all_data)
   repairer = Repairer(data_copy, feature_to_repair, repair_level)
   repaired_data=repairer.repair(data_copy)
-  print "categorical repaired_data altered?", repaired_data != all_data
+  print "categorical fully repaired_data altered?", repaired_data != all_data
   correct_repaired_data = [
   ["z","A"],
   ["z","A"],
@@ -353,11 +354,33 @@ def test_categorical():
   ["z","A"],
   ["z","B"],
   ["z","B"]]
-  print  "categorical repaired_data correct?", repaired_data == correct_repaired_data
-
+  print  "categorical fully repaired_data correct?", repaired_data == correct_repaired_data
+  repair_level=.1
+  random.seed(10)
+  repairer = Repairer(data_copy, feature_to_repair, repair_level)
+  part_repaired_data=repairer.repair(data_copy) 
+  print part_repaired_data
+  print "categorical partially repaired_data altered?", part_repaired_data != all_data
+  correct_part_repaired_data = [
+  ["z","A"],
+  ["z","A"],
+  ["z","B"],
+  ["z","A"],
+  ["z","A"],
+  ["z","A"],
+  ["z","A"],
+  ["z","A"],
+  ["z","B"],
+  ["z","A"],
+  ["z","A"],
+  ["z","A"],
+  ["z","A"],
+  ["z","B"],
+  ["z","B"]]
+  print  "categorical partially repaired_data correct?", part_repaired_data == correct_repaired_data
 def test_arrests():
   import csv
-  filepath = "test_data/arrests_full_categorical.csv"
+  filepath = "../test_data/arrests_full_categorical.csv"
   ignored_features = [] # Identifier columns and response columns.
   feature_to_repair = 0
   repair_level = 1
