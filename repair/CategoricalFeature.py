@@ -90,6 +90,7 @@ class CategoricalFeature:
 
 
 def test():
+  random.seed(10)
   test_feature = CategoricalFeature(["A","B","C","D","D","D","C","B","A","C","B","A"])
   test_feature.desired_category_count = {"A": 1, "B": 2, "C": 2, "D": 3}
   DG = test_feature.create_graph()
@@ -104,9 +105,10 @@ def test():
   (8, 't', {'weight': 0}), 
   ('s', 0, {'capacity': 3, 'weight': 0}), ('s', 1, {'capacity': 3, 'weight': 0}),
   ('s', 2, {'capacity': 3, 'weight': 0}), ('s', 3, {'capacity': 3, 'weight': 0})]
-
-  print "CategoricalFeature has correct number of categories?", 4==test_feature.num_bins
+  new_data = [0, 0, 'C', 'D', 'D', 'D', 'C', 'B', 'A', 0, 'B', 0]
+  print "CategoricalFeature has correct number of categories?", 4 == test_feature.num_bins
   print "Directed Graph has correct edges and edge weights?", DG.edges(data=True) == edges
   print "mincostFlow has correct overflow?", overflow == 4 
+  print "mincostFlow has correct output data?", new_feature.data == new_data 
 
 if __name__=="__main__": test()
