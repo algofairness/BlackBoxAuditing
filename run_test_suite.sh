@@ -8,6 +8,9 @@
 #   ...
 #
 
+# Add the current directory to the PYTHONPATH so imports start at the project root.
+export PYTHONPATH="${PYTHONPATH}:`pwd`"
+
 echo "#########################################################################"
 echo "### Running all *.py files now. #########################################"
 echo "### No tests should be False nor should there be Traceback exceptions. ##"

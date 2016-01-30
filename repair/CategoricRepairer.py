@@ -330,23 +330,17 @@ def test_categorical():
   print  "categorical partially repaired_data correct?", part_repaired_data == correct_part_repaired_data
 
 
-def test_arrests(): #TODO: This should become an experiment.arrests.load_data file.
-  import csv
-  filepath = "test_data/arrests_full_categorical.csv"
+def test_arrests():
+  from experiments.arrests.load_data import load_data
   feature_to_repair = 0
   repair_level = 1
+  _, train_data, test_data = load_data()
 
-  data = []
-  with open(filepath) as f:
-    for row in csv.reader(f):
-      data.append(row)
-  data.pop(0)
+  repairer = Repairer(train_data+test_data, feature_to_repair, repair_level)
+  repaired_data = repairer.repair(test_data)
 
-  repairer = Repairer(data, feature_to_repair, repair_level)
-  repaired_data = repairer.repair(data)
-
-  print "no rows lost:", len(repaired_data) == len(data)
-  print "features repaired for repair level '{}': {}".format(repair_level, repaired_data != data)
+  print "no rows lost:", len(repaired_data) == len(test_data)
+  print "features changed for repair level '{}': {}".format(repair_level, repaired_data != test_data)
 
 if __name__== "__main__":
   test()
