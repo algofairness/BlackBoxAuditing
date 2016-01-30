@@ -46,18 +46,11 @@ class Repairer(AbstractRepairer):
       else:
         repair_types[col_id] = str
 
-    # Create unique value structures:
-    # When performing repairs, we choose median values. If repair is partial, then values will
-    # be modified to some intermediate value between the original and the median value. However,
-    # the partially repaired value will only be chosen out of values that exist in the data set.
-    # This prevents choosing values that might not make any sense in the data's context.
-    # To do this, for each column, we need to sort all unique values and create two data structures:
-    # a list of values, and a dict mapping values to their positions in that list. Example:
-    #   There are unique_col_vals[col] = [1, 2, 5, 7, 10, 14, 20] in the column. A value 2 must be
-    #   repaired to 14, but the user requests that data only be repaired by 50%. We do this by
-    #   finding the value at the right index:
-    #   index_lookup[col][2] = 1; index_lookup[col][14] = 5; this tells us that
-    #   unique_col_vals[col][3] = 7 is 50% of the way from 2 to 14.
+    """
+    Create unique value structures: When performing repairs, we choose median values. If repair is partial, then values will be modified to some intermediate value between the original and the median value. However, the partially repaired value will only be chosen out of values that exist in the data set.  This prevents choosing values that might not make any sense in the data's context.  To do this, for each column, we need to sort all unique values and create two data structures: a list of values, and a dict mapping values to their positions in that list. Example: There are unique_col_vals[col] = [1, 2, 5, 7, 10, 14, 20] in the column. A value 2 must be repaired to 14, but the user requests that data only be repaired by 50%. We do this by finding the value at the right index:
+       index_lookup[col][2] = 1; index_lookup[col][14] = 5; this tells us that
+       unique_col_vals[col][3] = 7 is 50% of the way from 2 to 14.
+    """
     unique_col_vals = {}
     index_lookup = {}
     for col_id in not_I_col_ids:
@@ -68,11 +61,11 @@ class Repairer(AbstractRepairer):
       # look up a value, get its position
       index_lookup[col_id] = {col_values[i]: i for i in range(len(col_values))}
 
-    # Make a list of unique values per each stratified column.
-    # Then make a list of combinations of stratified groups. Example: race and gender cols are stratified:
-    # [(white, female), (white, male), (black, female), (black, male)]
-    # The combinations are tuples because they can be hashed and used as dictionary keys.
-    # From these, find the sizes of these groups.
+    """
+    Make a list of unique values per each stratified column.  Then make a list of combinations of stratified groups. Example: race and gender cols are stratified:
+        [(white, female), (white, male), (black, female), (black, male)]
+    The combinations are tuples because they can be hashed and used as dictionary keys.  From these, find the sizes of these groups.
+    """
     unique_stratify_values = [unique_col_vals[i] for i in safe_stratify_cols]
     all_stratified_groups = list(product(*unique_stratify_values))
     # look up a stratified group, and get a list of indices corresponding to that group in the data
@@ -95,8 +88,10 @@ class Repairer(AbstractRepairer):
     # the data structure would look like: {("Black", "Woman"): {Score1: [(70,2),(90,4)]}}
     stratified_group_data = {group: {} for group in all_stratified_groups}
     for group in all_stratified_groups:
-      for col_id in data_dict:
-        stratified_col_values = sorted([(data_dict[col_id][i], i) for i in stratified_group_indices[group]], key=lambda vals: vals[0])
+      for col_id, col_dict in data_dict.items():
+        stratified_col_values = [(i, col_dict[i]) for i in stratified_group_indices[group]]
+
+        stratified_col_values.sort(key=lambda vals: (vals[1],vals[0]))
         stratified_group_data[group][col_id] = stratified_col_values
 
     features = {}
@@ -107,39 +102,42 @@ class Repairer(AbstractRepairer):
     categories_count_norm = {}
 
     # Find the combination with the fewest data points. This will determine what the quantiles are.
-    num_quantiles = min(filter(lambda x: x, sizes.values()))
+    num_quantiles = min(filter(lambda x: x, sizes.values())) # Remove 0s
     quantile_unit = 1.0/num_quantiles
 
     # Repair Data and retrieve the results
     for col_id in filter(lambda x: col_type_dict[x] == "Y", col_ids):
-      # which bucket value we're repairing
+      # Which bucket value we're repairing
       group_offsets = {group: 0 for group in all_stratified_groups}
       col = data_dict[col_id]
 
       if repair_types[col_id] in {int, float}:
         for quantile in range(num_quantiles):
-          values_at_quantile = []
+          median_at_quantiles = []
           indices_per_group = {}
+
           for group in all_stratified_groups:
             offset = int(round(group_offsets[group]*sizes[group]))
             number_to_get = int(round((group_offsets[group] + quantile_unit)*sizes[group]) - offset)
             group_offsets[group] += quantile_unit
 
-            # get data at this quantile from this Y column such that stratified X = group
+            # Get data at this quantile from this Y column such that stratified X = group
             group_data_at_col = stratified_group_data[group][col_id]
-            # (val, index) -> tuple
-            indices_per_group[group] = [x[1] for x in group_data_at_col[offset:offset+number_to_get]]
+            offset_data = group_data_at_col[offset:offset+number_to_get]
+            indices_per_group[group] = [index for index, _ in offset_data]
+            values = sorted([float(val) for _, val in offset_data])
 
-            values =  [x[0] for x in group_data_at_col[offset:offset+number_to_get]]
-          # Find this group's median value at this quantile
-            values_at_quantile.append(sorted([float(x) for x in values])[len(values)/2])
+            # Find this group's median value at this quantile
+            median = values[len(values)/2]
+            median_at_quantiles.append(median)
 
           # Find the median value of all groups at this quantile (chosen from each group's medians)
-          median = sorted(values_at_quantile)[len(values_at_quantile)/2]
+          median = sorted(median_at_quantiles)[len(median_at_quantiles)/2]
           median_val_pos = index_lookup[col_id][median]
 
           # Update values to repair the dataset.
           for group in all_stratified_groups:
+            if group != ("W",): continue
             for index in indices_per_group[group]:
               original_value = col[index]
 
@@ -156,18 +154,13 @@ class Repairer(AbstractRepairer):
         feature = CategoricalFeature(col)
         categories_count_norm[col_id] = {}
         bin_index_dict = feature.bin_index_dict
-        categories[col_id] = []
-        for key,value in bin_index_dict.items():
-           categories[col_id].append(key)
+        categories[col_id] = bin_index_dict.keys()
 
         group_size[col_id] = {}
         features[col_id] = {}
         for group in all_stratified_groups:
-          #values is a list like: [('A',0),('A',1),('B',2),('B',3),('B',4)], where the second element in the tuple is the index of the observation
           tuple_values = stratified_group_data[group][col_id]
-          values=[]
-          for tuple_value in tuple_values:
-            values.append(tuple_value[0])
+          values=[value for _, value in tuple_values]
           feature = CategoricalFeature(values)
           group_size[col_id][group] = len(feature.data)
           features[col_id][group] = feature
@@ -176,14 +169,12 @@ class Repairer(AbstractRepairer):
         for group in all_stratified_groups:
           category_count = features[col_id][group].category_count
           for category in categories[col_id]:
-            if category in category_count:
-              count=category_count[category]
-              categories_count[col_id][category].append(count)
-            else:
-              categories_count[col_id][category].append(0)
+            count = category_count[category] if category in category_count else 0
+            categories_count[col_id][category].append(count)
 
         for key,value in bin_index_dict.items():
            categories[col_id].append(key)
+
         for category in categories[col_id]:
           categories_count_norm[col_id][category]=[0]*len(categories_count[col_id][category])
           for i in range(len(categories_count[col_id][category])):
@@ -218,11 +209,9 @@ class Repairer(AbstractRepairer):
 
         assigned_overflow = {}
         distribution = {}
-        for i in range(len(all_stratified_groups)):
-          group = all_stratified_groups[i]
+        for i, group in enumerate(all_stratified_groups):
           distribution[group] = {}
-          for j in range(len(categories[col_id])):
-            category = categories[col_id][j]
+          for j, category in enumerate(categories[col_id]):
             distribution[group][j] = categories_count_norm[col_id][category][i]
         for group in all_stratified_groups:
           assigned_overflow[group] = {}
@@ -231,7 +220,7 @@ class Repairer(AbstractRepairer):
             number = random.uniform(0, 1)
             cat_index = 0
             tally = 0
-            for j in range(len(dist)):
+            for j, value in enumerate(dist):
               value=dist[j]
               if number < (tally+value):
                 cat_index = j
@@ -240,8 +229,7 @@ class Repairer(AbstractRepairer):
             assigned_overflow[group][i] = categories[col_id][cat_index]
         #Actually do the assignment
           count = 0
-          for i in range(len(features[col_id][group].data)):
-            value = (features[col_id][group].data)[i]
+          for i, value in enumerate(features[col_id][group].data):
             if value ==0:
               (features[col_id][group].data)[i] = assigned_overflow[group][count]
               count += 1
@@ -276,6 +264,10 @@ def test():
   test_minimal()
   test_ricci()
   test_categorical()
+  test_repeated_values()
+
+def test_repeated_values():
+  print False #TODO: Add this test (which is why Ricci broke).
 
 def test_minimal():
   class_1 = [[float(i),"A"] for i in xrange(0, 100)]
