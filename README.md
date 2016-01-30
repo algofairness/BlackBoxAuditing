@@ -18,6 +18,14 @@ Note: if a test requires reading data from the `test_data` file, it should impor
 
 The best way to create a model would be to use a ModelFactory and ModelVisitors. A ModelVisitor should be thought of as a wrapper that knows how to load a model of a given type and communicate with that model file in order to output predicted values of some test dataset. A ModelFactory simply knows how to "build" a ModelVisitor based on some provided training data. Check out the "Abstract" files in the `sample_experiment` directory for outlines of what these two classes should do; similarly, check out the "SVMModelFactory" files in the `sample_experiment` subdirectory for examples that use WEKA to create model files and produce predictions.
 
+# Setup and Installation
+
+Many of the ModelVisitors rely on [Weka](http://www.cs.waikato.ac.nz/ml/weka/). Similarly, we use [TensorFlow]() for network-based machine learning. Any Python libraries that need to be installed should be included in the `requirements.txt` file.
+
+- Weka 3.6.13 [download](http://www.cs.waikato.ac.nz/ml/weka/downloading.html)
+- TensorFlow 3.6.0 [download](https://www.tensorflow.org/versions/0.6.0/get_started/os_setup.html)
+
+
 # Sources
 
 DRP information (and the dataset) can be found at [Dark Reactions Project Moodle Group](https://moodlegroups.haverford.edu/course/view.php?id=65).
