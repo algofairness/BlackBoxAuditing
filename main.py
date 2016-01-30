@@ -15,7 +15,7 @@ verbose = True # Set to `True` to allow for more detailed status updates.
 # NOTE: You should not need to change anything below this point.
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-from logging import vprint
+from loggers import vprint
 from GradientFeatureAuditor import GradientFeatureAuditor
 from audit_reading import graph_audit, graph_audits, rank_audit_files
 
