@@ -17,8 +17,8 @@ class ModelFactory(AbstractModelFactory):
   def __init__(self, *args, **kwargs):
     super(ModelFactory, self).__init__(*args,**kwargs)
 
-    #self.kernel = "" # Weka defaults to a traditional linear classifier.
-    self.kernel = "weka.classifiers.functions.supportVector.Puk -O 0.5 -S 7"
+    self.kernel = "" # Weka defaults to a traditional linear classifier.
+    #self.kernel = "weka.classifiers.functions.supportVector.Puk" # PUK Kernel
 
   def build(self, train_set):
 
