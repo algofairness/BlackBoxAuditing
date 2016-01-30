@@ -9,11 +9,14 @@ graph_measurers = [accuracy]
 rank_measurer = accuracy
 features_to_ignore = ["Position"]
 
+verbose = True # Set to `True` to allow for more detailed status updates.
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # NOTE: You should not need to change anything below this point.
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-from gradient_feature_auditing import GradientFeatureAuditor
+from logging import vprint
+from GradientFeatureAuditor import GradientFeatureAuditor
 from audit_reading import graph_audit, graph_audits, rank_audit_files
 
 def run():
@@ -26,6 +29,8 @@ def run():
    in the same format as the training data, yields a confusion table detailing
    the correct and incorrect predictions of the model.
   """
+
+  vprint("Training initial model.",verbose)
   all_data = train_set + test_set
   model_factory = ModelFactory(all_data, headers, response_header)
   model = model_factory.build(train_set)
@@ -39,18 +44,21 @@ def run():
   # Perform the Gradient Feature Audit and dump the audit results into files.
   auditor = GradientFeatureAuditor(model, headers, train_set, test_set,
                                    features_to_ignore=feature_indexes_to_ignore)
-  audit_filenames = auditor.audit()
+  audit_filenames = auditor.audit(verbose=verbose)
 
   # Graph the audit files.
+  vprint("Graphing audit files.",verbose)
   for audit_filename in audit_filenames:
     audit_image_filename = audit_filename + ".png"
     graph_audit(audit_filename, graph_measurers, audit_image_filename)
 
+  ranked_graph_filename = "{}/{}.png".format(auditor.OUTPUT_DIR, rank_measurer.__name__)
+  graph_audits(audit_filenames, rank_measurer, ranked_graph_filename)
+
+  vprint("Ranking audit files.",verbose)
   ranked_features = rank_audit_files(audit_filenames, rank_measurer)
   print ranked_features
 
-  ranked_graph_filename = "{}/{}.png".format(auditor.OUTPUT_DIR, rank_measurer.__name__)
-  graph_audits(audit_filenames, rank_measurer, ranked_graph_filename)
 
 if __name__=="__main__":
   run()

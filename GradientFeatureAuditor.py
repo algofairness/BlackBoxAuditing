@@ -1,4 +1,5 @@
 from repair.GeneralRepairer import Repairer
+from logging import vprint
 import csv
 import time
 import os
@@ -39,7 +40,7 @@ class GradientFeatureAuditor(object):
           for row in [self.headers]+rep_test:
             writer.writerow(row)
 
-      conf_table = self.model.test(rep_test) #TODO
+      conf_table = self.model.test(rep_test)
 
       conf_tables.append( (repair_level, conf_table) )
       repair_level += repair_increase_per_step
@@ -49,11 +50,13 @@ class GradientFeatureAuditor(object):
       for repair_level, conf_table in conf_tables:
         f.write("{}:{}\n".format(repair_level, conf_table))
 
-  def audit(self):
+  def audit(self, verbose=True):
     output_files = []
 
     for i, feature in enumerate(self.headers):
       if i not in self.features_to_ignore:
+        vprint("Auditing: '{}'.".format(feature), verbose)
+
         cleaned_feature_name = feature.replace(".","_").replace(" ","_")
         output_file = "{}.audit".format(cleaned_feature_name)
         full_filepath = self.OUTPUT_DIR + "/" + output_file

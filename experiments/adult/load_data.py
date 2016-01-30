@@ -6,7 +6,6 @@ def load_data():
     reader = csv.reader(f)
     data = [row for row in reader]
     headers = data.pop(0)
-    print len(headers)
 
     correct_types = [int, str, int, str, int, str, str, str, str, str, int, int, int, str, str]
 
