@@ -47,9 +47,10 @@ class Repairer(AbstractRepairer):
         repair_types[col_id] = str
 
     """
-    Create unique value structures: When performing repairs, we choose median values. If repair is partial, then values will be modified to some intermediate value between the original and the median value. However, the partially repaired value will only be chosen out of values that exist in the data set.  This prevents choosing values that might not make any sense in the data's context.  To do this, for each column, we need to sort all unique values and create two data structures: a list of values, and a dict mapping values to their positions in that list. Example: There are unique_col_vals[col] = [1, 2, 5, 7, 10, 14, 20] in the column. A value 2 must be repaired to 14, but the user requests that data only be repaired by 50%. We do this by finding the value at the right index:
-       index_lookup[col][2] = 1; index_lookup[col][14] = 5; this tells us that
-       unique_col_vals[col][3] = 7 is 50% of the way from 2 to 14.
+     Create unique value structures: When performing repairs, we choose median values. If repair is partial, then values will be modified to some intermediate value between the original and the median value. However, the partially repaired value will only be chosen out of values that exist in the data set.  This prevents choosing values that might not make any sense in the data's context.  To do this, for each column, we need to sort all unique values and create two data structures: a list of values, and a dict mapping values to their positions in that list. Example: There are unique_col_vals[col] = [1, 2, 5, 7, 10, 14, 20] in the column. A value 2 must be repaired to 14, but the user requests that data only be repaired by 50%. We do this by finding the value at the right index:
+       index_lookup[col][2] = 1
+       index_lookup[col][14] = 5
+       this tells us that unique_col_vals[col][3] = 7 is 50% of the way from 2 to 14.
     """
     unique_col_vals = {}
     index_lookup = {}
@@ -62,9 +63,7 @@ class Repairer(AbstractRepairer):
       index_lookup[col_id] = {col_values[i]: i for i in range(len(col_values))}
 
     """
-    Make a list of unique values per each stratified column.  Then make a list of combinations of stratified groups. Example: race and gender cols are stratified:
-        [(white, female), (white, male), (black, female), (black, male)]
-    The combinations are tuples because they can be hashed and used as dictionary keys.  From these, find the sizes of these groups.
+     Make a list of unique values per each stratified column.  Then make a list of combinations of stratified groups. Example: race and gender cols are stratified: [(white, female), (white, male), (black, female), (black, male)] The combinations are tuples because they can be hashed and used as dictionary keys.  From these, find the sizes of these groups.
     """
     unique_stratify_values = [unique_col_vals[i] for i in safe_stratify_cols]
     all_stratified_groups = list(product(*unique_stratify_values))
@@ -80,12 +79,9 @@ class Repairer(AbstractRepairer):
     # Don't consider groups not present in data (size 0)
     all_stratified_groups = filter(lambda x: sizes[x], all_stratified_groups)
 
-    # Separate data by stratified group to perform repair on each Y column's values given that their
-    # corresponding protected attribute is a particular stratified group. We need to keep track of each Y column's
-    # values corresponding to each particular stratified group, as well as each value's index, so that when we
-    # repair the data, we can modify the correct value in the original data. Example: Supposing there is a
-    # Y column, "Score1", in which the 3rd and 5th scores, 70 and 90 respectively, belonged to black women,
-    # the data structure would look like: {("Black", "Woman"): {Score1: [(70,2),(90,4)]}}
+    """
+     Separate data by stratified group to perform repair on each Y column's values given that their corresponding protected attribute is a particular stratified group. We need to keep track of each Y column's values corresponding to each particular stratified group, as well as each value's index, so that when we repair the data, we can modify the correct value in the original data. Example: Supposing there is a Y column, "Score1", in which the 3rd and 5th scores, 70 and 90 respectively, belonged to black women, the data structure would look like: {("Black", "Woman"): {Score1: [(70,2),(90,4)]}}
+    """
     stratified_group_data = {group: {} for group in all_stratified_groups}
     for group in all_stratified_groups:
       for col_id, col_dict in data_dict.items():
@@ -98,16 +94,17 @@ class Repairer(AbstractRepairer):
     categories = {}
     categories_count = {}
     desired_categories_count = {}
+    desired_categories_dist = {}
     group_size = {}
     categories_count_norm = {}
 
     # Find the combination with the fewest data points. This will determine what the quantiles are.
-    num_quantiles = min(filter(lambda x: x, sizes.values())) # Remove 0s
+    num_quantiles = min(filter(lambda x: x, sizes.values())) # Remove any 0s
     quantile_unit = 1.0/num_quantiles
 
     # Repair Data and retrieve the results
     for col_id in filter(lambda x: col_type_dict[x] == "Y", col_ids):
-      # Which bucket value we're repairing
+      # which bucket value we're repairing
       group_offsets = {group: 0 for group in all_stratified_groups}
       col = data_dict[col_id]
 
@@ -150,96 +147,114 @@ class Repairer(AbstractRepairer):
               # Update data to repaired valued
               data_dict[col_id][index] = repaired_value
 
+
+      #Categorical Repair is done below
       elif repair_types[col_id] in {str}:
         feature = CategoricalFeature(col)
         categories_count_norm[col_id] = {}
         bin_index_dict = feature.bin_index_dict
-        categories[col_id] = bin_index_dict.keys()
+        categories[col_id] = []
+        # Initialize categories dictionary with a list of categories
+        for key,value in bin_index_dict.items():
+           categories[col_id].append(key)
 
         group_size[col_id] = {}
         features[col_id] = {}
         for group in all_stratified_groups:
+          #tuple_values is a list e.g. [('A',0),('A',1),('B',2),('B',3),('B',4)], where the second element in the tuple is the index of the observation
           tuple_values = stratified_group_data[group][col_id]
           values=[value for _, value in tuple_values]
+          # send values to CategoricalFeature object, which bins the data into categories
           feature = CategoricalFeature(values)
           group_size[col_id][group] = len(feature.data)
           features[col_id][group] = feature
-
+	# Count the observations in each category. e.g. categories_count[1] = {'A':[1,2,3], 'B':[3,1,4]}, for column 1, category 'A' has 1 observation from group 'x', 2 from 'y', ect.
         categories_count[col_id]={category: [] for category in categories[col_id]}
         for group in all_stratified_groups:
           category_count = features[col_id][group].category_count
           for category in categories[col_id]:
             count = category_count[category] if category in category_count else 0
             categories_count[col_id][category].append(count)
-
-        for key,value in bin_index_dict.items():
-           categories[col_id].append(key)
-
+	# Find the normalized count for each category, where normalized count is count divided by the number of people in that group
         for category in categories[col_id]:
           categories_count_norm[col_id][category]=[0]*len(categories_count[col_id][category])
           for i in range(len(categories_count[col_id][category])):
             group= all_stratified_groups[i]
             orig_count = categories_count[col_id][category][i]
             categories_count_norm[col_id][category][i] = orig_count* (1.0/group_size[col_id][group])
-        categories_count[col_id]={category: [] for category in categories[col_id]}
-        desired_categories_count[col_id]={}
+        # Find the median normalized count for each category
         median = {}
         for category in categories[col_id]:
           median[category] = sorted(categories_count_norm[col_id][category])[len(categories_count_norm[col_id][category])/2]
-        for i in range(len(all_stratified_groups)):
-          group = all_stratified_groups[i]
+        # Find the desired category count for each group, by using the repair_level (lambda). Desired category count is the desired distribution multiplied by the total number of observations in the group
+        desired_categories_count[col_id]={}
+        desired_categories_dist[col_id]={}
+        for i, group in enumerate(all_stratified_groups):
           desired_categories_count[col_id][group] = {}
+          desired_categories_dist[col_id][group] = {}
           for category in categories[col_id]:
             med=median[category]
             size = group_size[col_id][group]
+            # desired-proportion = (1-lambda)*original-count  + (lambda)*median-count
             temp=(1 - self.repair_level)*categories_count_norm[col_id][category][i] + self.repair_level*med
+            # our desired-count = floor(desired-proportion * group-size)
             estimate = math.floor(temp*(1.0*size))
             desired_categories_count[col_id][group][category] = estimate
+            desired_categories_dist[col_id][group][category] = temp
 
+        # Run Max-flow to distribute as many observations to categories as possible. Overflow are those observations that are left over
         total_overflow=0
         total_overflows={}
         for group in all_stratified_groups:
           feature = features[col_id][group]
           feature.desired_category_count = desired_categories_count[col_id][group]
+          # Create directed graph from nodes that supply the original countes to nodes that demand the desired counts, with a overflow node as total desired count is at most total original counts
           DG=feature.create_graph()
+          # Run max-flow, and record overflow count (total and per-group)
           [new_feature,overflow] = feature.repair(DG)
           total_overflow += overflow
           total_overflows[group] = overflow
+          # Update our original values with the values from max-flow, Note: still missing overflowed observations
           features[col_id][group] = new_feature
 
+        # Assign overflow observations to categories based on the group's desired distribution
         assigned_overflow = {}
-        distribution = {}
-        for i, group in enumerate(all_stratified_groups):
-          distribution[group] = {}
-          for j, category in enumerate(categories[col_id]):
-            distribution[group][j] = categories_count_norm[col_id][category][i]
+        distribution = deepcopy(desired_categories_dist) #distribution is desired_categories_dist but with the category proportions represented in a list (divide by total, which should be 1 when repair_level is 1, but otherwise will vary slightly)
+        for group in all_stratified_groups:
+          dist=[]
+          for category in categories[col_id]:
+            dist.append(desired_categories_dist[col_id][group][category])
+          for i, elem in enumerate(dist):
+            dist[i] = elem/float(sum(dist))
+          distribution[col_id][group] = dist
         for group in all_stratified_groups:
           assigned_overflow[group] = {}
           for i in range(int(total_overflows[group])):
-            dist = distribution[group]
+            dist = distribution[col_id][group]
             number = random.uniform(0, 1)
             cat_index = 0
             tally = 0
-            for j, value in enumerate(dist):
+            for j in range(len(dist)):
               value=dist[j]
               if number < (tally+value):
                 cat_index = j
                 break
               tally += value
             assigned_overflow[group][i] = categories[col_id][cat_index]
-        #Actually do the assignment
+          # Actually do the assignment
           count = 0
           for i, value in enumerate(features[col_id][group].data):
             if value ==0:
               (features[col_id][group].data)[i] = assigned_overflow[group][count]
               count += 1
-        #Now we need to return our repaired feature in the form of our original dataset!!
+        # Return our repaired feature in the form of our original dataset
         for group in all_stratified_groups:
           indices = stratified_group_indices[group]
           for i, index in enumerate(indices):
             repaired_value = (features[col_id][group].data)[i]
             data_dict[col_id][index] = repaired_value
 
+    # Replace stratified groups with their mode value, to remove it's information
     repaired_data = []
     mode = get_mode([row[self.feature_to_repair] for row in data_to_repair])
     for i, orig_row in enumerate(data_to_repair):
@@ -262,12 +277,13 @@ def get_mode(values):
 
 def test():
   test_minimal()
-  test_ricci()
   test_categorical()
   test_repeated_values()
+  test_arrests()
 
 def test_repeated_values():
-  print False #TODO: Add this test (which is why Ricci broke).
+  #TODO: Add this test (which is why Ricci broke originally)
+  print "NEED TO ADD TEST FOR REPEATED VALUES IN CATEGORICAL REPAIR!", False
 
 def test_minimal():
   class_1 = [[float(i),"A"] for i in xrange(0, 100)]
@@ -283,69 +299,54 @@ def test_minimal():
   print "Minimal Dataset -- mode is true mode?", mode=="A"
   print "Minimal Dataset -- mode value as feature_to_repair?", all(row[feature_to_repair] == mode for row in repaired_data)
 
-def test_ricci():
+def test_categorical():
+  feature_to_repair = 0
+
+  all_data = [
+  ["x","A"], ["x","A"], ["x","B"], ["x","B"], ["x","B"], ["y","A"],
+  ["y","A"], ["y","A"], ["y","B"], ["z","A"], ["z","A"], ["z","A"],
+  ["z","A"], ["z","A"], ["z","B"]]
+  #feature_to_repair is really feature to repair ON
+  repair_level=1
+  random.seed(10)
+  repairer = Repairer(all_data, feature_to_repair, repair_level)
+  repaired_data=repairer.repair(all_data)
+  correct_repaired_data = [
+  ["z","A"], ["z","A"], ["z","B"], ["z","A"], ["z","A"], ["z","A"],
+  ["z","A"], ["z","A"], ["z","B"], ["z","A"], ["z","A"], ["z","A"],
+  ["z","A"], ["z","B"], ["z","B"]]
+  print "categorical fully repaired_data altered?", repaired_data != all_data
+  print  "categorical fully repaired_data correct?", repaired_data == correct_repaired_data
+
+  repair_level=0.1
+  random.seed(10)
+  repairer = Repairer(all_data, feature_to_repair, repair_level)
+  part_repaired_data=repairer.repair(all_data)
+  correct_part_repaired_data = [
+  ["z","A"], ["z","A"], ["z","B"], ["z","B"], ["z","A"], ["z","A"],
+  ["z","A"], ["z","A"], ["z","B"], ["z","A"], ["z","A"], ["z","A"],
+  ["z","A"], ["z","B"], ["z","B"]]
+  print "categorical partially repaired_data altered?", part_repaired_data != all_data
+  print  "categorical partially repaired_data correct?", part_repaired_data == correct_part_repaired_data
+
+
+def test_arrests(): #TODO: This should become an experiment.arrests.load_data file.
   import csv
-  filepath = "test_data/RicciDataMod.csv"
-  ignored_features = [0, 5] # Identifier columns and response columns.
-  feature_to_repair = 3
-  repair_level = 0.5
+  filepath = "test_data/arrests_full_categorical.csv"
+  feature_to_repair = 0
+  repair_level = 1
 
   data = []
   with open(filepath) as f:
     for row in csv.reader(f):
       data.append(row)
-
   data.pop(0)
 
-  repairer = Repairer(data, feature_to_repair, repair_level, features_to_ignore=ignored_features)
+  repairer = Repairer(data, feature_to_repair, repair_level)
   repaired_data = repairer.repair(data)
 
   print "no rows lost:", len(repaired_data) == len(data)
-  print "features repaired for level=1.0:", repaired_data != data
-
-def test_categorical():
-  all_data = [
-  ["x","A"],
-  ["x","A"],
-  ["x","B"],
-  ["x","B"],
-  ["x","B"],
-  ["y","A"],
-  ["y","A"],
-  ["y","A"],
-  ["y","B"],
-  ["z","A"],
-  ["z","A"],
-  ["z","A"],
-  ["z","A"],
-  ["z","A"],
-  ["z","B"]]
-  #feature_to_repair is really feature to repair ON
-  feature_to_repair = 0
-  repair_level=1
-  random.seed(10)
-  data_copy=deepcopy(all_data)
-  repairer = Repairer(data_copy, feature_to_repair, repair_level)
-  repaired_data=repairer.repair(data_copy)
-  print "categorical repaired_data altered?", repaired_data != all_data
-  correct_repaired_data = [
-  ["z","A"],
-  ["z","A"],
-  ["z","B"],
-  ["z","A"],
-  ["z","A"],
-  ["z","A"],
-  ["z","A"],
-  ["z","A"],
-  ["z","B"],
-  ["z","A"],
-  ["z","A"],
-  ["z","A"],
-  ["z","A"],
-  ["z","B"],
-  ["z","B"]]
-  print  "categorical repaired_data correct?", repaired_data == correct_repaired_data
-
+  print "features repaired for repair level '{}': {}".format(repair_level, repaired_data != data)
 
 if __name__== "__main__":
   test()
