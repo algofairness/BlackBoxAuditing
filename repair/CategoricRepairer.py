@@ -315,8 +315,8 @@ def test_categorical():
   ["z","A"], ["z","A"], ["z","B"], ["z","A"], ["z","A"], ["z","A"],
   ["z","A"], ["z","A"], ["z","B"], ["z","A"], ["z","A"], ["z","A"],
   ["z","A"], ["z","B"], ["z","B"]]
-  print "categorical fully repaired_data altered?", repaired_data != all_data
-  print  "categorical fully repaired_data correct?", repaired_data == correct_repaired_data
+  print "Categorical Minimal Dataset -- full repaired_data altered?", repaired_data != all_data
+  print "Categorical Minimal Dataset -- full repaired_data correct?", repaired_data == correct_repaired_data
 
   repair_level=0.1
   random.seed(10)
@@ -326,8 +326,8 @@ def test_categorical():
   ["z","A"], ["z","A"], ["z","B"], ["z","B"], ["z","A"], ["z","A"],
   ["z","A"], ["z","A"], ["z","B"], ["z","A"], ["z","A"], ["z","A"],
   ["z","A"], ["z","B"], ["z","B"]]
-  print "categorical partially repaired_data altered?", part_repaired_data != all_data
-  print  "categorical partially repaired_data correct?", part_repaired_data == correct_part_repaired_data
+  print "Categorical Minimal Dataset -- partial repaired_data altered?", part_repaired_data != all_data
+  print "Categorical Minimal Dataset -- partial repaired_data correct?", part_repaired_data == correct_part_repaired_data
 
 
 def test_arrests():
@@ -339,8 +339,8 @@ def test_arrests():
   repairer = Repairer(train_data+test_data, feature_to_repair, repair_level)
   repaired_data = repairer.repair(test_data)
 
-  print "no rows lost:", len(repaired_data) == len(test_data)
-  print "features changed for repair level '{}': {}".format(repair_level, repaired_data != test_data)
+  print "Arrest Dataset -- no rows lost?", len(repaired_data) == len(test_data)
+  print "Arrest Dataset -- features changed for repair level '{}'? {}".format(repair_level, repaired_data != test_data)
 
 if __name__== "__main__":
   test()
