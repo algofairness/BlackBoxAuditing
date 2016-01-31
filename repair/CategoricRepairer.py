@@ -3,6 +3,7 @@ from collections import defaultdict
 
 from AbstractRepairer import AbstractRepairer
 from CategoricalFeature import CategoricalFeature
+from calculators import get_median
 
 import random
 import math
@@ -11,7 +12,7 @@ from copy import deepcopy
 class Repairer(AbstractRepairer):
   def repair(self, data_to_repair):
     col_ids = get_col_ids(data_to_repair)
-    
+
     # Get column type information
     col_types = ["Y"]*len(col_ids)
     for i, col in enumerate(col_ids):
@@ -23,6 +24,7 @@ class Repairer(AbstractRepairer):
     col_type_dict = {col_id: col_type for col_id, col_type in zip(col_ids, col_types)}
 
     not_I_col_ids = filter(lambda x: col_type_dict[x] != "I", col_ids)
+    cols_to_repair = filter(lambda x: col_type_dict[x] == "Y", col_ids)
 
     # To prevent potential perils with user-provided column names, map them to safe column names
     safe_stratify_cols = [self.feature_to_repair]
@@ -69,14 +71,22 @@ class Repairer(AbstractRepairer):
     all_stratified_groups = list(product(*unique_stratify_values))
     # look up a stratified group, and get a list of indices corresponding to that group in the data
     stratified_group_indices = defaultdict(list)
-    # Find the sizes of each combination of stratified groups in the data
-    sizes = {group: 0 for group in all_stratified_groups}
-    for i in range(len(data_dict[safe_stratify_cols[0]])):
-      group = tuple(data_dict[col][i] for col in safe_stratify_cols)
-      stratified_group_indices[group].append(i)
-      sizes[group] += 1
 
-    # Don't consider groups not present in data (size 0)
+    # Find the number of unique values for each strat-group, organized per column.
+    val_sets = {group: {col_id:set() for col_id in cols_to_repair}
+                                     for group in all_stratified_groups}
+    for i, row in enumerate(data_to_repair):
+      group = tuple(row[col] for col in safe_stratify_cols)
+      for col_id in cols_to_repair:
+        val_sets[group][col_id].add(row[col_id])
+
+      # Also remember that this row pertains to this strat-group.
+      stratified_group_indices[group].append(i)
+
+    # Sum the number of unique values present across each stratified group.
+    sizes = {group: min(len(val_set) for _, val_set in val_sets[group].items()) for group in all_stratified_groups}
+
+    # Don't consider groups not present in data (ie, size 0).
     all_stratified_groups = filter(lambda x: sizes[x], all_stratified_groups)
 
     """
@@ -85,9 +95,16 @@ class Repairer(AbstractRepairer):
     stratified_group_data = {group: {} for group in all_stratified_groups}
     for group in all_stratified_groups:
       for col_id, col_dict in data_dict.items():
-        stratified_col_values = [(i, col_dict[i]) for i in stratified_group_indices[group]]
+        # Get the indices at which each value occurs.
+        indices = {}
+        for i in stratified_group_indices[group]:
+          value = col_dict[i]
+          if value not in indices:
+            indices[value] = []
+          indices[value].append(i)
 
-        stratified_col_values.sort(key=lambda vals: (vals[1],vals[0]))
+        stratified_col_values = [(occurs, val) for val, occurs in indices.items()]
+        stratified_col_values.sort(key=lambda tup: tup[1])
         stratified_group_data[group][col_id] = stratified_col_values
 
     # Find the combination with the fewest data points. This will determine what the quantiles are.
@@ -95,11 +112,18 @@ class Repairer(AbstractRepairer):
     quantile_unit = 1.0/num_quantiles
 
     # Init data dictionaries
-    group_features = {}; categories = {}; categories_count = {}; desired_categories_count = {}
-    desired_categories_dist = {}; group_size = {}; categories_count_norm = {}; distribution = {}
-    
+    group_features = {}
+    categories = {}
+    categories_count = {}
+    desired_categories_count = {}
+    desired_categories_dist = {}
+    group_size = {}
+    categories_count_norm = {}
+    distribution = {}
+
+
     # Repair Data and retrieve the results
-    for col_id in filter(lambda x: col_type_dict[x] == "Y", col_ids):
+    for col_id in cols_to_repair:
       # which bucket value we're repairing
       group_offsets = {group: 0 for group in all_stratified_groups}
       col = data_dict[col_id]
@@ -117,15 +141,14 @@ class Repairer(AbstractRepairer):
             # Get data at this quantile from this Y column such that stratified X = group
             group_data_at_col = stratified_group_data[group][col_id]
             offset_data = group_data_at_col[offset:offset+number_to_get]
-            indices_per_group[group] = [index for index, _ in offset_data]
+            indices_per_group[group] = [i for val_indices, _ in offset_data for i in val_indices]
             values = sorted([float(val) for _, val in offset_data])
 
             # Find this group's median value at this quantile
-            median = values[len(values)/2]
-            median_at_quantiles.append(median)
+            median_at_quantiles.append( get_median(values) )
 
           # Find the median value of all groups at this quantile (chosen from each group's medians)
-          median = sorted(median_at_quantiles)[len(median_at_quantiles)/2]
+          median = get_median(median_at_quantiles)
           median_val_pos = index_lookup[col_id][median]
 
           # Update values to repair the dataset.
@@ -148,18 +171,17 @@ class Repairer(AbstractRepairer):
         feature = CategoricalFeature(col)
         categories[col_id] = get_categories(feature.bin_index_dict)
         [group_features[col_id], group_size[col_id]] = get_group_data(all_stratified_groups, stratified_group_data, col_id)
-        categories_count[col_id] = get_categories_count(categories, all_stratified_groups, col_id, group_features)       
+        categories_count[col_id] = get_categories_count(categories, all_stratified_groups, col_id, group_features)
         categories_count_norm[col_id] = get_categories_count_norm(categories, col_id, all_stratified_groups, categories_count, group_size)
-        median = get_median(categories, col_id, categories_count_norm)
-        
+        median = get_median_per_category(categories, col_id, categories_count_norm)
+
         [desired_categories_count[col_id],desired_categories_dist[col_id]] = \
-          get_desired_data(all_stratified_groups, col_id, categories, median, group_size, self.repair_level, categories_count_norm)  
-        
+          get_desired_data(all_stratified_groups, col_id, categories, median, group_size, self.repair_level, categories_count_norm)
+
         [group_features[col_id], overflow] = flow_on_group_features(all_stratified_groups, col_id, group_features, desired_categories_count)
 
         [group_features[col_id], assigned_overflow, distribution[col_id]] = assign_overflow(desired_categories_dist, all_stratified_groups, categories, col_id, overflow, group_features)
-        
-        
+
         # Return our repaired feature in the form of our original dataset
         for group in all_stratified_groups:
           indices = stratified_group_indices[group]
@@ -185,10 +207,10 @@ def get_categories(bin_index_dict):
   list = []
   for key,value in bin_index_dict.items():
     list.append(key)
-  return list 
+  return list
 
 def get_group_data(all_stratified_groups,stratified_group_data, col_id):
-  group_features={}; group_size={}; 
+  group_features={}; group_size={};
   for group in all_stratified_groups:
     #tuple_values is a list e.g. [('A',0),('A',1),('B',2),('B',3),('B',4)], where the second element in the tuple is the index of the observation
     tuple_values = stratified_group_data[group][col_id]
@@ -218,11 +240,8 @@ def get_categories_count_norm(categories, col_id, all_stratified_groups, categor
   return norm
 
 # Find the median normalized count for each category
-def get_median(categories, col_id, categories_count_norm):
-  dict={}
-  for category in categories[col_id]:
-    dict[category] = sorted(categories_count_norm[col_id][category])[len(categories_count_norm[col_id][category])/2]
-  return dict
+def get_median_per_category(categories, col_id, categories_count_norm):
+  return {cat: get_median(categories_count_norm[col_id][cat]) for cat in categories[col_id]}
 
 # Find the desired category count for each group, by using the repair_level (lambda). Desired category count is the desired distribution multiplied by the total number of observations in the group
 def get_desired_data(all_stratified_groups, col_id, categories, median, group_size, repair_level, categories_count_norm):
@@ -254,7 +273,7 @@ def flow_on_group_features(all_stratified_groups, col_id, group_features, desire
     dict1[group] = new_feature
   return [dict1, dict2]
 
-# Assign overflow observations to categories based on the group's desired distribution 
+# Assign overflow observations to categories based on the group's desired distribution
 def assign_overflow(desired_categories_dist, all_stratified_groups, categories, col_id, overflow, group_features):
   dict1 = deepcopy(group_features[col_id])
   dict2 = {}
@@ -264,7 +283,7 @@ def assign_overflow(desired_categories_dist, all_stratified_groups, categories, 
     list = []
     for category in categories[col_id]:
       list.append(desired_categories_dist[col_id][group][category])
-    s = float(sum(list)) 
+    s = float(sum(list))
     for i, elem in enumerate(list):
       list[i] = elem/s
     dict3[group] = list; dict2[group] = {};
@@ -284,7 +303,7 @@ def assign_overflow(desired_categories_dist, all_stratified_groups, categories, 
         (dict1[group].data)[i] = dict2[group][count]
         count += 1
   # dict1 represents group_features[col_id], dict2 represents assigned_overflow, dict3 represents distribution[col_id]
-  return [dict1, dict2, dict3] 
+  return [dict1, dict2, dict3]
 
 def get_mode(values):
   counts = {}
@@ -321,14 +340,14 @@ def test_minimal():
 
 def test_categorical():
   all_data = [
-  ["x","A"], ["x","A"], ["x","B"], ["x","B"], ["x","B"], 
-  ["y","A"], ["y","A"], ["y","A"], ["y","B"], 
+  ["x","A"], ["x","A"], ["x","B"], ["x","B"], ["x","B"],
+  ["y","A"], ["y","A"], ["y","A"], ["y","B"],
   ["z","A"], ["z","A"], ["z","A"], ["z","A"], ["z","A"], ["z","B"]]
 
   random.seed(10)
   col=[]; col_id = 1; categories = {}; group_features={}; group_size={}; categories_count={}; categories_count_norm={};
-  desired_categories_count={}; desired_categories_dist={}; col_ids = [1]; 
-  for row in all_data: col.append(row[1])  
+  desired_categories_count={}; desired_categories_dist={};
+  for row in all_data: col.append(row[1])
   feature = CategoricalFeature(col)
   categories[col_id] = get_categories(feature.bin_index_dict)
 
@@ -336,12 +355,12 @@ def test_categorical():
   stratified_group_data = {('y',): {0: [(5, 'y'), (6, 'y'), (7, 'y'), (8, 'y')], 1: [(5, 'A'), (6, 'A'), (7, 'A'), (8, 'B')]},\
                            ('z',): {0: [(9, 'z'), (10, 'z'), (11, 'z'), (12, 'z'), (13, 'z'), (14, 'z')], 1: [(9, 'A'), (10, 'A'), (11, 'A'), (12, 'A'), (13, 'A'), (14, 'B')]},\
                            ('x',): {0: [(0, 'x'), (1, 'x'), (2, 'x'), (3, 'x'), (4, 'x')], 1: [(0, 'A'), (1, 'A'), (2, 'B'), (3, 'B'), (4, 'B')]}}
-  
+
   [group_features[col_id], group_size[col_id]] = get_group_data(all_stratified_groups, stratified_group_data, col_id)
-  categories_count[col_id] = get_categories_count(categories, all_stratified_groups, col_id, group_features)       
+  categories_count[col_id] = get_categories_count(categories, all_stratified_groups, col_id, group_features)
   categories_count_norm[col_id] = get_categories_count_norm(categories, col_id, all_stratified_groups, categories_count, group_size)
-  median = get_median(categories, col_id, categories_count_norm)      
-  
+  median = get_median_per_category(categories, col_id, categories_count_norm)
+
   print "Categorical Minimal Dataset -- categories correct?", {1: ['A', 'B']} == categories
   print "Categorical Minimal Dataset -- category counts correct?", {1: {'A': [2, 3, 5], 'B': [3,1,1]}} == categories_count
   print "Categorical Minimal Dataset -- category distribution correct?", {1: {'A': [0.4, 0.75, .8333333333333333], 'B': [.6000000000000001, 0.25, .16666666666666666]}} == categories_count_norm
@@ -353,36 +372,36 @@ def test_categorical():
   repaired_data=repairer.repair(all_data)
 
   [desired_categories_count[col_id],desired_categories_dist[col_id]] = \
-      get_desired_data(all_stratified_groups, col_id, categories, median, group_size, repair_level, categories_count_norm)   
+      get_desired_data(all_stratified_groups, col_id, categories, median, group_size, repair_level, categories_count_norm)
 
   correct_repaired_data = [
-  ["z","A"], ["z","A"], ["z","B"], ["z","A"], ["z","A"], 
-  ["z","A"], ["z","A"], ["z","A"], ["z","B"], 
+  ["z","A"], ["z","A"], ["z","B"], ["z","A"], ["z","A"],
+  ["z","A"], ["z","A"], ["z","A"], ["z","B"],
   ["z","A"], ["z","A"], ["z","A"], ["z","A"], ["z","B"], ["z","B"]]
 
   print "Categorical Minimal Dataset -- full repair desired category counts correct?", \
-    {1: {('y',): {'A':3.0, 'B':1.0}, ('z',): {'A':4.0, 'B':1.0}, ('x',): {'A':3.0, 'B':1.0}}} == desired_categories_count  
+    {1: {('y',): {'A':3.0, 'B':1.0}, ('z',): {'A':4.0, 'B':1.0}, ('x',): {'A':3.0, 'B':1.0}}} == desired_categories_count
   print "Categorical Minimal Dataset -- full repair desired category distribution correct?", \
-    {1: {('y',): {'A':0.75, 'B':0.25}, ('z',): {'A':0.75, 'B':0.25}, ('x',): {'A':0.75, 'B':0.25}}} == desired_categories_dist  
+    {1: {('y',): {'A':0.75, 'B':0.25}, ('z',): {'A':0.75, 'B':0.25}, ('x',): {'A':0.75, 'B':0.25}}} == desired_categories_dist
   print "Categorical Minimal Dataset -- full repaired_data altered?", repaired_data != all_data
   print "Categorical Minimal Dataset -- full repaired_data correct?", repaired_data == correct_repaired_data
-  
+
   repair_level=0.1; feature_to_repair = 0
   repairer = Repairer(all_data, feature_to_repair, repair_level)
   part_repaired_data=repairer.repair(all_data)
 
   [desired_categories_count[col_id],desired_categories_dist[col_id]] = \
-      get_desired_data(all_stratified_groups, col_id, categories, median, group_size, repair_level, categories_count_norm)   
-  
+      get_desired_data(all_stratified_groups, col_id, categories, median, group_size, repair_level, categories_count_norm)
+
   correct_part_repaired_data = [
-  ["z","A"], ["z","A"], ["z","B"], ["z","B"], ["z","A"], 
-  ["z","A"], ["z","A"], ["z","A"], ["z","B"], 
+  ["z","A"], ["z","A"], ["z","B"], ["z","B"], ["z","A"],
+  ["z","A"], ["z","A"], ["z","A"], ["z","B"],
   ["z","A"], ["z","A"], ["z","A"], ["z","A"], ["z","A"], ["z","B"]]
-  
+
   print "Categorical Minimal Dataset -- partial repair desired category counts correct?", \
-    {1: {('y',): {'A':3.0, 'B':1.0}, ('z',): {'A':4.0, 'B':1.0}, ('x',): {'A':2.0, 'B':2.0}}} == desired_categories_count  
+    {1: {('y',): {'A':3.0, 'B':1.0}, ('z',): {'A':4.0, 'B':1.0}, ('x',): {'A':2.0, 'B':2.0}}} == desired_categories_count
   print "Categorical Minimal Dataset -- partial repair desired category distribution correct?", \
-    {1: {('y',): {'A':0.75, 'B':0.25}, ('z',): {'A':0.825, 'B':0.175}, ('x',): {'A':0.43500000000000005, 'B':0.5650000000000002}}}== desired_categories_dist  
+    {1: {('y',): {'A':0.75, 'B':0.25}, ('z',): {'A':0.825, 'B':0.175}, ('x',): {'A':0.43500000000000005, 'B':0.5650000000000002}}}== desired_categories_dist
   print "Categorical Minimal Dataset -- partial repaired_data altered?", part_repaired_data != all_data
   print "Categorical Minimal Dataset -- partial repaired_data correct?", part_repaired_data == correct_part_repaired_data
 

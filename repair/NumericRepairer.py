@@ -2,6 +2,7 @@ from AbstractRepairer import AbstractRepairer
 import CategoricRepairer
 from binning.Binner import make_histogram_bins
 from binning.BinSizes import FreedmanDiaconisBinSize as bin_calculator
+from calculators import get_median
 
 class Repairer(AbstractRepairer):
   def __init__(self, *args, **kwargs):
@@ -29,24 +30,9 @@ class Repairer(AbstractRepairer):
 
     return repaired_data
 
-def get_median(values):
-  """
-  Given an unsorted list of numeric values, return median value (as a float).
-  Note that in the case of even-length lists of values, we apply the value to
-  the left of the center to be the median (such that the median can only be
-  a value from the list of values).
-  Eg: get_median([1,2,3,4]) == 2, not 2.5.
-  """
-  values = sorted(values)
-  if len(values) % 2 == 0:
-    return values[len(values)/2-1]
-  else:
-    return values[len(values)/2]
-
 
 def test():
   test_sample()
-  test_median()
 
 def test_sample():
   data = [[float(i),float(i)*2, 1] for i in xrange(0, 150)]
@@ -57,13 +43,6 @@ def test_sample():
 
   median = get_median([row[feature_to_repair] for row in data])
   print "median replaces column?", all(row[feature_to_repair] == median for row in repaired_data)
-
-def test_median():
-  feature_values = [1,2,3,4]
-  correct_median = 2
-  print "median value is correct?", get_median(feature_values) == correct_median
-
-
 
 
 if __name__=="__main__":
