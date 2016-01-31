@@ -320,9 +320,6 @@ def test_minimal():
   print "Minimal Dataset -- mode value as feature_to_repair?", all(row[feature_to_repair] == mode for row in repaired_data)
 
 def test_categorical():
-  import unittest
-  
-  
   all_data = [
   ["x","A"], ["x","A"], ["x","B"], ["x","B"], ["x","B"], 
   ["y","A"], ["y","A"], ["y","A"], ["y","B"], 
