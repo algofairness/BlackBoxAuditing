@@ -32,15 +32,23 @@ class Repairer(AbstractRepairer):
 def get_median(values):
   """
   Given an unsorted list of numeric values, return median value (as a float).
+  Note that in the case of even-length lists of values, we apply the value to
+  the left of the center to be the median (such that the median can only be
+  a value from the list of values).
+  Eg: get_median([1,2,3,4]) == 2, not 2.5.
   """
   values = sorted(values)
-  if len(values)%2 == 0:
-    return (values[len(values)/2] + values[len(values)/2+1]) / 2.0
+  if len(values) % 2 == 0:
+    return values[len(values)/2-1]
   else:
-    return float(values[len(values)/2])
+    return values[len(values)/2]
 
 
 def test():
+  test_sample()
+  test_median()
+
+def test_sample():
   data = [[float(i),float(i)*2, 1] for i in xrange(0, 150)]
   feature_to_repair = 0
   repairer = Repairer(data, feature_to_repair, 0.5)
@@ -49,6 +57,13 @@ def test():
 
   median = get_median([row[feature_to_repair] for row in data])
   print "median replaces column?", all(row[feature_to_repair] == median for row in repaired_data)
+
+def test_median():
+  feature_values = [1,2,3,4]
+  correct_median = 2
+  print "median value is correct?", get_median(feature_values) == correct_median
+
+
 
 
 if __name__=="__main__":
