@@ -297,10 +297,10 @@ def get_mode(values):
 
 
 def test():
-  #test_minimal()
+  test_minimal()
   test_categorical()
-  #test_repeated_values()
-  #test_arrests()
+  test_repeated_values()
+  test_arrests()
 
 def test_repeated_values():
   #TODO: Add this test (which is why Ricci broke originally)
@@ -335,7 +335,7 @@ def test_categorical():
   for row in all_data: col.append(row[1])  
   feature = CategoricalFeature(col)
   categories[col_id] = get_categories(feature.bin_index_dict)
-  print repaired_data
+  
   print "Categorical Minimal Dataset -- full repair desired distribution correct?", repaired_data != all_data
   correct_repaired_data = [
   ["z","A"], ["z","A"], ["z","B"], ["z","A"], ["z","A"], ["z","A"],
