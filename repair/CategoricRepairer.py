@@ -90,13 +90,14 @@ class Repairer(AbstractRepairer):
         stratified_col_values.sort(key=lambda vals: (vals[1],vals[0]))
         stratified_group_data[group][col_id] = stratified_col_values
 
-    features = {}
+    group_features = {}
     categories = {}
     categories_count = {}
     desired_categories_count = {}
     desired_categories_dist = {}
     group_size = {}
     categories_count_norm = {}
+    distribution = {}
 
     # Find the combination with the fewest data points. This will determine what the quantiles are.
     num_quantiles = min(filter(lambda x: x, sizes.values())) # Remove any 0s
@@ -151,107 +152,24 @@ class Repairer(AbstractRepairer):
       #Categorical Repair is done below
       elif repair_types[col_id] in {str}:
         feature = CategoricalFeature(col)
-        categories_count_norm[col_id] = {}
-        bin_index_dict = feature.bin_index_dict
-        categories[col_id] = []
-        # Initialize categories dictionary with a list of categories
-        for key,value in bin_index_dict.items():
-           categories[col_id].append(key)
+        categories[col_id] = get_categories(feature.bin_index_dict)
+        [group_features[col_id], group_size[col_id]] = get_group_data(all_stratified_groups, stratified_group_data, col_id, feature)
+        categories_count[col_id] = get_categories_count(categories, all_stratified_groups, col_id, group_features)       
+        categories_count_norm[col_id] = get_categories_count_norm(categories, col_id, all_stratified_groups, categories_count, group_size)
+        median = get_median(categories, col_id, categories_count_norm)
 
-        group_size[col_id] = {}
-        features[col_id] = {}
-        for group in all_stratified_groups:
-          #tuple_values is a list e.g. [('A',0),('A',1),('B',2),('B',3),('B',4)], where the second element in the tuple is the index of the observation
-          tuple_values = stratified_group_data[group][col_id]
-          values=[value for _, value in tuple_values]
-          # send values to CategoricalFeature object, which bins the data into categories
-          feature = CategoricalFeature(values)
-          group_size[col_id][group] = len(feature.data)
-          features[col_id][group] = feature
-	# Count the observations in each category. e.g. categories_count[1] = {'A':[1,2,3], 'B':[3,1,4]}, for column 1, category 'A' has 1 observation from group 'x', 2 from 'y', ect.
-        categories_count[col_id]={category: [] for category in categories[col_id]}
-        for group in all_stratified_groups:
-          category_count = features[col_id][group].category_count
-          for category in categories[col_id]:
-            count = category_count[category] if category in category_count else 0
-            categories_count[col_id][category].append(count)
-	# Find the normalized count for each category, where normalized count is count divided by the number of people in that group
-        for category in categories[col_id]:
-          categories_count_norm[col_id][category]=[0]*len(categories_count[col_id][category])
-          for i in range(len(categories_count[col_id][category])):
-            group= all_stratified_groups[i]
-            orig_count = categories_count[col_id][category][i]
-            categories_count_norm[col_id][category][i] = orig_count* (1.0/group_size[col_id][group])
-        # Find the median normalized count for each category
-        median = {}
-        for category in categories[col_id]:
-          median[category] = sorted(categories_count_norm[col_id][category])[len(categories_count_norm[col_id][category])/2]
-        # Find the desired category count for each group, by using the repair_level (lambda). Desired category count is the desired distribution multiplied by the total number of observations in the group
-        desired_categories_count[col_id]={}
-        desired_categories_dist[col_id]={}
-        for i, group in enumerate(all_stratified_groups):
-          desired_categories_count[col_id][group] = {}
-          desired_categories_dist[col_id][group] = {}
-          for category in categories[col_id]:
-            med=median[category]
-            size = group_size[col_id][group]
-            # desired-proportion = (1-lambda)*original-count  + (lambda)*median-count
-            temp=(1 - self.repair_level)*categories_count_norm[col_id][category][i] + self.repair_level*med
-            # our desired-count = floor(desired-proportion * group-size)
-            estimate = math.floor(temp*(1.0*size))
-            desired_categories_count[col_id][group][category] = estimate
-            desired_categories_dist[col_id][group][category] = temp
+        [desired_categories_count[col_id],desired_categories_dist[col_id]] = \
+          get_desired_data(all_stratified_groups, col_id, categories, median, group_size, self.repair_level, categories_count_norm)  
 
-        # Run Max-flow to distribute as many observations to categories as possible. Overflow are those observations that are left over
-        total_overflow=0
-        total_overflows={}
-        for group in all_stratified_groups:
-          feature = features[col_id][group]
-          feature.desired_category_count = desired_categories_count[col_id][group]
-          # Create directed graph from nodes that supply the original countes to nodes that demand the desired counts, with a overflow node as total desired count is at most total original counts
-          DG=feature.create_graph()
-          # Run max-flow, and record overflow count (total and per-group)
-          [new_feature,overflow] = feature.repair(DG)
-          total_overflow += overflow
-          total_overflows[group] = overflow
-          # Update our original values with the values from max-flow, Note: still missing overflowed observations
-          features[col_id][group] = new_feature
+        [group_features[col_id], overflow] = flow_on_group_features(all_stratified_groups, col_id, group_features, desired_categories_count)
 
-        # Assign overflow observations to categories based on the group's desired distribution
-        assigned_overflow = {}
-        distribution = deepcopy(desired_categories_dist) #distribution is desired_categories_dist but with the category proportions represented in a list (divide by total, which should be 1 when repair_level is 1, but otherwise will vary slightly)
-        for group in all_stratified_groups:
-          dist=[]
-          for category in categories[col_id]:
-            dist.append(desired_categories_dist[col_id][group][category])
-          for i, elem in enumerate(dist):
-            dist[i] = elem/float(sum(dist))
-          distribution[col_id][group] = dist
-        for group in all_stratified_groups:
-          assigned_overflow[group] = {}
-          for i in range(int(total_overflows[group])):
-            dist = distribution[col_id][group]
-            number = random.uniform(0, 1)
-            cat_index = 0
-            tally = 0
-            for j in range(len(dist)):
-              value=dist[j]
-              if number < (tally+value):
-                cat_index = j
-                break
-              tally += value
-            assigned_overflow[group][i] = categories[col_id][cat_index]
-          # Actually do the assignment
-          count = 0
-          for i, value in enumerate(features[col_id][group].data):
-            if value ==0:
-              (features[col_id][group].data)[i] = assigned_overflow[group][count]
-              count += 1
+        [group_features[col_id], assigned_overflow, distribution[col_id]] = assign_overflow(desired_categories_dist, all_stratified_groups, categories, col_id, overflow, group_features)
+        
         # Return our repaired feature in the form of our original dataset
         for group in all_stratified_groups:
           indices = stratified_group_indices[group]
           for i, index in enumerate(indices):
-            repaired_value = (features[col_id][group].data)[i]
+            repaired_value = (group_features[col_id][group].data)[i]
             data_dict[col_id][index] = repaired_value
 
     # Replace stratified groups with their mode value, to remove it's information
@@ -259,12 +177,115 @@ class Repairer(AbstractRepairer):
     mode = get_mode([row[self.feature_to_repair] for row in data_to_repair])
     for i, orig_row in enumerate(data_to_repair):
       new_row = [orig_row[j] if j in self.features_to_ignore else data_dict[j][i] for j in col_ids]
-
       # Replace the "feature_to_replace" column with the mode value.
       new_row[self.feature_to_repair] = mode
       repaired_data.append(new_row)
 
     return repaired_data
+# Initialize categories dictionary with a list of categories
+
+def get_categories(bin_index_dict):
+  list = []
+  for key,value in bin_index_dict.items():
+    list.append(key)
+  return list 
+
+def get_group_data(all_stratified_groups,stratified_group_data, col_id, feature):
+  group_features={}; group_size={}; 
+  for group in all_stratified_groups:
+    #tuple_values is a list e.g. [('A',0),('A',1),('B',2),('B',3),('B',4)], where the second element in the tuple is the index of the observation
+    tuple_values = stratified_group_data[group][col_id]
+    values=[value for _, value in tuple_values]
+    # send values to CategoricalFeature object, which bins the data into categories
+    group_features[group] = CategoricalFeature(values)
+    group_size[group] = len(feature.data)
+  return [group_features, group_size]
+
+# Count the observations in each category. e.g. categories_count[1] = {'A':[1,2,3], 'B':[3,1,4]}, for column 1, category 'A' has 1 observation from group 'x', 2 from 'y', ect.
+def get_categories_count(categories, all_stratified_groups, col_id, group_features):
+  dict={category: [] for category in categories[col_id]}
+  for group in all_stratified_groups:
+    category_count = group_features[col_id][group].category_count
+    for category in categories[col_id]:
+      count = category_count[category] if category in category_count else 0
+      dict[category].append(count)
+  return dict
+
+# Find the normalized count for each category, where normalized count is count divided by the number of people in that group
+def get_categories_count_norm(categories, col_id, all_stratified_groups, categories_count, group_size):
+  norm = deepcopy(categories_count[col_id])
+  for category in categories[col_id]:
+    for i in range(len(norm[category])):
+      group= all_stratified_groups[i]
+      norm[category][i] = norm[category][i]* (1.0/group_size[col_id][group])
+  return norm
+
+# Find the median normalized count for each category
+def get_median(categories, col_id, categories_count_norm):
+  dict={}
+  for category in categories[col_id]:
+    dict[category] = sorted(categories_count_norm[col_id][category])[len(categories_count_norm[col_id][category])/2]
+  return dict
+
+# Find the desired category count for each group, by using the repair_level (lambda). Desired category count is the desired distribution multiplied by the total number of observations in the group
+def get_desired_data(all_stratified_groups, col_id, categories, median, group_size, repair_level, categories_count_norm):
+  dict1={}; dict2={}
+  for i, group in enumerate(all_stratified_groups):
+    dict1[group] = {}; dict2[group] = {}
+    for category in categories[col_id]:
+      med=median[category]; size = group_size[col_id][group]
+      # desired-proportion = (1-lambda)*original-count  + (lambda)*median-count
+      temp=(1 - repair_level)*categories_count_norm[col_id][category][i] + repair_level*med
+      # our desired-count = floor(desired-proportion * group-size)
+      estimate = math.floor(temp*(1.0*size))
+      dict1[group][category] = estimate
+      dict2[group][category] = temp
+  return [dict1, dict2]
+
+ # Run Max-flow to distribute as many observations to categories as possible. Overflow are those observations that are left over
+def flow_on_group_features(all_stratified_groups, col_id, group_features, desired_categories_count):
+  dict1= {}; dict2={};
+  for group in all_stratified_groups:
+    feature = group_features[col_id][group]
+    feature.desired_category_count = desired_categories_count[col_id][group]
+    # Create directed graph from nodes that supply the original countes to nodes that demand the desired counts, with a overflow node as total desired count is at most total original counts
+    DG=feature.create_graph()
+    # Run max-flow, and record overflow count (total and per-group)
+    [new_feature,overflow] = feature.repair(DG)
+    dict2[group] = overflow
+    # Update our original values with the values from max-flow, Note: still missing overflowed observations
+    dict1[group] = new_feature
+  return [dict1, dict2]
+
+# Assign overflow observations to categories based on the group's desired distribution 
+def assign_overflow(desired_categories_dist, all_stratified_groups, categories, col_id, overflow, group_features):
+  dict1 = deepcopy(group_features[col_id])
+  dict2 = {}
+  #dict3 (distribution) is desired_categories_dist but with the category proportions represented in a list (divide by total, which should be 1 when repair_level is 1, but otherwise will vary slightly)
+  dict3 = {}
+  for group in all_stratified_groups:
+    list = []
+    for category in categories[col_id]:
+      list.append(desired_categories_dist[col_id][group][category])
+      for i, elem in enumerate(list):
+        list[i] = elem/float(sum(list))
+    dict3[group] = list; dict2[group] = {};
+    for i in range(int(overflow[group])):
+      dist = dict3[group]; number = random.uniform(0, 1); cat_index = 0; tally = 0
+      for j in range(len(dist)):
+        value=dist[j]
+        if number < (tally+value):
+          cat_index = j
+          break
+        tally += value
+      dict2[group][i] = categories[col_id][cat_index]
+    # Actually do the assignment
+    count = 0
+    for i, value in enumerate(group_features[col_id][group].data):
+      if value ==0:
+        (dict1[group].data)[i] = dict2[group][count]
+        count += 1
+  return [dict1, dict2, dict3] 
 
 def get_mode(values):
   counts = {}
@@ -276,10 +297,10 @@ def get_mode(values):
 
 
 def test():
-  test_minimal()
+  #test_minimal()
   test_categorical()
-  test_repeated_values()
-  test_arrests()
+  #test_repeated_values()
+  #test_arrests()
 
 def test_repeated_values():
   #TODO: Add this test (which is why Ricci broke originally)
@@ -301,27 +322,31 @@ def test_minimal():
 
 def test_categorical():
   feature_to_repair = 0
-
   all_data = [
   ["x","A"], ["x","A"], ["x","B"], ["x","B"], ["x","B"], ["y","A"],
   ["y","A"], ["y","A"], ["y","B"], ["z","A"], ["z","A"], ["z","A"],
   ["z","A"], ["z","A"], ["z","B"]]
-  #feature_to_repair is really feature to repair ON
+  #feature_to_repair is really feature to repair on
   repair_level=1
   random.seed(10)
   repairer = Repairer(all_data, feature_to_repair, repair_level)
   repaired_data=repairer.repair(all_data)
+  col=[]; col_id = 1; categories = {};
+  for row in all_data: col.append(row[1])  
+  feature = CategoricalFeature(col)
+  categories[col_id] = get_categories(feature.bin_index_dict)
+  print "Categorical Minimal Dataset -- full repair desired distribution correct?", repaired_data != all_data
   correct_repaired_data = [
   ["z","A"], ["z","A"], ["z","B"], ["z","A"], ["z","A"], ["z","A"],
   ["z","A"], ["z","A"], ["z","B"], ["z","A"], ["z","A"], ["z","A"],
-  ["z","A"], ["z","B"], ["z","B"]]
+  ["z","A"], ["z","A"], ["z","B"]]
   print "Categorical Minimal Dataset -- full repaired_data altered?", repaired_data != all_data
   print "Categorical Minimal Dataset -- full repaired_data correct?", repaired_data == correct_repaired_data
-
   repair_level=0.1
   random.seed(10)
   repairer = Repairer(all_data, feature_to_repair, repair_level)
   part_repaired_data=repairer.repair(all_data)
+  print "Categorical Minimal Dataset -- partial repair desired distribution correct?", repaired_data != all_data
   correct_part_repaired_data = [
   ["z","A"], ["z","A"], ["z","B"], ["z","B"], ["z","A"], ["z","A"],
   ["z","A"], ["z","A"], ["z","B"], ["z","A"], ["z","A"], ["z","A"],
