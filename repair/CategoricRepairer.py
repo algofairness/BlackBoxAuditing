@@ -177,7 +177,7 @@ class Repairer(AbstractRepairer):
 
         [desired_categories_count[col_id],desired_categories_dist[col_id]] = \
           get_desired_data(all_stratified_groups, col_id, categories, median, group_size, self.repair_level, categories_count_norm)
-
+        
         [group_features[col_id], overflow] = flow_on_group_features(all_stratified_groups, col_id, group_features, desired_categories_count)
 
         [group_features[col_id], assigned_overflow, distribution[col_id]] = assign_overflow(desired_categories_dist, all_stratified_groups, categories, col_id, overflow, group_features)
@@ -209,12 +209,22 @@ def get_categories(bin_index_dict):
     list.append(key)
   return list
 
+def getKey(item):
+    return item[0]
 def get_group_data(all_stratified_groups,stratified_group_data, col_id):
   group_features={}; group_size={};
   for group in all_stratified_groups:
-    #tuple_values is a list e.g. [('A',0),('A',1),('B',2),('B',3),('B',4)], where the second element in the tuple is the index of the observation
-    tuple_values = stratified_group_data[group][col_id]
-    values=[value for _, value in tuple_values]
+    #stratified_group_data is a dictionary in the form: {('y',):{0: [([5,6,7,8],'A'])], 1: [([0,1,2,3,4]), 'B'])]}}
+    list = stratified_group_data[group][col_id]
+    points=[]
+    values=[]
+    for tuple in list:
+      for i in tuple[0]:
+        points.append((i, tuple[1]))
+    points = sorted(points, key=getKey)
+    for i in range(len(points)):
+      (index, value) = points[i]
+      values.append(value)
     # send values to CategoricalFeature object, which bins the data into categories
     group_features[group] = CategoricalFeature(values)
     group_size[group] = len(group_features[group].data)
@@ -345,16 +355,23 @@ def test_categorical():
   ["z","A"], ["z","A"], ["z","A"], ["z","A"], ["z","A"], ["z","B"]]
 
   random.seed(10)
-  col=[]; col_id = 1; categories = {}; group_features={}; group_size={}; categories_count={}; categories_count_norm={};
-  desired_categories_count={}; desired_categories_dist={};
+  col=[]; 
+  col_id = 1; 
+  categories = {}; 
+  group_features={}; 
+  group_size={}; 
+  categories_count={}; 
+  categories_count_norm={};
+  desired_categories_count={}; 
+  desired_categories_dist={};
   for row in all_data: col.append(row[1])
   feature = CategoricalFeature(col)
   categories[col_id] = get_categories(feature.bin_index_dict)
 
   all_stratified_groups = [('x',), ('y',),('z',)]
-  stratified_group_data = {('y',): {0: [(5, 'y'), (6, 'y'), (7, 'y'), (8, 'y')], 1: [(5, 'A'), (6, 'A'), (7, 'A'), (8, 'B')]},\
-                           ('z',): {0: [(9, 'z'), (10, 'z'), (11, 'z'), (12, 'z'), (13, 'z'), (14, 'z')], 1: [(9, 'A'), (10, 'A'), (11, 'A'), (12, 'A'), (13, 'A'), (14, 'B')]},\
-                           ('x',): {0: [(0, 'x'), (1, 'x'), (2, 'x'), (3, 'x'), (4, 'x')], 1: [(0, 'A'), (1, 'A'), (2, 'B'), (3, 'B'), (4, 'B')]}}
+  stratified_group_data = {('y',): {0: [([5, 6, 7, 8], 'y')], 1: [([5, 6, 7], 'A'), ([8], 'B')]},\
+                           ('z',): {0: [([9, 10, 11, 12, 13, 14], 'z')], 1: [([9, 10, 11, 12, 13], 'A'), ([14], 'B')]},\
+                           ('x',): {0: [([0, 1, 2, 3, 4], 'x')], 1: [([0, 1], 'A'), ([2, 3, 4], 'B')]}}
 
   [group_features[col_id], group_size[col_id]] = get_group_data(all_stratified_groups, stratified_group_data, col_id)
   categories_count[col_id] = get_categories_count(categories, all_stratified_groups, col_id, group_features)
