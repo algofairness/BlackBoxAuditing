@@ -22,11 +22,15 @@ class Repairer(AbstractRepairer):
           if row == binned_row: # TODO: This isn't the best way to do this...
             binned_data_to_repair[j][self.feature_to_repair] = bin_name
 
+    repaired_data = self.categoric_repairer.repair(binned_data_to_repair)
+
     # Replace the "feature_to_repair" column with the median numeric value.
     median = get_median([row[self.feature_to_repair] for row in data_to_repair])
-    repaired_data = self.categoric_repairer.repair(binned_data_to_repair)
     for i in xrange(len(repaired_data)):
-      repaired_data[i][self.feature_to_repair] = median
+      if self.repair_level > 0:
+        repaired_data[i][self.feature_to_repair] = median
+      else:
+        repaired_data[i][self.feature_to_repair] = data_to_repair[i][self.feature_to_repair]
 
     return repaired_data
 
@@ -43,6 +47,12 @@ def test_sample():
 
   median = get_median([row[feature_to_repair] for row in data])
   print "median replaces column?", all(row[feature_to_repair] == median for row in repaired_data)
+
+  repairer = Repairer(data, feature_to_repair, 0.0)
+  repaired_data = repairer.repair(data)
+  print repaired_data
+  print data
+  print "repaired_data unaltered for repair level=0?", repaired_data == data
 
 
 if __name__=="__main__":

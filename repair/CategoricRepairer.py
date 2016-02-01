@@ -193,7 +193,12 @@ class Repairer(AbstractRepairer):
     repaired_data = []
     mode = get_mode([row[self.feature_to_repair] for row in data_to_repair])
     for i, orig_row in enumerate(data_to_repair):
-      new_row = [orig_row[j] if j in self.features_to_ignore else data_dict[j][i] for j in col_ids]
+      new_row = []
+      for j in col_ids:
+        if self.repair_level==0 or j in self.features_to_ignore:
+          new_row.append( orig_row[j] )
+        else:
+          new_row.append( data_dict[j][i] )
       # Replace the "feature_to_replace" column with the mode value.
       new_row[self.feature_to_repair] = mode
       repaired_data.append(new_row)
