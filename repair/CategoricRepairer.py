@@ -246,7 +246,8 @@ def get_categories_count_norm(categories, col_id, all_stratified_groups, categor
   for category in categories[col_id]:
     for i in range(len(norm[category])):
       group= all_stratified_groups[i]
-      norm[category][i] = norm[category][i]* (1.0/group_size[col_id][group])
+      if group_size[col_id][group]==0: norm[category][i] = 0.0
+      else: norm[category][i] = norm[category][i]* (1.0/group_size[col_id][group])
   return norm
 
 # Find the median normalized count for each category
@@ -323,12 +324,17 @@ def get_mode(values):
   return mode_tuple[0]
 
 
-
 def test():
   test_minimal()
+  test_get_group_data()
+  test_get_categories_count()
+  test_get_categories_count_norm()
+  test_get_median_per_category()
+  test_get_desired_data()
   test_categorical()
   test_repeated_values()
   test_arrests()
+
 
 def test_repeated_values():
   #TODO: Add this test (which is why Ricci broke originally)
@@ -348,6 +354,67 @@ def test_minimal():
   print "Minimal Dataset -- mode is true mode?", mode=="A"
   print "Minimal Dataset -- mode value as feature_to_repair?", all(row[feature_to_repair] == mode for row in repaired_data)
 
+def test_get_group_data():
+  group_features = {}
+  group_size = {}
+  col_id = 1
+  all_stratified_groups = [('y',),('z',)]
+  stratified_group_data = {('y',): {1: [([4, 7, 5], 'A'),([3, 2, 6], 'B'), ([], 'C')]},\
+                           ('z',): {1: [([9, 1, 10], 'A'), ([], 'B'), ([11], 'C')]}}
+  group_features[col_id], group_size[col_id] = get_group_data(all_stratified_groups, stratified_group_data, col_id)
+  print "Test get_group_data -- group features correct?", \
+    [group_features[col_id][group].data for group in all_stratified_groups] == [['B','B','A','A','B','A'],['A', 'A', 'A', 'C']]
+  print "Test get_group_data -- group sizes correct?", group_size[col_id] == {('y',): 6, ('z',):4}
+
+def test_get_categories_count():
+  categories_count = {}
+  categories = {1:['A','B','C','D']}
+  all_stratified_groups = [('y',),('z',)]
+  col_id = 1
+  group_features = {1:{('y',): CategoricalFeature(['C','A','C','B','A','C']),\
+                      ('z',): CategoricalFeature(['B','B','D','D'])}}\
+  
+  categories_count[col_id] = get_categories_count(categories, all_stratified_groups, col_id, group_features)
+  print "Test get_categories_count -- category counts correct?",\
+    categories_count[col_id] == {'A':[2,0],'B':[1,2], 'C':[3,0], 'D':[0,2]} 
+
+def test_get_categories_count_norm():
+  categories_count_norm = {}
+  categories = {1:['A','B','C','D']}
+  all_stratified_groups = [('y',),('z',)]
+  col_id = 1
+  categories_count = {1: {'A':[2,0],'B':[1,0], 'C':[3,0], 'D':[0,0]}}
+  group_size = {1: {('y',): 6,('z',): 0}}
+  
+  categories_count_norm[col_id] = get_categories_count_norm(categories, col_id, all_stratified_groups, categories_count, group_size)
+  print "Test get_categories_count_norm -- normalized category counts correct?",\
+    categories_count_norm[col_id] == {'A':[.333333333333333333333333,0.0],'C':[0.5,0.0],'B':[0.16666666666666666,0.0],  'D':[0.0,0.0]}
+
+def test_get_median_per_category():
+  categories = {1:['A','B','C','D']}
+  col_id =1
+  categories_count_norm = {1:{'A':[0.25,0.0],'C':[0.3,0.0],'B':[0.4,0.0],  'D':[0.6,0.4]}}
+  median = get_median_per_category(categories, col_id, categories_count_norm)
+  print "Test get_median_per_category -- medians are correct?", median == {'A':0.0,'C':0.0,'B':0.0,  'D':0.4}
+
+def test_get_desired_data():
+  desired_categories_count={}
+  desired_categories_dist={}
+  all_stratified_groups = [('y',),('z',)]
+  col_id =1
+  categories = {1:['A','B','C','D']}
+  median = {'A':0.0,'C':0.0,'B':0.0,  'D':0.4}
+  group_size = {1: {('y',): 6,('z',): 10}}
+  repair_level = .6
+  categories_count_norm = {1:{'A':[0.25,0.0],'C':[0.3,0.0],'B':[0.4,0.0],  'D':[0.6,0.4]}}
+
+  [desired_categories_count[col_id],desired_categories_dist[col_id]] = \
+      get_desired_data(all_stratified_groups, col_id, categories, median, group_size, repair_level, categories_count_norm)
+  print "Test get_desired_data -- Desired category counts correct?", \
+    desired_categories_count[col_id] =={('y',):{'A':0.0, 'C':0.0,'B':0.0, 'D':2.0}, ('z',):{'A':0.0, 'C':0.0,'B':0.0, 'D':4.0}}
+  print "Test get_desired_data -- Desired category distribution correct?", \
+    desired_categories_dist[col_id] == {('y',):{'A':0.1, 'C':0.12,'B':0.16000000000000003, 'D':0.48}, ('z',):{'A':0.0, 'C':0.0,'B':0.0, 'D':0.4}}
+
 def test_categorical():
   all_data = [
   ["x","A"], ["x","A"], ["x","B"], ["x","B"], ["x","B"],
@@ -355,70 +422,30 @@ def test_categorical():
   ["z","A"], ["z","A"], ["z","A"], ["z","A"], ["z","A"], ["z","B"]]
 
   random.seed(10)
-  col=[]; 
-  col_id = 1; 
-  categories = {}; 
-  group_features={}; 
-  group_size={}; 
-  categories_count={}; 
-  categories_count_norm={};
-  desired_categories_count={}; 
-  desired_categories_dist={};
-  for row in all_data: col.append(row[1])
-  feature = CategoricalFeature(col)
-  categories[col_id] = get_categories(feature.bin_index_dict)
 
-  all_stratified_groups = [('x',), ('y',),('z',)]
-  stratified_group_data = {('y',): {0: [([5, 6, 7, 8], 'y')], 1: [([5, 6, 7], 'A'), ([8], 'B')]},\
-                           ('z',): {0: [([9, 10, 11, 12, 13, 14], 'z')], 1: [([9, 10, 11, 12, 13], 'A'), ([14], 'B')]},\
-                           ('x',): {0: [([0, 1, 2, 3, 4], 'x')], 1: [([0, 1], 'A'), ([2, 3, 4], 'B')]}}
-
-  [group_features[col_id], group_size[col_id]] = get_group_data(all_stratified_groups, stratified_group_data, col_id)
-  categories_count[col_id] = get_categories_count(categories, all_stratified_groups, col_id, group_features)
-  categories_count_norm[col_id] = get_categories_count_norm(categories, col_id, all_stratified_groups, categories_count, group_size)
-  median = get_median_per_category(categories, col_id, categories_count_norm)
-
-  print "Categorical Minimal Dataset -- categories correct?", {1: ['A', 'B']} == categories
-  print "Categorical Minimal Dataset -- category counts correct?", {1: {'A': [2, 3, 5], 'B': [3,1,1]}} == categories_count
-  print "Categorical Minimal Dataset -- category distribution correct?", {1: {'A': [0.4, 0.75, .8333333333333333], 'B': [.6000000000000001, 0.25, .16666666666666666]}} == categories_count_norm
-  print "Categorical Minimal Dataset -- group sizes correct?", {1: {('y',):4, ('z',):6, ('x',):5}} == group_size
-  print "Categorical Minimal Dataset -- category median correct?", {'A':0.75, 'B':0.25} == median
-
-  repair_level=1; feature_to_repair = 0
+  repair_level=1; 
+  feature_to_repair = 0
   repairer = Repairer(all_data, feature_to_repair, repair_level)
   repaired_data=repairer.repair(all_data)
-
-  [desired_categories_count[col_id],desired_categories_dist[col_id]] = \
-      get_desired_data(all_stratified_groups, col_id, categories, median, group_size, repair_level, categories_count_norm)
 
   correct_repaired_data = [
   ["z","A"], ["z","A"], ["z","B"], ["z","A"], ["z","A"],
   ["z","A"], ["z","A"], ["z","A"], ["z","B"],
   ["z","A"], ["z","A"], ["z","A"], ["z","A"], ["z","B"], ["z","B"]]
 
-  print "Categorical Minimal Dataset -- full repair desired category counts correct?", \
-    {1: {('y',): {'A':3.0, 'B':1.0}, ('z',): {'A':4.0, 'B':1.0}, ('x',): {'A':3.0, 'B':1.0}}} == desired_categories_count
-  print "Categorical Minimal Dataset -- full repair desired category distribution correct?", \
-    {1: {('y',): {'A':0.75, 'B':0.25}, ('z',): {'A':0.75, 'B':0.25}, ('x',): {'A':0.75, 'B':0.25}}} == desired_categories_dist
   print "Categorical Minimal Dataset -- full repaired_data altered?", repaired_data != all_data
   print "Categorical Minimal Dataset -- full repaired_data correct?", repaired_data == correct_repaired_data
 
-  repair_level=0.1; feature_to_repair = 0
+  repair_level=0.1; 
+  feature_to_repair = 0
   repairer = Repairer(all_data, feature_to_repair, repair_level)
   part_repaired_data=repairer.repair(all_data)
-
-  [desired_categories_count[col_id],desired_categories_dist[col_id]] = \
-      get_desired_data(all_stratified_groups, col_id, categories, median, group_size, repair_level, categories_count_norm)
 
   correct_part_repaired_data = [
   ["z","A"], ["z","A"], ["z","B"], ["z","B"], ["z","A"],
   ["z","A"], ["z","A"], ["z","A"], ["z","B"],
   ["z","A"], ["z","A"], ["z","A"], ["z","A"], ["z","A"], ["z","B"]]
 
-  print "Categorical Minimal Dataset -- partial repair desired category counts correct?", \
-    {1: {('y',): {'A':3.0, 'B':1.0}, ('z',): {'A':4.0, 'B':1.0}, ('x',): {'A':2.0, 'B':2.0}}} == desired_categories_count
-  print "Categorical Minimal Dataset -- partial repair desired category distribution correct?", \
-    {1: {('y',): {'A':0.75, 'B':0.25}, ('z',): {'A':0.825, 'B':0.175}, ('x',): {'A':0.43500000000000005, 'B':0.5650000000000002}}}== desired_categories_dist
   print "Categorical Minimal Dataset -- partial repaired_data altered?", part_repaired_data != all_data
   print "Categorical Minimal Dataset -- partial repaired_data correct?", part_repaired_data == correct_part_repaired_data
 
