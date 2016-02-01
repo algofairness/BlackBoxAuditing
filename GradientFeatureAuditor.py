@@ -3,6 +3,7 @@ from loggers import vprint
 import csv
 import time
 import os
+import json
 
 class GradientFeatureAuditor(object):
   def __init__(self, model, headers, train_set, test_set, repair_steps=10,
@@ -48,7 +49,8 @@ class GradientFeatureAuditor(object):
     with open(output_file, "a") as f:
       f.write("GFA Audit for:{}\n".format(feature_to_repair))
       for repair_level, conf_table in conf_tables:
-        f.write("{}:{}\n".format(repair_level, conf_table))
+        json_conf_table = json.dumps(conf_table)
+        f.write("{}:{}\n".format(repair_level, json_conf_table))
 
   def audit(self, verbose=False):
     output_files = []

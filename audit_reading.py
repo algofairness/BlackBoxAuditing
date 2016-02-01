@@ -5,6 +5,17 @@ import random
 import csv
 
 def load_audit_confusion_matrices(filename):
+  """
+  Loads a confusion matrix in a two-level dictionary format.
+
+  For example, the confusion matrix of a 75%-accurate model
+  that predicted 15 values (and mis-classified 5) may look like:
+  {"A": {"A":10, "B": 5}, "B": {"B":5}}
+
+  Note that raw boolean values are translated into strings, such that
+  a value that was the boolean True will be returned as the string "True".
+  """
+
   with open(filename) as audit_file:
     audit_file.next() # Skip the first line.
 
