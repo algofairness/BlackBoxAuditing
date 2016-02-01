@@ -4,7 +4,7 @@
 from experiments.adult.load_data import load_data
 from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy
-response_header = "income-per-year"
+response_header = "income-per-year" #"boolean_crystallisation_outcome_manual_0"
 graph_measurers = [accuracy]
 rank_measurer = accuracy
 features_to_ignore = []

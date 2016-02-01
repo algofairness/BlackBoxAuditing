@@ -32,6 +32,7 @@ def load_data():
 
     # Remove unhelpful headers from the dataset.
     ignored_indices = {headers.index(header) for header in ignored_headers}
+    for i in xrange(35, len(headers)): ignored_indices.add(i) #TODO
     headers = [h for i,h in enumerate(headers) if i not in ignored_indices]
     data = [[e for i,e in enumerate(row) if i not in ignored_indices] for row in data]
 

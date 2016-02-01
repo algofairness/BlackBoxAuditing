@@ -296,6 +296,8 @@ def assign_overflow(desired_dists, all_stratified_groups, categories, col_id, ov
   desired_dict_list = {}
   for group in all_stratified_groups:
     cat_props = [desired_dists[col_id][group][cat] for cat in categories[col_id]]
+    if all(elem==0 for elem in cat_props): #TODO: Check that this is correct!
+      cat_props = [1.0/len(cat_props)] * len(cat_props)
     s = float(sum(cat_props))
     for i, elem in enumerate(cat_props):
       cat_props[i] = elem/s

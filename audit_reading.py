@@ -72,7 +72,7 @@ def graph_audits(filenames, measurer, output_image_file):
   for filename in filenames:
     with open(filename) as audit_file:
       header_line = audit_file.readline()[:-1] # Remove the trailing endline.
-      feature = header_line[header_line.index(":")+2:]
+      feature = header_line[header_line.index(":")+1:]
 
     confusion_matrices = load_audit_confusion_matrices(filename)
     x_axis = [repair_level for repair_level, _ in confusion_matrices]
