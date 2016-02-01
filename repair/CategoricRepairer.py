@@ -291,20 +291,18 @@ def flow_on_group_features(all_stratified_groups, col_id, group_features, desire
 
 # Assign overflow observations to categories based on the group's desired distribution
 def assign_overflow(desired_dists, all_stratified_groups, categories, col_id, overflow, group_features):
-  dict1 = deepcopy(group_features[col_id])
-  #dict2 is assigned overflow
-  dict2 = {}
-  #dict3 (distribution) is desired_dists but with the category proportions represented in a list (divide by total, which should be 1 when repair_level is 1, but otherwise will vary slightly)
-  dict3 = {}
+  feature = deepcopy(group_features[col_id])
+  assigned_overflow = {}
+  desired_dict_list = {}
   for group in all_stratified_groups:
     cat_props = [desired_dists[col_id][group][cat] for cat in categories[col_id]]
     s = float(sum(cat_props))
     for i, elem in enumerate(cat_props):
       cat_props[i] = elem/s
-    dict3[group] = cat_props
-    dict2[group] = {}
+    desired_dict_list[group] = cat_props
+    assigned_overflow[group] = {}
     for i in range(int(overflow[group])):
-      distribution_list = dict3[group]
+      distribution_list = desired_dict_list[group]
       number = random.uniform(0, 1)
       cat_index = 0
       tally = 0
@@ -314,15 +312,14 @@ def assign_overflow(desired_dists, all_stratified_groups, categories, col_id, ov
           cat_index = j
           break
         tally += value
-      dict2[group][i] = categories[col_id][cat_index]
+      assigned_overflow[group][i] = categories[col_id][cat_index]
     # Actually do the assignment
     count = 0
     for i, value in enumerate(group_features[col_id][group].data):
       if value ==0:
-        (dict1[group].data)[i] = dict2[group][count]
+        (feature[group].data)[i] = assigned_overflow[group][count]
         count += 1
-  # dict1 represents group_features[col_id], dict2 represents assigned_overflow, dict3 represents distribution[col_id]
-  return dict1, dict2, dict3
+  return feature, assigned_overflow, desired_dict_list
 
 def get_mode(values):
   counts = {}

@@ -4,7 +4,7 @@ import random
 
 train_percentage = 0.70
 filename = "test_data/adult.csv"
-max_entries = 5000
+max_entries = 500
 
 def load_data():
   with open(filename) as f:
