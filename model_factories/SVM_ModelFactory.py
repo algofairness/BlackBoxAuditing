@@ -70,6 +70,7 @@ class ModelVisitor(AbstractModelVisitor):
     conf_table = {}
     for entry, guess in zip(test_set, predictions):
       actual = entry[self.response_index]
+      guess = convert_to_type(actual, guess) # ... Since file-reading changes types.
 
       if not actual in conf_table:
         conf_table[actual] = {}
@@ -81,10 +82,17 @@ class ModelVisitor(AbstractModelVisitor):
 
     return conf_table
 
+def convert_to_type(actual, guess):
+  if type(actual) == bool:
+    guess = guess=="True"
+  else:
+    actual_type = type(actual)
+    guess = actual_type(guess)
+  return guess
+
 
 def run_weka_command(command):
   set_path = "export CLASSPATH=$CLASSPATH:{}; ".format(WEKA_PATH)
-  print command
   subprocess.check_output(set_path + command, shell=True)
 
 

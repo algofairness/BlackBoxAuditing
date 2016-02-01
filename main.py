@@ -1,13 +1,13 @@
 
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-from experiments.ricci.load_data import load_data
+from experiments.DRP.load_data import load_data
 from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy
-response_header = "Class"
+response_header = "boolean_crystallisation_outcome_manual_0"
 graph_measurers = [accuracy]
 rank_measurer = accuracy
-features_to_ignore = ["Position"]
+features_to_ignore = []
 
 verbose = True # Set to `True` to allow for more detailed status updates.
 
@@ -35,6 +35,12 @@ def run():
   model_factory = ModelFactory(all_data, headers, response_header)
   model = model_factory.build(train_set)
 
+  # Check the quality of the initial model on verbose runs.
+  if verbose:
+    conf_table = model.test(train_set)
+    for measurer in graph_measurers:
+      print "\t{}: {}".format(measurer.__name__, measurer(conf_table))
+
   # Don't audit the response feature.
   features_to_ignore.append(response_header)
 
@@ -43,7 +49,8 @@ def run():
 
   # Perform the Gradient Feature Audit and dump the audit results into files.
   auditor = GradientFeatureAuditor(model, headers, train_set, test_set,
-                                   features_to_ignore=feature_indexes_to_ignore)
+                                   features_to_ignore=feature_indexes_to_ignore,
+                                   repair_steps = 2)
   audit_filenames = auditor.audit(verbose=verbose)
 
   # Graph the audit files.
