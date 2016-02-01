@@ -9,13 +9,14 @@ bool_headers = ["boolean_crystallisation_outcome_manual_0",
                 "legacyRecommendedFlag", "valid", "public"]
 ignored_headers = ["notes", "rxnSpaceHash1_drpxxhash_0.02/0.4.3","reaction_ptr",
                    "labGroup", "user", "insertedDateTime", "performedDateTime",
-                   "performedBy", "reference"]
+                   "performedBy", "reference", "crystallisation_outcome_manual_0",
+                   "crystallisation_purity_outcome_manual_0"]
 
 ignored_headers += str_headers #TODO: For now, ignore all the string-fields.
 
 unknown_tokens = {"?", ""}
 train_percentage = 0.7
-max_entries = 1500
+max_entries = 100
 filename = "test_data/DRP.csv"
 
 def load_data():

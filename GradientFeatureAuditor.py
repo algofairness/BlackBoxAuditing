@@ -53,8 +53,8 @@ class GradientFeatureAuditor(object):
   def audit(self, verbose=False):
     output_files = []
 
-    features_to_audit = [h for h in self.headers if h not in self.features_to_ignore]
-    for i, feature in enumerate(self.headers):
+    features_to_audit = [h for i, h in enumerate(self.headers) if i not in self.features_to_ignore]
+    for i, feature in enumerate(features_to_audit):
       message = "Auditing: '{}' ({}/{}).".format(feature,i+1,len(features_to_audit))
       vprint(message, verbose)
 
