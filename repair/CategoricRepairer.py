@@ -343,7 +343,6 @@ def test():
   test_repeated_values()
   test_arrests()
 
-
 def test_repeated_values():
   #TODO: Add this test (which is why Ricci broke originally)
   print "NEED TO ADD TEST FOR REPEATED VALUES IN CATEGORICAL REPAIR!", False
@@ -413,7 +412,7 @@ def test_get_desired_data():
   categories = {1:['A','B','C','D']}
   median = {'A':0.0,'C':0.0,'B':0.0,  'D':0.4}
   group_size = {1: {('y',): 6,('z',): 10}}
-  repair_level = .6
+  repair_level = 0.6
   categories_count_norm = {1:{'A':[0.25,0.0],'C':[0.3,0.0],'B':[0.4,0.0],  'D':[0.6,0.4]}}
 
   desired_categories_count[col_id],desired_categories_dist[col_id] = \
@@ -479,7 +478,7 @@ def test_categorical():
 def test_arrests():
   from experiments.arrests.load_data import load_data
   feature_to_repair = 0
-  repair_level = 1
+  repair_level = 1.0
   _, train_data, test_data = load_data()
 
   repairer = Repairer(train_data+test_data, feature_to_repair, repair_level)
@@ -487,6 +486,12 @@ def test_arrests():
 
   print "Arrest Dataset -- no rows lost?", len(repaired_data) == len(test_data)
   print "Arrest Dataset -- features changed for repair level '{}'? {}".format(repair_level, repaired_data != test_data)
+
+  repair_level = 0.0
+  repairer = Repairer(train_data+test_data, feature_to_repair, repair_level)
+  repaired_data = repairer.repair(test_data)
+  print "Arrest Dataset -- features not changed for repair level 0?", repaired_data == test_data
+
 
 if __name__== "__main__":
   test()
