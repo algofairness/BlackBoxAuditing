@@ -1,11 +1,19 @@
+from splitters import split_by_percent
 import csv
+import random
+
+train_percentage = 0.70
+filename = "test_data/adult.csv"
+max_entries = 500
 
 def load_data():
-  filename = "test_data/adult.csv"
   with open(filename) as f:
     reader = csv.reader(f)
     data = [row for row in reader]
     headers = data.pop(0)
+
+    if max_entries:
+      data = random.sample(data, max_entries)
 
     correct_types = [int, str, int, str, int, str, str, str, str, str, int, int, int, str, str]
 
@@ -13,8 +21,7 @@ def load_data():
       for j, correct_type in enumerate(correct_types):
         data[i][j] = correct_type(row[j])
 
-    train = data[:len(data)/2]
-    test = data[len(data)/2:]
+    train, test = split_by_percent(data, train_percentage)
 
   return headers, train, test
 

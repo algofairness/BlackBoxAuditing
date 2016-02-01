@@ -1,3 +1,4 @@
+from splitters import split_by_percent
 import csv
 import random
 
@@ -15,10 +16,9 @@ ignored_headers += str_headers #TODO: For now, ignore all the string-fields.
 unknown_tokens = {"?", ""}
 train_percentage = 0.7
 max_entries = 1500
-
+filename = "test_data/DRP.csv"
 
 def load_data():
-  filename = "test_data/DRP.csv"
   with open(filename) as f:
     reader = csv.reader(f)
     data = [row for row in reader]
@@ -42,9 +42,7 @@ def load_data():
         correct_type = correct_types[header]
         data[i][j] = correct_type(row[j]) if row[j] not in unknown_tokens else 0.0
 
-    train_indices = random.sample(range(len(data)), int(train_percentage*len(data)))
-    train = [row for i,row in enumerate(data) if i in train_indices]
-    test = [row for i,row in enumerate(data) if i not in train_indices]
+    train, test = split_by_percent(data, train_percentage)
 
   return headers, train, test
 

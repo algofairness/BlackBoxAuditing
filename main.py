@@ -1,10 +1,10 @@
 
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-from experiments.DRP.load_data import load_data
+from experiments.adult.load_data import load_data
 from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy
-response_header = "boolean_crystallisation_outcome_manual_0"
+response_header = "income-per-year"
 graph_measurers = [accuracy]
 rank_measurer = accuracy
 features_to_ignore = []
