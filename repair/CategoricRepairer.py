@@ -177,7 +177,7 @@ class Repairer(AbstractRepairer):
 
         desired_categories_count[col_id],desired_categories_dist[col_id] = \
           get_desired_data(all_stratified_groups, col_id, categories, median, group_size, self.repair_level, categories_count_norm)
-        
+
         group_features[col_id], overflow = flow_on_group_features(all_stratified_groups, col_id, group_features, desired_categories_count)
 
         group_features[col_id], assigned_overflow, distribution[col_id] = assign_overflow(desired_categories_dist, all_stratified_groups, categories, col_id, overflow, group_features)
@@ -212,7 +212,7 @@ def get_categories(bin_index_dict):
 def getKey(item):
     return item[0]
 def get_group_data(all_stratified_groups,stratified_group_data, col_id):
-  group_features={} 
+  group_features={}
   group_size={}
   for group in all_stratified_groups:
     #stratified_group_data is a dictionary in the form: {('y',):{0: [([5,6,7,8],'A'])], 1: [([0,1,2,3,4]), 'B'])]}}
@@ -290,23 +290,21 @@ def flow_on_group_features(all_stratified_groups, col_id, group_features, desire
   return dict1, dict2
 
 # Assign overflow observations to categories based on the group's desired distribution
-def assign_overflow(desired_categories_dist, all_stratified_groups, categories, col_id, overflow, group_features):
+def assign_overflow(desired_dists, all_stratified_groups, categories, col_id, overflow, group_features):
   dict1 = deepcopy(group_features[col_id])
   #dict2 is assigned overflow
   dict2 = {}
-  #dict3 (distribution) is desired_categories_dist but with the category proportions represented in a list (divide by total, which should be 1 when repair_level is 1, but otherwise will vary slightly)
+  #dict3 (distribution) is desired_dists but with the category proportions represented in a list (divide by total, which should be 1 when repair_level is 1, but otherwise will vary slightly)
   dict3 = {}
   for group in all_stratified_groups:
-    list = []
-    for category in categories[col_id]:
-      list.append(desired_categories_dist[col_id][group][category])
-    s = float(sum(list))
-    for i, elem in enumerate(list):
-      list[i] = elem/s
-    dict3[group] = list
+    cat_props = [desired_dists[col_id][group][cat] for cat in categories[col_id]]
+    s = float(sum(cat_props))
+    for i, elem in enumerate(cat_props):
+      cat_props[i] = elem/s
+    dict3[group] = cat_props
     dict2[group] = {}
     for i in range(int(overflow[group])):
-      distribution_list = dict3[group] 
+      distribution_list = dict3[group]
       number = random.uniform(0, 1)
       cat_index = 0
       tally = 0
@@ -384,10 +382,10 @@ def test_get_categories_count():
   col_id = 1
   group_features = {1:{('y',): CategoricalFeature(['C','A','C','B','A','C']),\
                       ('z',): CategoricalFeature(['B','B','D','D'])}}\
-  
+
   categories_count[col_id] = get_categories_count(categories, all_stratified_groups, col_id, group_features)
   print "Test get_categories_count -- category counts correct?",\
-    categories_count[col_id] == {'A':[2,0],'B':[1,2], 'C':[3,0], 'D':[0,2]} 
+    categories_count[col_id] == {'A':[2,0],'B':[1,2], 'C':[3,0], 'D':[0,2]}
 
 def test_get_categories_count_norm():
   categories_count_norm = {}
@@ -396,7 +394,7 @@ def test_get_categories_count_norm():
   col_id = 1
   categories_count = {1: {'A':[2,0],'B':[1,0], 'C':[3,0], 'D':[0,0]}}
   group_size = {1: {('y',): 6,('z',): 0}}
-  
+
   categories_count_norm[col_id] = get_categories_count_norm(categories, col_id, all_stratified_groups, categories_count, group_size)
   print "Test get_categories_count_norm -- normalized category counts correct?",\
     categories_count_norm[col_id] == {'A':[.333333333333333333333333,0.0],'C':[0.5,0.0],'B':[0.16666666666666666,0.0],  'D':[0.0,0.0]}
@@ -437,12 +435,12 @@ def test_assign_overflow():
   categories = {1:['A','B','C','D']}
   col_id = 1
   overflow = {('y',):0,('z',):0}
-  group_features = {1: {('y',):CategoricalFeature(['A','B','C','D','D','C']), ('z',): CategoricalFeature(['B','B'])}} 
+  group_features = {1: {('y',):CategoricalFeature(['A','B','C','D','D','C']), ('z',): CategoricalFeature(['B','B'])}}
   group_features[col_id], assigned_overflow, distribution[col_id] = assign_overflow(desired_categories_dist, all_stratified_groups, categories, col_id, overflow, group_features)
   #print "Test assign_overflow -- updated group features correct?",\
   #  [group_features[col_id][group].data for group in all_stratified_groups] =
   print "Test assign_overflow -- assigned overflow correctly?", assigned_overflow =={('y',):{},('z',):{}}
-  #print "Test assign_overflow -- distribution correct?", distribution[col_id] 
+  #print "Test assign_overflow -- distribution correct?", distribution[col_id]
 
 def test_categorical():
   all_data = [
@@ -452,7 +450,7 @@ def test_categorical():
 
   random.seed(10)
 
-  repair_level=1 
+  repair_level=1
   feature_to_repair = 0
   repairer = Repairer(all_data, feature_to_repair, repair_level)
   repaired_data=repairer.repair(all_data)
