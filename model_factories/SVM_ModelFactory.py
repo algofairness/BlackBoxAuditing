@@ -84,6 +84,7 @@ class ModelVisitor(AbstractModelVisitor):
 
 def run_weka_command(command):
   set_path = "export CLASSPATH=$CLASSPATH:{}; ".format(WEKA_PATH)
+  print command
   subprocess.check_output(set_path + command, shell=True)
 
 
@@ -107,7 +108,11 @@ def list_to_arff_file(arff_type_dict, data, arff_file_output):
   arff_header = "@relation BlackBoxAuditing\n"
   for attribute, types in arff_type_dict.items():
     if type(types) == list:
-      types = "{" + ",".join(str(entry) for entry in types) + "}"
+      formatter = io.BytesIO()
+      writer = csv.writer(formatter)
+      unique_values = list(set(types))
+      writer.writerow(unique_values)
+      types = "{" + formatter.getvalue().strip('\r\n') + "}"
     attribute = attribute.replace(" ","_")
     arff_header += "@attribute {} {}\n".format(attribute, types)
 
