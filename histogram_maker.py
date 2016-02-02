@@ -10,13 +10,15 @@ import numpy as np
 def run():
   feature_to_repair = 0
   repair_level = 1.0
-  _, train_data, test_data = load_data()
+  headers, train_data, test_data = load_data()
   orig_data = train_data
   repairer = Repairer(orig_data, feature_to_repair, repair_level)
   repaired_data = repairer.repair(test_data)
   
   features_to_graph = range(1, 13)
   for feature_to_graph in features_to_graph:
+    header = headers[feature_to_graph]
+
     orig_groups = {}
     group_indices = {}
     for i, row in enumerate(orig_data):
@@ -33,28 +35,23 @@ def run():
     data_list = {0: {}, 1: {}}
     for group, data in orig_groups.items():
       data_dict[0][group] = {value: 0 for value in data}
-      data_list[0][group] = []
+      data_dict[1][group] = {value: 0 for value in data}
       for value in data:
         data_dict[0][group][value] += 1
+      rep_data = rep_groups[group]
+      for value in rep_data:
+        if value in data_dict[1][group]:
+          data_dict[1][group][value] += 1
 
-    for group, data in rep_groups.items():
-      data_dict[1][group] = {value: 0 for value in data}
+    for group in orig_groups:
+      data_list[0][group] = []
       data_list[1][group] = []
-      for value in data:
-        data_dict[1][group][value] += 1
-
-    for group,_ in rep_groups.items():
-      for value, count in data_dict[0][group].items():
-        data_list[0][group].append(count)
-      for value, count in data_dict[1][group].items():
-        data_list[1][group].append(count)
-      categories1 = [value for value in data_dict[1][group]]
-      categories0 = [value for value in data_dict[0][group]]
-      if categories1> categories0:
-        categories = categories1
-      else:
-        categories = categories0
-      
+      for value in data_dict[0][group]:
+        count0 = data_dict[0][group][value]
+        count1 = data_dict[1][group][value]
+        data_list[0][group].append(count0)
+        data_list[1][group].append(count1)
+      categories =  [value for value in data_dict[0][group]]
       n_categories = len(categories)  
 
       count_group_orig = data_list[0][group]
@@ -81,12 +78,12 @@ def run():
 
       plt.xlabel('Categories')
       plt.ylabel('Count')
-      plt.title(group + ' distribution over categories for feature ' + str(feature_to_graph))
-      plt.xticks(index + bar_width, categories)
+      plt.title(group + ' distribution over categories for feature ' + header)
+      plt.xticks(index + bar_width, categories, rotation='vertical')
       plt.legend()
 
       plt.tight_layout()
-      plt.savefig("figures/"+ str(feature_to_graph)+ "_" + group + ".png")
+      plt.savefig("figures/"+ header+ "_" + group + ".png")
       plt.clf()
     
   
