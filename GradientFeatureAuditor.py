@@ -7,7 +7,7 @@ import json
 
 class GradientFeatureAuditor(object):
   def __init__(self, model, headers, train_set, test_set, repair_steps=10,
-                features_to_ignore = []):
+                features_to_ignore = [], save_repaired_data=False):
     self.repair_steps = repair_steps
     self.model = model
     self.train_set = train_set
@@ -17,13 +17,17 @@ class GradientFeatureAuditor(object):
     self.AUDIT_DIR = "audits"
     self.OUTPUT_DIR = "{}/{}".format(self.AUDIT_DIR, time.time())
 
+    # Set to `True` to allow the repaired data to be saved to a file.
+    # Note: Be cautious when using this on large-sized datasets.
+    self.save_repaired_data = save_repaired_data
+
     # Create any output directories that don't exist.
     for directory in [self.AUDIT_DIR, self.OUTPUT_DIR]:
       if not os.path.exists(directory):
         os.makedirs(directory)
 
 
-  def audit_feature(self, feature_to_repair, output_file, save_repaired_data=True):
+  def audit_feature(self, feature_to_repair, output_file):
     conf_tables = []
     repair_increase_per_step = 1.0/self.repair_steps
     repair_level = 0.0
@@ -35,7 +39,7 @@ class GradientFeatureAuditor(object):
                           features_to_ignore=self.features_to_ignore)
       rep_test = repairer.repair(self.test_set)
 
-      if save_repaired_data:
+      if self.save_repaired_data:
         with open(output_file + ".repaired_{}.data".format(repair_level), "w") as f:
           writer = csv.writer(f)
           for row in [self.headers]+rep_test:

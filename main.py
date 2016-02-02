@@ -1,7 +1,7 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
 from experiments.adult.load_data import load_data
-from model_factories.SVM_ModelFactory import ModelFactory
+from model_factories.J48_ModelFactory import ModelFactory
 from measurements import accuracy
 response_header = "income-per-year"
 graph_measurers = [accuracy]
@@ -9,6 +9,7 @@ rank_measurer = accuracy
 features_to_ignore = []
 
 verbose = True # Set to `True` to allow for more detailed status updates.
+save_repaired_data = False # Set to `True` to allow repaired data to be saved.
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # NOTE: You should not need to change anything below this point.
@@ -49,7 +50,7 @@ def run():
   # Perform the Gradient Feature Audit and dump the audit results into files.
   auditor = GradientFeatureAuditor(model, headers, train_set, test_set,
                                    features_to_ignore=feature_indexes_to_ignore,
-                                   repair_steps = 2)
+                                   save_repaired_data=save_repaired_data)
   audit_filenames = auditor.audit(verbose=verbose)
 
   # Graph the audit files.
