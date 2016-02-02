@@ -50,8 +50,6 @@ def test_sample():
 
   repairer = Repairer(data, feature_to_repair, 0.0)
   repaired_data = repairer.repair(data)
-  print repaired_data
-  print data
   print "repaired_data unaltered for repair level=0?", repaired_data == data
 
 

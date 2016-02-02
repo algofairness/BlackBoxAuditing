@@ -5,21 +5,14 @@ class ModelFactory(AbstractWekaModelFactory):
   def __init__(self, *args, **kwargs):
     super(ModelFactory, self).__init__(*args,**kwargs)
     self.model_visitor_type = ModelVisitor
-    self.verbose_factory_name = "Support_Vector_Machine"
 
-    self.kernel = "" # Weka defaults to a traditional linear classifier.
-    command = "weka.classifiers.functions.SMO"
-
-    # If a kernel option is listed, include it in the command.
-    if self.kernel:
-      command += " -K \"{}\"".format(self.kernel)
-
-    self.train_command = command
+    self.verbose_factory_name = "J48_Decision_Tree"
+    self.train_command = "weka.classifiers.trees.J48"
 
 class ModelVisitor(AbstractWekaModelVisitor):
   def __init__(self, *args, **kwargs):
     super(ModelVisitor, self).__init__(*args,**kwargs)
-    self.test_command = "weka.classifiers.functions.SMO"
+    self.test_command = "weka.classifiers.trees.J48"
 
 
 def test():
