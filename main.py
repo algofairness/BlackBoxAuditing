@@ -1,7 +1,7 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
 from experiments.adult.load_data import load_data
-from model_factories.J48_ModelFactory import ModelFactory
+from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy
 response_header = "income-per-year"
 graph_measurers = [accuracy]

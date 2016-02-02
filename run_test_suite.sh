@@ -21,9 +21,11 @@ find . -type f -iname "*.py" -print0 | while IFS= read -r -d $'\0' line; do
   if [[ ! $line =~ .*__init__.py ]]; then
     if [[ ! $line =~ .*Abstract.+.py ]]; then
       if [[ ! $line =~ ./main.py ]]; then
-        echo "________________________________"
-        echo "Running tests for: $line"
-        python "$line"
+        if [[ ! $line =~ ./histogram_maker.py ]]; then
+          echo "________________________________"
+          echo "Running tests for: $line"
+          python "$line" | grep --color -E '^|False$' # Highlight "False" tests.
+        fi
       fi
     fi
   fi

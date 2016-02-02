@@ -1,9 +1,14 @@
 # NOTE:These settings and imports should be the only things that change
 #       across experiments on different datasets
-# TODO: Make this file generalizable to all datasets  
+# TODO: Make this file generalizable to all datasets
 
 from experiments.arrests.load_data import load_data
 from repair.CategoricRepairer import Repairer
+import os
+
+FIGURES_DIR = "figures"
+if not os.path.exists(FIGURES_DIR):
+  os.makedirs(FIGURES_DIR)
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,7 +19,7 @@ def run():
   orig_data = train_data
   repairer = Repairer(orig_data, feature_to_repair, repair_level)
   repaired_data = repairer.repair(test_data)
-  
+
   features_to_graph = range(1, 13)
   for feature_to_graph in features_to_graph:
     header = headers[feature_to_graph]
@@ -30,7 +35,7 @@ def run():
       orig_groups[stratified_val].append(feature_val)
       group_indices[stratified_val].append(i)
     rep_groups = {group:[repaired_data[i][feature_to_graph] for i in indices] for group, indices in group_indices.items()}
-    
+
     data_dict = {0: {}, 1: {}}
     data_list = {0: {}, 1: {}}
     for group, data in orig_groups.items():
@@ -52,7 +57,7 @@ def run():
         data_list[0][group].append(count0)
         data_list[1][group].append(count1)
       categories =  [value for value in data_dict[0][group]]
-      n_categories = len(categories)  
+      n_categories = len(categories)
 
       count_group_orig = data_list[0][group]
       count_group_repaired = data_list[1][group]
@@ -84,9 +89,10 @@ def run():
 
       plt.tight_layout()
       plt.savefig("figures/"+ header+ "_" + group + ".png")
+      plt.savefig("{}/{}_{}.png".format(FIGURES_DIR, header, group))
       plt.clf()
-    
-  
+
+
 if __name__=="__main__":
   run()
 
