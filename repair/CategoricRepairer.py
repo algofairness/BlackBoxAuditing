@@ -193,14 +193,12 @@ class Repairer(AbstractRepairer):
     repaired_data = []
     mode = get_mode([row[self.feature_to_repair] for row in data_to_repair])
     for i, orig_row in enumerate(data_to_repair):
-      new_row = []
-      for j in col_ids:
-        if self.repair_level==0 or j in self.features_to_ignore:
-          new_row.append( orig_row[j] )
-        else:
-          new_row.append( data_dict[j][i] )
+      new_row = [orig_row[j] if j in self.features_to_ignore else data_dict[j][i] for j in col_ids]
+
       # Replace the "feature_to_replace" column with the mode value.
-      new_row[self.feature_to_repair] = mode
+      if self.repair_level > 0:
+        new_row[self.feature_to_repair] = mode
+
       repaired_data.append(new_row)
 
     return repaired_data
@@ -442,7 +440,7 @@ def test_assign_overflow():
   group_features = {1: {('y',):CategoricalFeature(['A',0,0]), ('z',): CategoricalFeature([0,0])}}
   group_features[col_id], assigned_overflow, distribution[col_id] = assign_overflow(desired_categories_dist, all_stratified_groups, categories, col_id, overflow, group_features)
   print "Test assign_overflow -- updated group features correct?",\
-    [group_features[col_id][group].data for group in all_stratified_groups] == [['A','A','A'],['B','A']] 
+    [group_features[col_id][group].data for group in all_stratified_groups] == [['A','A','A'],['B','A']]
   print "Test assign_overflow -- assigned overflow correctly?", assigned_overflow =={('y',): {0: 'A', 1: 'A'}, ('z',): {0: 'B', 1: 'A'}}
   print "Test assign_overflow -- distribution correct?", distribution[col_id] =={('y',): [1.0, 0.0], ('z',): [0.5, 0.5]}
 
@@ -497,6 +495,14 @@ def test_arrests():
   repairer = Repairer(train_data+test_data, feature_to_repair, repair_level)
   repaired_data = repairer.repair(test_data)
   print "Arrest Dataset -- features not changed for repair level 0?", repaired_data == test_data
+  if repaired_data != test_data: #TODO: Remove this after debugging.
+    count = 0
+    for rep,orig in zip(repaired_data, test_data):
+      if rep != orig:
+        print "wroooong: ", count, "------------------------",
+        for i,j in zip(rep, orig):
+          if i!=j: print j, "-->", i
+        count += 1
 
 
 if __name__== "__main__":
