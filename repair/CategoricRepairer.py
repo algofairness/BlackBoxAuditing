@@ -433,17 +433,18 @@ def test_assign_overflow():
   assigned_overflow={}
   distribution = {}
   group_features = {}
-  desired_categories_dist = {1:{('y',):{'A':0.1, 'C':0.12,'B':0.16000000000000003, 'D':0.48}, ('z',):{'A':0.0, 'C':0.0,'B':0.0, 'D':0.4}}}
+  # The desired categories distribution is purposely erroneous
+  desired_categories_dist = {1:{('y',):{'A':0.5,'B':0.0}, ('z',):{'A':0.25,'B':0.25}}}
   all_stratified_groups = [('y',),('z',)]
-  categories = {1:['A','B','C','D']}
+  categories = {1:['A','B']}
   col_id = 1
-  overflow = {('y',):0,('z',):0}
-  group_features = {1: {('y',):CategoricalFeature(['A','B','C','D','D','C']), ('z',): CategoricalFeature(['B','B'])}}
+  overflow = {('y',):2,('z',):2}
+  group_features = {1: {('y',):CategoricalFeature(['A',0,0]), ('z',): CategoricalFeature([0,0])}}
   group_features[col_id], assigned_overflow, distribution[col_id] = assign_overflow(desired_categories_dist, all_stratified_groups, categories, col_id, overflow, group_features)
-  #print "Test assign_overflow -- updated group features correct?",\
-  #  [group_features[col_id][group].data for group in all_stratified_groups] =
-  print "Test assign_overflow -- assigned overflow correctly?", assigned_overflow =={('y',):{},('z',):{}}
-  #print "Test assign_overflow -- distribution correct?", distribution[col_id]
+  print "Test assign_overflow -- updated group features correct?",\
+    [group_features[col_id][group].data for group in all_stratified_groups] == [['A','A','A'],['B','A']] 
+  print "Test assign_overflow -- assigned overflow correctly?", assigned_overflow =={('y',): {0: 'A', 1: 'A'}, ('z',): {0: 'B', 1: 'A'}}
+  print "Test assign_overflow -- distribution correct?", distribution[col_id] =={('y',): [1.0, 0.0], ('z',): [0.5, 0.5]}
 
 def test_categorical():
   all_data = [
