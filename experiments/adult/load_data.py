@@ -1,27 +1,35 @@
-from splitters import split_by_percent
 import csv
 import random
 
-train_percentage = 0.70
-filename = "test_data/adult.csv"
+train_filename = "test_data/adult.csv"
+test_filename = "test_data/adult.test.csv"
 max_entries = None
+correct_types = [int, str, int, str, int, str, str, str,
+                 str, str, int, int, int, str, str]
 
 def load_data():
-  with open(filename) as f:
+  with open(train_filename) as f:
     reader = csv.reader(f)
-    data = [row for row in reader]
-    headers = data.pop(0)
+    train = [row for row in reader]
+    headers = train.pop(0)
 
     if max_entries:
-      data = random.sample(data, max_entries)
+      train = random.sample(train, max_entries)
 
-    correct_types = [int, str, int, str, int, str, str, str, str, str, int, int, int, str, str]
-
-    for i, row in enumerate(data):
+    for i, row in enumerate(train):
       for j, correct_type in enumerate(correct_types):
-        data[i][j] = correct_type(row[j])
+        train[i][j] = correct_type(row[j])
 
-    train, test = split_by_percent(data, train_percentage)
+  with open(test_filename) as f:
+    reader = csv.reader(f)
+    test = [row for row in reader][1:] # Ignore headers.
+
+    if max_entries:
+      test = random.sample(test, max_entries)
+
+    for i, row in enumerate(test):
+      for j, correct_type in enumerate(correct_types):
+        test[i][j] = correct_type(row[j])
 
   return headers, train, test
 
@@ -41,7 +49,8 @@ def test():
       gathered_types.append(str)
 
   print "load_data types are correct? -- ", gathered_types == correct_types
-
+  print "load_data train size correct? -- ", len(train) == 32561
+  print "load_data test size correct? -- ", len(test) == 16281
 
 if __name__=="__main__":
   test()
