@@ -3,11 +3,9 @@ import csv
 import random
 
 train_percentage = 0.70
-filename = "test_data/german_categorical.csv"
+filename = "test_data/german_categorical_sorelle.csv"
 max_entries = None
-
-correct_types = [str, int, str, str, int, str, str, int, str, str,
-                 int, str, int, str, str, int, str, int, str, str]
+correct_types = [str, int, str, int, str, str, int, int, str, int, str, int, str]
 
 def load_data():
   with open(filename) as f:
