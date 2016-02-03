@@ -121,7 +121,6 @@ class Repairer(AbstractRepairer):
     categories_count_norm = {}
     distribution = {}
 
-
     # Repair Data and retrieve the results
     for col_id in cols_to_repair:
       # which bucket value we're repairing
@@ -153,7 +152,6 @@ class Repairer(AbstractRepairer):
 
           # Update values to repair the dataset.
           for group in all_stratified_groups:
-            if group != ("W",): continue
             for index in indices_per_group[group]:
               original_value = col[index]
 
@@ -174,7 +172,7 @@ class Repairer(AbstractRepairer):
         categories_count[col_id] = get_categories_count(categories, all_stratified_groups, col_id, group_features)
         categories_count_norm[col_id] = get_categories_count_norm(categories, col_id, all_stratified_groups, categories_count, group_size)
         median = get_median_per_category(categories, col_id, categories_count_norm)
-        
+
         desired_categories_count[col_id],desired_categories_dist[col_id] = \
           get_desired_data(all_stratified_groups, col_id, categories, median, group_size, self.repair_level, categories_count_norm, categories_count)
 
@@ -200,7 +198,6 @@ class Repairer(AbstractRepairer):
         new_row[self.feature_to_repair] = mode
 
       repaired_data.append(new_row)
-
     return repaired_data
 
 def get_col_ids(data_to_repair):
@@ -444,7 +441,7 @@ def test_assign_overflow():
     [group_features[col_id][group].data for group in all_stratified_groups] == [['A','A','B','B','B','A'],['B','B','B']]
   print "Test assign_overflow -- assigned overflow correctly?", assigned_overflow =={('y',): {0: 'B', 1: 'A'}, ('z',): {0: 'B', 1: 'B'}}
   print "Test assign_overflow -- distribution correct?", distribution[col_id] =={('y',): [0.5, 0.5], ('z',): [0.0, 1.0]}
-  
+
 def test_categorical():
   all_data = [
   ["x","A"], ["x","A"], ["x","B"], ["x","B"], ["x","B"],

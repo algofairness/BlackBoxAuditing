@@ -13,16 +13,15 @@ class Repairer(AbstractRepairer):
 
     # Convert the "feature_to_repair" into a pseudo-categorical feature by
     # applying binning on that column.
-    binned_data_to_repair = [row[:] for row in data_to_repair]
-    bins = make_histogram_bins(bin_calculator, data_to_repair, self.feature_to_repair)
-    for i, binned_data in enumerate(bins):
-      bin_name = "BIN_{}".format(i) # IE, the "category" to replace numeric values.
-      for binned_row in binned_data:
-        for j, row in enumerate(binned_data_to_repair):
-          if row == binned_row: # TODO: This isn't the best way to do this...
-            binned_data_to_repair[j][self.feature_to_repair] = bin_name
+    binned_data = [row[:] for row in data_to_repair]
+    index_bins = make_histogram_bins(bin_calculator, data_to_repair, self.feature_to_repair)
 
-    repaired_data = self.categoric_repairer.repair(binned_data_to_repair)
+    for i, index_bin in enumerate(index_bins):
+      bin_name = "BIN_{}".format(i) # IE, the "category" to replace numeric values.
+      for j in index_bin:
+        binned_data[j][self.feature_to_repair] = bin_name
+
+    repaired_data = self.categoric_repairer.repair(binned_data)
 
     # Replace the "feature_to_repair" column with the median numeric value.
     median = get_median([row[self.feature_to_repair] for row in data_to_repair])
@@ -31,7 +30,6 @@ class Repairer(AbstractRepairer):
         repaired_data[i][self.feature_to_repair] = median
       else:
         repaired_data[i][self.feature_to_repair] = data_to_repair[i][self.feature_to_repair]
-
     return repaired_data
 
 

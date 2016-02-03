@@ -1,13 +1,19 @@
+import math
+
 def make_histogram_bins(bin_size_calculator, data, col_id):
   feature_vals = [row[col_id] for row in data]
   bin_size = bin_size_calculator(feature_vals)
 
-  sorted_data = sorted(data, key=lambda row: row[col_id])
+  # Round the number of buckets up so we don't lose any data.
+  num_bins = int(math.ceil(len(data)/float(bin_size)))
 
-  num_bins = len(sorted_data)/bin_size
-  bins = [sorted_data[bin_size*i:bin_size*(i+1)] for i in xrange(num_bins)]
+  data_tuples = list(enumerate(data)) # [(0,row), (1,row'), (2,row''), ... ]
+  sorted_data_tuples = sorted(data_tuples, key=lambda tup: tup[1][col_id])
 
-  return bins
+  sorted_index = [i for i,_ in data_tuples]
+  index_bins = [sorted_index[bin_size*i:bin_size*(i+1)] for i in xrange(num_bins)]
+
+  return index_bins
 
 
 def test():
