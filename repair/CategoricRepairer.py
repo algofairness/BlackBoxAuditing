@@ -174,9 +174,9 @@ class Repairer(AbstractRepairer):
         categories_count[col_id] = get_categories_count(categories, all_stratified_groups, col_id, group_features)
         categories_count_norm[col_id] = get_categories_count_norm(categories, col_id, all_stratified_groups, categories_count, group_size)
         median = get_median_per_category(categories, col_id, categories_count_norm)
-
+        
         desired_categories_count[col_id],desired_categories_dist[col_id] = \
-          get_desired_data(all_stratified_groups, col_id, categories, median, group_size, self.repair_level, categories_count_norm)
+          get_desired_data(all_stratified_groups, col_id, categories, median, group_size, self.repair_level, categories_count_norm, categories_count)
 
         group_features[col_id], overflow = flow_on_group_features(all_stratified_groups, col_id, group_features, desired_categories_count)
 
@@ -259,7 +259,7 @@ def get_median_per_category(categories, col_id, categories_count_norm):
   return {cat: get_median(categories_count_norm[col_id][cat]) for cat in categories[col_id]}
 
 # Find the desired category count for each group, by using the repair_level (lambda). Desired category count is the desired distribution multiplied by the total number of observations in the group
-def get_desired_data(all_stratified_groups, col_id, categories, median, group_size, repair_level, categories_count_norm):
+def get_desired_data(all_stratified_groups, col_id, categories, median, group_size, repair_level, categories_count_norm, categories_count):
   dict1={}
   dict2={}
   for i, group in enumerate(all_stratified_groups):
@@ -269,9 +269,10 @@ def get_desired_data(all_stratified_groups, col_id, categories, median, group_si
       med=median[category]
       size = group_size[col_id][group]
       # desired-proportion = (1-lambda)*original-count  + (lambda)*median-count
+      count = categories_count[col_id][category][i]
+      estimate = math.floor(((1-repair_level)*count)+(repair_level)*med*size)
       temp=((1 - repair_level)*categories_count_norm[col_id][category][i]) + (repair_level*med)
       # our desired-count = floor(desired-proportion * group-size)
-      estimate = math.floor(temp*(1.0*size))
       dict1[group][category] = estimate
       dict2[group][category] = temp
   return dict1, dict2
@@ -390,15 +391,15 @@ def test_get_categories_count():
 
 def test_get_categories_count_norm():
   categories_count_norm = {}
-  categories = {1:['A','B','C','D']}
+  categories = {1:['A','B']}
   all_stratified_groups = [('y',),('z',)]
   col_id = 1
-  categories_count = {1: {'A':[2,0],'B':[1,0], 'C':[3,0], 'D':[0,0]}}
-  group_size = {1: {('y',): 6,('z',): 0}}
+  categories_count = {1: {'A':[4,0],'B':[16,0]}}
+  group_size = {1: {('y',): 20,('z',): 0}}
 
   categories_count_norm[col_id] = get_categories_count_norm(categories, col_id, all_stratified_groups, categories_count, group_size)
   print "Test get_categories_count_norm -- normalized category counts correct?",\
-    categories_count_norm[col_id] == {'A':[.333333333333333333333333,0.0],'C':[0.5,0.0],'B':[0.16666666666666666,0.0],  'D':[0.0,0.0]}
+    categories_count_norm[col_id] == {'A':[0.2,0.0],'B':[0.8,0.0]}
 
 def test_get_median_per_category():
   categories = {1:['A','B','C','D']}
@@ -412,18 +413,19 @@ def test_get_desired_data():
   desired_categories_dist={}
   all_stratified_groups = [('y',),('z',)]
   col_id =1
-  categories = {1:['A','B','C','D']}
-  median = {'A':0.0,'C':0.0,'B':0.0,  'D':0.4}
-  group_size = {1: {('y',): 6,('z',): 10}}
-  repair_level = 0.6
-  categories_count_norm = {1:{'A':[0.25,0.0],'C':[0.3,0.0],'B':[0.4,0.0],  'D':[0.6,0.4]}}
+  categories = {1:['A','B']}
+  median = {'A':0.5,'B':0.5}
+  group_size = {1: {('y',): 4,('z',): 8}}
+  repair_level = 0.5
+  categories_count_norm = {1:{'A':[0.5,0.5],'B':[0.5,0.5]}}
+  categories_count = {1:{'A':[2, 4],'B':[2,4]}}
 
   desired_categories_count[col_id],desired_categories_dist[col_id] = \
-      get_desired_data(all_stratified_groups, col_id, categories, median, group_size, repair_level, categories_count_norm)
+      get_desired_data(all_stratified_groups, col_id, categories, median, group_size, repair_level, categories_count_norm, categories_count)
   print "Test get_desired_data -- Desired category counts correct?", \
-    desired_categories_count[col_id] =={('y',):{'A':0.0, 'C':0.0,'B':0.0, 'D':2.0}, ('z',):{'A':0.0, 'C':0.0,'B':0.0, 'D':4.0}}
+    desired_categories_count[col_id] =={('y',):{'A':2.0, 'B':2.0}, ('z',):{'A':4.0,'B':4.0}}
   print "Test get_desired_data -- Desired category distribution correct?", \
-    desired_categories_dist[col_id] == {('y',):{'A':0.1, 'C':0.12,'B':0.16000000000000003, 'D':0.48}, ('z',):{'A':0.0, 'C':0.0,'B':0.0, 'D':0.4}}
+    desired_categories_dist[col_id] == {('y',):{'A':0.5, 'B':0.5}, ('z',):{'A':0.5, 'B':0.5}}
 
 def test_assign_overflow():
   random.seed(10)
@@ -431,19 +433,18 @@ def test_assign_overflow():
   assigned_overflow={}
   distribution = {}
   group_features = {}
-  # The desired categories distribution is purposely erroneous
-  desired_categories_dist = {1:{('y',):{'A':0.5,'B':0.0}, ('z',):{'A':0.25,'B':0.25}}}
+  desired_categories_dist = {1:{('y',):{'A':0.5,'B':0.5}, ('z',):{'A':0.0,'B':1.0}}}
   all_stratified_groups = [('y',),('z',)]
   categories = {1:['A','B']}
   col_id = 1
   overflow = {('y',):2,('z',):2}
-  group_features = {1: {('y',):CategoricalFeature(['A',0,0]), ('z',): CategoricalFeature([0,0])}}
+  group_features = {1: {('y',):CategoricalFeature(['A','A','B','B',0,0]), ('z',): CategoricalFeature(['B',0,0])}}
   group_features[col_id], assigned_overflow, distribution[col_id] = assign_overflow(desired_categories_dist, all_stratified_groups, categories, col_id, overflow, group_features)
   print "Test assign_overflow -- updated group features correct?",\
-    [group_features[col_id][group].data for group in all_stratified_groups] == [['A','A','A'],['B','A']]
-  print "Test assign_overflow -- assigned overflow correctly?", assigned_overflow =={('y',): {0: 'A', 1: 'A'}, ('z',): {0: 'B', 1: 'A'}}
-  print "Test assign_overflow -- distribution correct?", distribution[col_id] =={('y',): [1.0, 0.0], ('z',): [0.5, 0.5]}
-
+    [group_features[col_id][group].data for group in all_stratified_groups] == [['A','A','B','B','B','A'],['B','B','B']]
+  print "Test assign_overflow -- assigned overflow correctly?", assigned_overflow =={('y',): {0: 'B', 1: 'A'}, ('z',): {0: 'B', 1: 'B'}}
+  print "Test assign_overflow -- distribution correct?", distribution[col_id] =={('y',): [0.5, 0.5], ('z',): [0.0, 1.0]}
+  
 def test_categorical():
   all_data = [
   ["x","A"], ["x","A"], ["x","B"], ["x","B"], ["x","B"],
