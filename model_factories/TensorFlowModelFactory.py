@@ -16,6 +16,7 @@ class ModelFactory(AbstractModelFactory):
 
   def __init__(self, *args, **kwargs):
     super(ModelFactory, self).__init__(*args, **kwargs)
+    self.verbose_factory_name = "TensorFlow_Network"
 
     self.num_epochs = 500
     self.batch_size = 50

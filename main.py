@@ -1,9 +1,9 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-from experiments.german.load_data import load_data
-from model_factories.J48_ModelFactory import ModelFactory
+import experiments.sample as experiment
+from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy
-response_header = "class"
+response_header = "Outcome"
 graph_measurers = [accuracy]
 rank_measurer = accuracy
 features_to_ignore = []
@@ -20,9 +20,13 @@ from loggers import vprint
 from GradientFeatureAuditor import GradientFeatureAuditor
 from audit_reading import graph_audit, graph_audits, rank_audit_files
 from measurements import get_conf_matrix
+from datetime import datetime
 
 def run():
-  headers, train_set, test_set = load_data()
+
+  start_time = datetime.now()
+
+  headers, train_set, test_set = experiment.load_data()
 
   """
    ModelFactories require a `build` method that accepts some training data
@@ -68,7 +72,22 @@ def run():
 
   vprint("Ranking audit files.",verbose)
   ranked_features = rank_audit_files(audit_filenames, rank_measurer)
-  print ranked_features
+  vprint("Ranked Features: {}".format(ranked_features), verbose)
+
+  end_time = datetime.now()
+
+  # Store a summary of this experiment.
+  summary_file = "{}/summary.txt".format(auditor.OUTPUT_DIR)
+  with open(summary_file, "w") as f:
+    f.write("Experiment Location: {}".format(experiment.__file__))
+    f.write("Audit Start Time: {}\n".format(start_time))
+    f.write("Audit End Time: {}\n".format(end_time))
+    f.write("Model Type: {}\n".format(model_factory.verbose_factory_name))
+    f.write("Train Size: {}\n".format(len(train_set)))
+    f.write("Test Size: {}\n".format(len(test_set)))
+    f.write("Features: {}\n".format(headers))
+    f.write("Ranked Features: {}\n".format(ranked_features))
+  vprint("Summary file written to: {}".format(summary_file), verbose)
 
 
 if __name__=="__main__":
