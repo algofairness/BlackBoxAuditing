@@ -4,6 +4,12 @@ This repository contains a sample implementation of Gradient Feature Auditing me
 
 For an example implementation, see (or run) the main.py file.
 
+# What it means to "repair" a feature. (TODO)
+
+Notes to elaborate on:
+- Repaired feature becomes median (numeric) or mode (categoric) of that feature.
+- Converge distributions and things.
+
 # Testing
 
 All tests should be run from the main project directory. To make this process easier, a `run_test_suite.sh` file has been included (which can be run with bash via: `bash ./run_test_suite.sh`) in order to run all available tests at once.

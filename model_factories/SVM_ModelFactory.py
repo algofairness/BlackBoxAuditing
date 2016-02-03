@@ -24,9 +24,12 @@ class ModelVisitor(AbstractWekaModelVisitor):
 
 def test():
   headers = ["predictor", "response"]
-  train_set = [[i, "A"] for i in range(1,50)] + [[i, "B"] for i in range(51,100)]
-  # Purposefully replace "B" with "C" so that we *should* fail them.
-  test_set = [[i, "A"] for i in range(1,50)] + [[i, "C"] for i in range(51,100)]
+  A_set = [[i, "A"] for i in range(1,50)]
+  B_set = [[i, "B"] for i in range(51,100)]
+  C_set = [[i, "C"] for i in range(51,100)]
+  train_set = A_set + B_set
+  # Purposefully replace "B" with "C" in the test-set so that we *should* fail them.
+  test_set = A_set + C_set
   all_data = train_set + test_set
 
   factory = ModelFactory(all_data, headers, "response", name_prefix="test")
@@ -34,7 +37,7 @@ def test():
   print "factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor)
 
   predictions = model.test(test_set)
-  intended_predictions = {'A': {'A': 49}, 'C': {'B': 49}}
+  intended_predictions = [("A", "A")]*len(A_set) + [("C", "B")]*len(C_set)
   print "predicting correctly? -- ", predictions == intended_predictions
 
 if __name__=="__main__":

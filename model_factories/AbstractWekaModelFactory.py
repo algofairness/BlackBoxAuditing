@@ -66,30 +66,7 @@ class AbstractWekaModelVisitor(AbstractModelVisitor):
       raw_predictions = [line.split()[prediction_index] for line in raw_lines]
       predictions = [prediction.split(":")[1] for prediction in raw_predictions]
 
-    # Produce a confusion matrix in a dictionary format from those predictions.
-    conf_table = {}
-    for entry, guess in zip(test_set, predictions):
-      actual = entry[self.response_index]
-      guess = convert_to_type(actual, guess) # ... Since file-reading changes types.
-
-      if not actual in conf_table:
-        conf_table[actual] = {}
-
-      if not guess in conf_table[actual]:
-        conf_table[actual][guess] = 1
-      else:
-        conf_table[actual][guess] += 1
-
-    return conf_table
-
-
-def convert_to_type(actual, guess):
-  if type(actual) == bool:
-    guess = guess=="True"
-  else:
-    actual_type = type(actual)
-    guess = actual_type(guess)
-  return guess
+    return zip([row[self.response_index] for row in test_set], predictions)
 
 
 def run_weka_command(command):

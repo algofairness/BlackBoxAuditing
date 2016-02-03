@@ -1,5 +1,6 @@
 from repair.GeneralRepairer import Repairer
 from loggers import vprint
+from measurements import get_conf_matrix
 import csv
 import time
 import os
@@ -7,7 +8,8 @@ import json
 
 class GradientFeatureAuditor(object):
   def __init__(self, model, headers, train_set, test_set, repair_steps=10,
-                features_to_ignore = [], save_repaired_data=False):
+                features_to_ignore = [], save_repaired_data=False,
+                save_prediction_details = True):
     self.repair_steps = repair_steps
     self.model = model
     self.train_set = train_set
@@ -20,6 +22,7 @@ class GradientFeatureAuditor(object):
     # Set to `True` to allow the repaired data to be saved to a file.
     # Note: Be cautious when using this on large-sized datasets.
     self.save_repaired_data = save_repaired_data
+    self.save_prediction_details = save_prediction_details
 
     # Create any output directories that don't exist.
     for directory in [self.AUDIT_DIR, self.OUTPUT_DIR]:
@@ -39,14 +42,26 @@ class GradientFeatureAuditor(object):
                           features_to_ignore=self.features_to_ignore)
       rep_test = repairer.repair(self.test_set)
 
+      pred_tuples = self.model.test(rep_test)
+
+      # Save the repaired version of the data if specified.
       if self.save_repaired_data:
         with open(output_file + ".repaired_{}.data".format(repair_level), "w") as f:
           writer = csv.writer(f)
           for row in [self.headers]+rep_test:
             writer.writerow(row)
 
-      conf_table = self.model.test(rep_test)
+      # Save the prediction_tuples and the original values of the features to repair.
+      if self.save_prediction_details:
+        with open(output_file + ".repaired_{}.predictions".format(repair_level), "w") as f:
+          writer = csv.writer(f)
+          file_headers = ["Pre-Repaired Feature", "Response", "Prediction"]
+          writer.writerow(file_headers)
+          for i, orig_row in enumerate(self.test_set):
+            row = [orig_row[index_to_repair], pred_tuples[i][0], pred_tuples[i][1]]
+            writer.writerow(row)
 
+      conf_table = get_conf_matrix(pred_tuples)
       conf_tables.append( (repair_level, conf_table) )
       repair_level += repair_increase_per_step
 
@@ -78,36 +93,28 @@ class GradientFeatureAuditor(object):
 def test():
   class MockModel(object):
     def test(self, test_set, response_col=0):
-      conf_table = {}
-      for entry in test_set:
-        actual = entry[response_col]
-        guess = actual
-
-        if not actual in conf_table:
-          conf_table[actual] = {}
-
-        if not guess in conf_table[actual]:
-          conf_table[actual][guess] = 1
-        else:
-          conf_table[actual][guess] += 1
-      return conf_table
+      return [(entry[response_col], entry[response_col]) for entry in test_set]
 
   model = MockModel()
   headers = ["response", "duplicate", "constant"]
   train = [[i,i,1] for i in xrange(100)]
   test = train[:] # Copy the training data.
   repair_steps = 5
-  gfa = GradientFeatureAuditor(model, headers, train, test, repair_steps=repair_steps)
+  gfa = GradientFeatureAuditor(model, headers, train, test,
+                               repair_steps=repair_steps,
+                               save_repaired_data=True,
+                               save_prediction_details = True)
   output_files = gfa.audit()
 
   print "correct # of audit files produced? --", len(output_files) == len(train[0]) # The number of features.
-
 
   with open(output_files[0]) as f:
     print "correct # of lines per file? --", len(f.readlines()) == repair_steps+2 # +1 for the header-line and +1 for the level=0 step.
 
   files_not_empty = all(os.stat(f).st_size!=0 for f in output_files)
   print "all audit files not empty? --", files_not_empty
+
+  #TODO: Test the optional predictions and repaired output files.
 
 if __name__=="__main__":
   test()

@@ -99,20 +99,7 @@ class ModelVisitor(AbstractModelVisitor):
       self.model_saver.restore(tf_session, ckpt.model_checkpoint_path)
       predictions = tf.argmax(self.y, 1).eval(feed_dict={self.x: test_matrix, self.y_:test_labels}, session=tf_session)
 
-    # Produce a confusion matrix in a dictionary format from those predictions.
-    conf_table = {}
-    for entry, guess in zip(test_set, predictions):
-      actual = entry[self.response_index]
-
-      if not actual in conf_table:
-        conf_table[actual] = {}
-
-      if not guess in conf_table[actual]:
-        conf_table[actual][guess] = 1
-      else:
-        conf_table[actual][guess] += 1
-
-    return conf_table
+    return zip([row[self.response_index] for row in test_set], predictions)
 
 def list_to_tf_input(data, response_index, num_labels):
   matrix = np.matrix([row[:response_index] + row[response_index+1:] for row in data])
@@ -123,8 +110,10 @@ def list_to_tf_input(data, response_index, num_labels):
   return matrix, labels_onehot
 
 def test():
-  tf_matrix, tf_onehot = list_to_tf_input([[0,0],[0,1],[0,2]], 1, 3)
-  correct_matrix, correct_onehot = [[0],[0],[0]], [[1,0,0], [0,1,0], [0,0,1]]
+  data = [[0,0],[0,1],[0,2]]
+  tf_matrix, tf_onehot = list_to_tf_input(data, 1, 3)
+  correct_matrix = [[0],[0],[0]]
+  correct_onehot = [[1,0,0], [0,1,0], [0,0,1]]
   print "list_to_tf_input matrix correct? --",np.array_equal(tf_matrix, correct_matrix)
   print "list_to_tf_input onehot correct? --",np.array_equal(tf_onehot, correct_onehot)
 
@@ -140,9 +129,9 @@ def test():
   model = factory.build(train_set)
   print "factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor)
 
-
   predictions = model.test(test_set)
-  intended_predictions = {0: {0: 49}, 1: {1: 49}}
+  resp_index = headers.index(response)
+  intended_predictions = [(row[resp_index], row[resp_index]) for row in test_set]
   print "predicting correctly? -- ", predictions == intended_predictions
 
 if __name__=="__main__":

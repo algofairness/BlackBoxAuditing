@@ -1,15 +1,16 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-from experiments.adult.load_data import load_data
+from experiments.sample.load_data import load_data
 from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy
-response_header = "income-per-year"
+response_header = "Outcome"
 graph_measurers = [accuracy]
 rank_measurer = accuracy
 features_to_ignore = []
 
 verbose = True # Set to `True` to allow for more detailed status updates.
 save_repaired_data = False # Set to `True` to allow repaired data to be saved.
+save_predictions_details = False # Set to `True` to save per-entry prediction info.
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # NOTE: You should not need to change anything below this point.
@@ -18,6 +19,7 @@ save_repaired_data = False # Set to `True` to allow repaired data to be saved.
 from loggers import vprint
 from GradientFeatureAuditor import GradientFeatureAuditor
 from audit_reading import graph_audit, graph_audits, rank_audit_files
+from measurements import get_conf_matrix
 
 def run():
   headers, train_set, test_set = load_data()
@@ -37,9 +39,10 @@ def run():
 
   # Check the quality of the initial model on verbose runs.
   if verbose:
-    conf_table = model.test(train_set)
+    pred_tuples = model.test(train_set)
+    conf_matrix = get_conf_matrix(pred_tuples)
     for measurer in graph_measurers:
-      print "\t{}: {}".format(measurer.__name__, measurer(conf_table))
+      print "\t{}: {}".format(measurer.__name__, measurer(conf_matrix))
 
   # Don't audit the response feature.
   features_to_ignore.append(response_header)
@@ -50,7 +53,8 @@ def run():
   # Perform the Gradient Feature Audit and dump the audit results into files.
   auditor = GradientFeatureAuditor(model, headers, train_set, test_set,
                                    features_to_ignore=feature_indexes_to_ignore,
-                                   save_repaired_data=save_repaired_data)
+                                   save_repaired_data=save_repaired_data,
+                                   save_prediction_details=save_predictions_details)
   audit_filenames = auditor.audit(verbose=verbose)
 
   # Graph the audit files.
