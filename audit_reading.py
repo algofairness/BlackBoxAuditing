@@ -58,8 +58,8 @@ def graph_audit(filename, measurers, output_image_file):
   plt.title(header_line)
   plt.axis([0,1,0,1.1]) # Make all the plots consistently sized.
   plt.xlabel("Repair Level")
-  plt.legend()
-  plt.savefig(output_image_file)
+  plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+  plt.savefig(output_image_file, bbox_inches='tight')
   plt.clf() # Clear the entire figure so future plots are empty.
 
   # Save the data used to generate that image file.
@@ -90,8 +90,8 @@ def graph_audits(filenames, measurer, output_image_file):
   plt.title(measurer.__name__)
   plt.axis([0,1,0,1.1]) # Make all the plots consistently sized.
   plt.xlabel("Repair Level")
-  plt.legend()
-  plt.savefig(output_image_file)
+  plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+  plt.savefig(output_image_file, bbox_inches='tight')
   plt.clf() # Clear the entire figure so future plots are empty.
 
   # Save the data used to generate that image file.
