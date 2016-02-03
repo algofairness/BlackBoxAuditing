@@ -11,6 +11,9 @@ import os
 WEKA_PATH = "/usr/share/java/weka.jar"
 TMP_DIR = "tmp/"
 
+if not os.path.isfile(WEKA_PATH):
+  raise Exception("WEKA_PATH is not properly set!")
+
 # Create the TMP_DIR if it does not already exist.
 if not os.path.exists(TMP_DIR):
   os.makedirs(TMP_DIR)

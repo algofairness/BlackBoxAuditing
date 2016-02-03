@@ -9,8 +9,8 @@ rank_measurer = accuracy
 features_to_ignore = []
 
 verbose = True # Set to `True` to allow for more detailed status updates.
-save_repaired_data = False # Set to `True` to allow repaired data to be saved.
-save_predictions_details = False # Set to `True` to save per-entry prediction info.
+save_repaired_data = True # Set to `True` to allow repaired data to be saved.
+save_predictions_details = True # Set to `True` to save per-entry prediction info.
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # NOTE: You should not need to change anything below this point.
