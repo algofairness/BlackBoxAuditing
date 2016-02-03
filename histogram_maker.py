@@ -4,14 +4,17 @@
 
 from experiments.arrests.load_data import load_data
 from repair.CategoricRepairer import Repairer
+import numpy as np
 import os
+
+import matplotlib
+matplotlib.use('Agg') # Set the back-end
+import matplotlib.pyplot as plt
 
 FIGURES_DIR = "figures"
 if not os.path.exists(FIGURES_DIR):
   os.makedirs(FIGURES_DIR)
 
-import matplotlib.pyplot as plt
-import numpy as np
 def run():
   feature_to_repair = 0
   repair_level = 1.0

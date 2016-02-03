@@ -1,8 +1,12 @@
-import matplotlib.pyplot as plt
 import json
 import os
 import random
 import csv
+
+import matplotlib
+matplotlib.use('Agg') # Set the back-end
+import matplotlib.pyplot as plt
+
 
 def load_audit_confusion_matrices(filename):
   """
