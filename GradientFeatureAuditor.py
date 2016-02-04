@@ -1,6 +1,8 @@
 from repair.GeneralRepairer import Repairer
 from loggers import vprint
 from measurements import get_conf_matrix
+
+from multiprocessing import Process, Pool
 import csv
 import time
 import os
@@ -29,52 +31,67 @@ class GradientFeatureAuditor(object):
       if not os.path.exists(directory):
         os.makedirs(directory)
 
+  def __call__(self, params):
+    # When the GFA is called from the multiprocessing Pool, spawn a worker.
+    return self._audit_worker(*params)
+
+  def _audit_worker(self, feature_to_repair, repair_level, output_file):
+    all_data = self.train_set + self.test_set
+    index_to_repair = self.headers.index(feature_to_repair)
+
+    repairer = Repairer(all_data, index_to_repair, repair_level,
+                        features_to_ignore=self.features_to_ignore)
+    rep_test = repairer.repair(self.test_set)
+
+    arff_prefix = "{}_{}".format(index_to_repair, repair_level)
+    pred_tuples = self.model.test(rep_test, arff_prefix=arff_prefix)
+    conf_table = get_conf_matrix(pred_tuples)
+
+    # Save the repaired version of the data if specified.
+    if self.save_repaired_data:
+      with open(output_file + ".repaired_{}.data".format(repair_level), "w") as f:
+        writer = csv.writer(f)
+        for row in [self.headers]+rep_test:
+          writer.writerow(row)
+
+    # Save the prediction_tuples and the original values of the features to repair.
+    if self.save_prediction_details:
+      with open(output_file + ".repaired_{}.predictions".format(repair_level), "w") as f:
+        writer = csv.writer(f)
+        file_headers = ["Pre-Repaired Feature", "Response", "Prediction"]
+        writer.writerow(file_headers)
+        for i, orig_row in enumerate(self.test_set):
+          row = [orig_row[index_to_repair], pred_tuples[i][0], pred_tuples[i][1]]
+          writer.writerow(row)
+
+    return (repair_level, conf_table)
 
   def audit_feature(self, feature_to_repair, output_file):
     conf_tables = []
     repair_increase_per_step = 1.0/self.repair_steps
     repair_level = 0.0
 
+    worker_params = []
     while repair_level <= 1.0:
-      all_data = self.train_set + self.test_set
-      index_to_repair = self.headers.index(feature_to_repair)
-      repairer = Repairer(all_data, index_to_repair, repair_level,
-                          features_to_ignore=self.features_to_ignore)
-      rep_test = repairer.repair(self.test_set)
-
-      pred_tuples = self.model.test(rep_test)
-
-      # Save the repaired version of the data if specified.
-      if self.save_repaired_data:
-        with open(output_file + ".repaired_{}.data".format(repair_level), "w") as f:
-          writer = csv.writer(f)
-          for row in [self.headers]+rep_test:
-            writer.writerow(row)
-
-      # Save the prediction_tuples and the original values of the features to repair.
-      if self.save_prediction_details:
-        with open(output_file + ".repaired_{}.predictions".format(repair_level), "w") as f:
-          writer = csv.writer(f)
-          file_headers = ["Pre-Repaired Feature", "Response", "Prediction"]
-          writer.writerow(file_headers)
-          for i, orig_row in enumerate(self.test_set):
-            row = [orig_row[index_to_repair], pred_tuples[i][0], pred_tuples[i][1]]
-            writer.writerow(row)
-
-      conf_table = get_conf_matrix(pred_tuples)
-      conf_tables.append( (repair_level, conf_table) )
+      worker_params.append( (feature_to_repair, repair_level, output_file) )
       repair_level += repair_increase_per_step
+
+    # Start a new worker process for each repair level.
+    pool = Pool(len(worker_params))
+    conf_table_tuples = pool.map(self, worker_params)
+    conf_table_tuples.sort(key=lambda tuples: tuples[0])
 
     with open(output_file, "a") as f:
       f.write("GFA Audit for:{}\n".format(feature_to_repair))
-      for repair_level, conf_table in conf_tables:
+      for repair_level, conf_table in conf_table_tuples:
         json_conf_table = json.dumps(conf_table)
         f.write("{}:{}\n".format(repair_level, json_conf_table))
 
   def audit(self, verbose=False):
-    output_files = []
-
     features_to_audit = [h for i, h in enumerate(self.headers) if i not in self.features_to_ignore]
+
+    output_files = []
+    processes = []
     for i, feature in enumerate(features_to_audit):
       message = "Auditing: '{}' ({}/{}).".format(feature,i+1,len(features_to_audit))
       vprint(message, verbose)
@@ -82,8 +99,15 @@ class GradientFeatureAuditor(object):
       cleaned_feature_name = feature.replace(".","_").replace(" ","_")
       output_file = "{}.audit".format(cleaned_feature_name)
       full_filepath = self.OUTPUT_DIR + "/" + output_file
-      self.audit_feature(feature, full_filepath)
+
+      process = Process(target=self.audit_feature, args=(feature,full_filepath))
+      process.start()
+
       output_files.append(full_filepath)
+      processes.append(process)
+
+    for process in processes:
+      process.join()
 
     print "Audit files dumped to: {}".format(self.OUTPUT_DIR)
 

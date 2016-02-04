@@ -2,11 +2,11 @@ import random
 
 def load_data():
   headers = ["Feature A (i)", "Feature B (2i)", "Feature C (-i)",
-             "Random Feature", "Outcome"]
-  train = [[i, 2*i, -i, random.random(), "A"] for i in range(0,100)] + \
-          [[i, 2*i, -i, random.random(), "B"] for i in range(100,200)]
-  test = [[i, 2*i, -i, random.random(), "A"] for i in range(0,100)] + \
-          [[i, 2*i, -i, random.random(), "B"] for i in range(100,200)]
+             "Static Feature", "Random Feature", "Outcome"]
+  train = [[i, 2*i, -i, 1, random.random(), "A"] for i in range(0,100)] + \
+          [[i, 2*i, -i, 1, random.random(), "B"] for i in range(100,200)]
+  test = [[i, 2*i, -i, 1, random.random(), "A"] for i in range(0,100)] + \
+          [[i, 2*i, -i, 1, random.random(), "B"] for i in range(100,200)]
   return headers, train, test
 
 
