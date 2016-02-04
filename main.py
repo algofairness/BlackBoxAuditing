@@ -1,9 +1,9 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-import experiments.sample as experiment
+import experiments.adult as experiment
 from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy
-response_header = "Outcome"
+response_header = "income-per-year"
 graph_measurers = [accuracy]
 rank_measurer = accuracy
 features_to_ignore = []
@@ -43,7 +43,7 @@ def run():
 
   # Check the quality of the initial model on verbose runs.
   if verbose:
-    pred_tuples = model.test(train_set)
+    pred_tuples = model.test(test_set)
     conf_matrix = get_conf_matrix(pred_tuples)
     for measurer in graph_measurers:
       print "\t{}: {}".format(measurer.__name__, measurer(conf_matrix))
