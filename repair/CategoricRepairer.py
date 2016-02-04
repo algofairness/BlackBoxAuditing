@@ -342,7 +342,6 @@ def test():
   test_assign_overflow()
   test_categorical()
   test_repeated_values()
-  test_arrests()
 
 def test_repeated_values():
   #TODO: Add this test (which is why Ricci broke originally)
@@ -352,6 +351,7 @@ def test_minimal():
   class_1 = [[float(i),"A"] for i in xrange(0, 100)]
   class_2 = [[float(i),"B"] for i in xrange(101, 200)] # Thus, "A" is mode class.
   data = class_1 + class_2
+  print "HERE"
 
   feature_to_repair = 1
   repairer = Repairer(data, feature_to_repair, 0.5)
@@ -475,32 +475,6 @@ def test_categorical():
 
   print "Categorical Minimal Dataset -- partial repaired_data altered?", part_repaired_data != all_data
   print "Categorical Minimal Dataset -- partial repaired_data correct?", part_repaired_data == correct_part_repaired_data
-
-
-def test_arrests():
-  from experiments.arrests.load_data import load_data
-  feature_to_repair = 0
-  repair_level = 1.0
-  _, train_data, test_data = load_data()
-
-  repairer = Repairer(train_data+test_data, feature_to_repair, repair_level)
-  repaired_data = repairer.repair(test_data)
-
-  print "Arrest Dataset -- no rows lost?", len(repaired_data) == len(test_data)
-  print "Arrest Dataset -- features changed for repair level '{}'? {}".format(repair_level, repaired_data != test_data)
-
-  repair_level = 0.0
-  repairer = Repairer(train_data+test_data, feature_to_repair, repair_level)
-  repaired_data = repairer.repair(test_data)
-  print "Arrest Dataset -- features not changed for repair level 0?", repaired_data == test_data
-  if repaired_data != test_data: #TODO: Remove this after debugging.
-    count = 0
-    for rep,orig in zip(repaired_data, test_data):
-      if rep != orig:
-        print "wroooong: ", count, "------------------------",
-        for i,j in zip(rep, orig):
-          if i!=j: print j, "-->", i
-        count += 1
 
 
 if __name__== "__main__":

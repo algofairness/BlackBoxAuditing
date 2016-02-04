@@ -44,7 +44,6 @@ def test():
   headers, train, test = load_data()
   print "load_data unpacks correctly? -- ", (headers != None and train != None and test != None)
 
-  correct_types = [int, str, int, str, int, str, str, str, str, str, int, int, int, str, str]
   gathered_types = []
   for i, header in enumerate(headers):
     if all( isinstance(row[i],float) for row in train + test ):

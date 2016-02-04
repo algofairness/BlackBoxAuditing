@@ -1,6 +1,7 @@
 from repair.GeneralRepairer import Repairer
 from loggers import vprint
 from measurements import get_conf_matrix
+from model_factories.AbstractModelVisitor import AbstractModelVisitor
 
 from multiprocessing import Process, Pool
 import csv
@@ -114,11 +115,11 @@ class GradientFeatureAuditor(object):
     return output_files
 
 
-def test():
-  class MockModel(object):
-    def test(self, test_set, response_col=0):
-      return [(entry[response_col], entry[response_col]) for entry in test_set]
+class MockModel(AbstractModelVisitor):
+  def test(self, test_set, arff_prefix="test", response_col=0):
+    return [(entry[response_col], entry[response_col]) for entry in test_set]
 
+def test():
   model = MockModel()
   headers = ["response", "duplicate", "constant"]
   train = [[i,i,1] for i in xrange(100)]
