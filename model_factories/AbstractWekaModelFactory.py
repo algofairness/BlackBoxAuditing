@@ -100,6 +100,7 @@ def list_to_arff_file(arff_type_dict, data, arff_file_output):
       formatter = io.BytesIO()
       writer = csv.writer(formatter)
       unique_values = list(set(types))
+      unique_values = ['"{}"'.format(val) if " " in val else val for val in unique_values]
       writer.writerow(unique_values)
       types = "{" + formatter.getvalue().strip('\r\n') + "}"
     attribute = attribute.replace(" ","_")
