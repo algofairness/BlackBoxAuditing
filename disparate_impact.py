@@ -32,7 +32,7 @@ def test():
 	groups = ('W','B')
 	outcomes = (1,0)
 	di = disparate_impact(feature_to_repair, response, groups, outcomes)
-	print "Disparate Impact correct?", di 
+	print "Disparate Impact correct?", di==0.75 
 
 if __name__== "__main__":
   test()
