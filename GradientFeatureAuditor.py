@@ -68,7 +68,6 @@ class GradientFeatureAuditor(object):
     return (repair_level, conf_table)
 
   def audit_feature(self, feature_to_repair, output_file):
-    conf_tables = []
     repair_increase_per_step = 1.0/self.repair_steps
     repair_level = 0.0
 
