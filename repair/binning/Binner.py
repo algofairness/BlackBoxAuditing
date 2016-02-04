@@ -1,5 +1,6 @@
 from BinSizes import FreedmanDiaconisBinSize as bsc
 import math
+import random
 
 def make_histogram_bins(bin_size_calculator, data, col_id):
   feature_vals = [row[col_id] for row in data]
@@ -7,7 +8,12 @@ def make_histogram_bins(bin_size_calculator, data, col_id):
 
   # If the bin-size is calculated to be less than 0, use only a single bucket.
   if bin_size==0:
+    bin_size = 1
+
+  # If all the values are the same, lump them in a single bucket.
+  if len(set(feature_vals)) == 1:
     bin_size = len(feature_vals)
+
 
   # Round the number of buckets up so we don't lose any data.
   num_bins = int(math.ceil(len(data)/float(bin_size)))
@@ -30,6 +36,10 @@ def test():
   data = [[1]]*100
   bins = make_histogram_bins(bsc, data, 0)
   print "homogenous feature yields one bin? ", len(bins) == 1
+
+  data = [[random.random()] for i in xrange(100)]
+  bins = make_histogram_bins(bsc, data, 0)
+  print "Unique and small features yield unique buckets? ", len(bins) == len(data)
 
 
 
