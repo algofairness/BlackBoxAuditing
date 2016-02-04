@@ -4,19 +4,19 @@ import random
 
 str_headers = ["compound_0", "compound_0_role","compound_1", "compound_1_role",
                "compound_2", "compound_2_role","compound_3", "compound_3_role",
-               "compound_4", "compound_4_role", "duplicateOf"]
-bool_headers = ["boolean_crystallisation_outcome_manual_0",
-                "legacyRecommendedFlag", "valid", "public"]
+               "compound_4", "compound_4_role", "duplicateOf",
+               "crystallisation_outcome_manual_0"]
+bool_headers = [ "legacyRecommendedFlag", "valid", "public"]
 ignored_headers = ["notes", "rxnSpaceHash1_drpxxhash_0.02/0.4.3","reaction_ptr",
                    "labGroup", "user", "insertedDateTime", "performedDateTime",
-                   "performedBy", "reference", "crystallisation_outcome_manual_0",
-                   "crystallisation_purity_outcome_manual_0"]
+                   "performedBy", "reference", "recommendation", "id",
+                   "boolean_crystallisation_outcome_manual_0"]
 
-ignored_headers += str_headers #TODO: For now, ignore all the string-fields.
+ignored_headers += str_headers[:-1] #TODO: For now, ignore all the string-fields.
 
 unknown_tokens = {"?", ""}
 train_percentage = 0.7
-max_entries = 100
+max_entries = None
 filename = "test_data/DRP.csv"
 
 def load_data():
@@ -32,7 +32,6 @@ def load_data():
 
     # Remove unhelpful headers from the dataset.
     ignored_indices = {headers.index(header) for header in ignored_headers}
-    for i in xrange(35, len(headers)): ignored_indices.add(i) #TODO
     headers = [h for i,h in enumerate(headers) if i not in ignored_indices]
     data = [[e for i,e in enumerate(row) if i not in ignored_indices] for row in data]
 
