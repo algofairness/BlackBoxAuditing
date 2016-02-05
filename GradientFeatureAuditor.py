@@ -3,7 +3,7 @@ from loggers import vprint
 from measurements import get_conf_matrix
 from model_factories.AbstractModelVisitor import AbstractModelVisitor
 
-from multiprocessing import Process, Pool
+from multiprocessing import Pool, cpu_count
 import csv
 import time
 import os
@@ -77,7 +77,7 @@ class GradientFeatureAuditor(object):
       repair_level += repair_increase_per_step
 
     # Start a new worker process for each repair level.
-    pool = Pool(len(worker_params))
+    pool = Pool(processes=cpu_count())
     conf_table_tuples = pool.map(self, worker_params)
     conf_table_tuples.sort(key=lambda tuples: tuples[0])
 
@@ -91,7 +91,6 @@ class GradientFeatureAuditor(object):
     features_to_audit = [h for i, h in enumerate(self.headers) if i not in self.features_to_ignore]
 
     output_files = []
-    processes = []
     for i, feature in enumerate(features_to_audit):
       message = "Auditing: '{}' ({}/{}).".format(feature,i+1,len(features_to_audit))
       vprint(message, verbose)
@@ -99,18 +98,11 @@ class GradientFeatureAuditor(object):
       cleaned_feature_name = feature.replace(".","_").replace(" ","_")
       output_file = "{}.audit".format(cleaned_feature_name)
       full_filepath = self.OUTPUT_DIR + "/" + output_file
-
-      process = Process(target=self.audit_feature, args=(feature,full_filepath))
-      process.start()
-
       output_files.append(full_filepath)
-      processes.append(process)
 
-    for process in processes:
-      process.join()
+      self.audit_feature(feature, full_filepath)
 
     print "Audit files dumped to: {}".format(self.OUTPUT_DIR)
-
     return output_files
 
 
