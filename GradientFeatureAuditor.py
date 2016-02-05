@@ -80,7 +80,7 @@ class GradientFeatureAuditor(object):
 
     # Start a new worker process for each repair level.
     if ENABLE_MULTIPROCESSING:
-      pool = Pool(processes=cpu_count())
+      pool = Pool(processes=cpu_count()-1 or 1)
       conf_table_tuples = pool.map(self, worker_params)
     else:
       conf_table_tuples = [self(params) for params in worker_params]
