@@ -9,7 +9,7 @@ import time
 import os
 import json
 
-ENABLE_MULTIPROCESSING = True
+ENABLE_MULTIPROCESSING = False
 
 class GradientFeatureAuditor(object):
   def __init__(self, model, headers, train_set, test_set, repair_steps=10,
@@ -78,9 +78,8 @@ class GradientFeatureAuditor(object):
       worker_params.append( (feature_to_repair, repair_level, output_file) )
       repair_level += repair_increase_per_step
 
-    # Start a new worker process for each repair level.
     if ENABLE_MULTIPROCESSING:
-      pool = Pool(processes=cpu_count()-1 or 1)
+      pool = Pool(processes=cpu_count()/2 or 1)
       conf_table_tuples = pool.map(self, worker_params)
     else:
       conf_table_tuples = [self(params) for params in worker_params]
