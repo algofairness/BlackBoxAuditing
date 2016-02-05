@@ -9,7 +9,7 @@ import time
 import os
 import json
 
-ENABLE_MULTIPROCESSING = False
+ENABLE_MULTIPROCESSING = True
 
 class GradientFeatureAuditor(object):
   def __init__(self, model, headers, train_set, test_set, repair_steps=10,

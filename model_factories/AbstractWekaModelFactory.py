@@ -93,6 +93,12 @@ def get_arff_type_dict(headers, data):
 
 
 def list_to_arff_file(arff_type_dict, data, arff_file_output):
+  def arff_format(string):
+    # Remove empty strings and quote strings with spaces.
+    if string == "":
+      string = "N/A"
+    return '"{}"'.format(string) if " " in str(string) else string
+
   # Produce the relevant file headers for the ARFF.
   arff_header = "@relation BlackBoxAuditing\n"
   for attribute, types in arff_type_dict.items():
@@ -100,9 +106,10 @@ def list_to_arff_file(arff_type_dict, data, arff_file_output):
       formatter = io.BytesIO()
       writer = csv.writer(formatter)
       unique_values = list(set(types))
-      unique_values = ['"{}"'.format(val) if " " in val else val for val in unique_values]
+      unique_values = [arff_format(val) for val in unique_values]
       writer.writerow(unique_values)
-      types = "{" + formatter.getvalue().strip('\r\n') + "}"
+      formatted = formatter.getvalue().strip('\r\n').replace('"""','"')
+      types = "{" + formatted + "}"
     attribute = attribute.replace(" ","_")
     arff_header += "@attribute {} {}\n".format(attribute, types)
 
@@ -112,8 +119,10 @@ def list_to_arff_file(arff_type_dict, data, arff_file_output):
   data_output = io.BytesIO()
   csv_writer = csv.writer(data_output)
   for row in data:
+    row = [arff_format(val) for val in row]
     csv_writer.writerow(row)
 
   # Dump everything into the intended ARFF file.
   with open(arff_file_output, "w") as f:
-    f.write(arff_header + data_output.getvalue())
+    output = data_output.getvalue().replace('"""','"')
+    f.write(arff_header + output)
