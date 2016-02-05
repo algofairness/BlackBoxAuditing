@@ -97,7 +97,7 @@ class ModelVisitor(AbstractModelVisitor):
     self.y = y
     self.response_dict = response_dict
 
-  def test(self, test_set):
+  def test(self, test_set, test_name=""):
     translated_test_set = translate_response(self.response_index, test_set, self.response_dict)
 
     test_matrix, test_labels = list_to_tf_input(translated_test_set, self.response_index, self.num_labels  )

@@ -9,6 +9,8 @@ import time
 import os
 import json
 
+ENABLE_MULTIPROCESSING = True
+
 class GradientFeatureAuditor(object):
   def __init__(self, model, headers, train_set, test_set, repair_steps=10,
                 features_to_ignore = [], save_repaired_data=False,
@@ -44,8 +46,8 @@ class GradientFeatureAuditor(object):
                         features_to_ignore=self.features_to_ignore)
     rep_test = repairer.repair(self.test_set)
 
-    arff_prefix = "{}_{}".format(index_to_repair, repair_level)
-    pred_tuples = self.model.test(rep_test, arff_prefix=arff_prefix)
+    test_name = "{}_{}".format(index_to_repair, repair_level)
+    pred_tuples = self.model.test(rep_test, test_name=test_name)
     conf_table = get_conf_matrix(pred_tuples)
 
     # Save the repaired version of the data if specified.
@@ -77,8 +79,12 @@ class GradientFeatureAuditor(object):
       repair_level += repair_increase_per_step
 
     # Start a new worker process for each repair level.
-    pool = Pool(processes=cpu_count())
-    conf_table_tuples = pool.map(self, worker_params)
+    if ENABLE_MULTIPROCESSING:
+      pool = Pool(processes=cpu_count())
+      conf_table_tuples = pool.map(self, worker_params)
+    else:
+      conf_table_tuples = [self(params) for params in worker_params]
+
     conf_table_tuples.sort(key=lambda tuples: tuples[0])
 
     with open(output_file, "a") as f:

@@ -52,8 +52,8 @@ class AbstractWekaModelVisitor(AbstractModelVisitor):
     self.response_index = response_index
     self.test_command = ""
 
-  def test(self, test_set, arff_prefix=""):
-    test_arff_file = "{}.{}.test.arff".format(self.model_file, arff_prefix)
+  def test(self, test_set, test_name=""):
+    test_arff_file = "{}.{}.test.arff".format(self.model_file, test_name)
     list_to_arff_file(self.arff_types, test_set, test_arff_file)
     results_path = "{}.out".format(test_arff_file)
 
