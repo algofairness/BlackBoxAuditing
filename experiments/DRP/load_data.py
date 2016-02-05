@@ -2,17 +2,18 @@ from splitters import split_by_percent
 import csv
 import random
 
-str_headers = ["compound_0", "compound_0_role","compound_1", "compound_1_role",
-               "compound_2", "compound_2_role","compound_3", "compound_3_role",
-               "compound_4", "compound_4_role", "duplicateOf",
-               "crystallisation_outcome_manual_0"]
-bool_headers = [ "legacyRecommendedFlag", "valid", "public"]
+str_headers = ["boolean_crystallisation_outcome_manual_0"]
 ignored_headers = ["notes", "rxnSpaceHash1_drpxxhash_0.02/0.4.3","reaction_ptr",
                    "labGroup", "user", "insertedDateTime", "performedDateTime",
                    "performedBy", "reference", "recommendation", "id",
-                   "boolean_crystallisation_outcome_manual_0"]
+                   "compound_0", "compound_0_role","compound_1", "compound_1_role",
+                   "compound_2", "compound_2_role","compound_3", "compound_3_role",
+                   "compound_4", "compound_4_role", "duplicateOf",
+                   "crystallisation_outcome_manual_0",
+                   "legacyRecommendedFlag", "valid", "public",
 
-ignored_headers += str_headers[:-1] #TODO: For now, ignore all the string-fields.
+                   #"boolean_crystallisation_outcome_manual_0"]
+                   ]
 
 unknown_tokens = {"?", ""}
 train_percentage = 0.7
@@ -28,7 +29,6 @@ def load_data():
     # Assign the appropriate types to each header.
     correct_types = {h:float for h in headers}
     for h in str_headers: correct_types[h] = str
-    for h in bool_headers: correct_types[h] = bool
 
     # Remove unhelpful headers from the dataset.
     ignored_indices = {headers.index(header) for header in ignored_headers}

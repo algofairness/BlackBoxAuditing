@@ -1,9 +1,9 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-import experiments.sample as experiment
+import experiments.DRP as experiment
 from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy
-response_header = "Outcome"
+response_header = "boolean_crystallisation_outcome_manual_0"
 graph_measurers = [accuracy]
 rank_measurer = accuracy
 features_to_ignore = []
@@ -40,6 +40,7 @@ def run():
   all_data = train_set + test_set
   model_factory = ModelFactory(all_data, headers, response_header)
   model = model_factory.build(train_set)
+
 
   # Check the quality of the initial model on verbose runs.
   if verbose:
