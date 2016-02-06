@@ -83,11 +83,6 @@ class Repairer(AbstractRepairer):
       # Also remember that this row pertains to this strat-group.
       stratified_group_indices[group].append(i)
 
-    # Sum the number of unique values present across each stratified group.
-    sizes = {group: min(len(val_set) for _, val_set in val_sets[group].items()) for group in all_stratified_groups}
-
-    # Don't consider groups not present in data (ie, size 0).
-    all_stratified_groups = filter(lambda x: sizes[x], all_stratified_groups)
 
     """
      Separate data by stratified group to perform repair on each Y column's values given that their corresponding protected attribute is a particular stratified group. We need to keep track of each Y column's values corresponding to each particular stratified group, as well as each value's index, so that when we repair the data, we can modify the correct value in the original data. Example: Supposing there is a Y column, "Score1", in which the 3rd and 5th scores, 70 and 90 respectively, belonged to black women, the data structure would look like: {("Black", "Woman"): {Score1: [(70,2),(90,4)]}}
@@ -107,10 +102,6 @@ class Repairer(AbstractRepairer):
         stratified_col_values.sort(key=lambda tup: tup[1])
         stratified_group_data[group][col_id] = stratified_col_values
 
-    # Find the combination with the fewest data points. This will determine what the quantiles are.
-    num_quantiles = min(filter(lambda x: x, sizes.values())) # Remove any 0s
-    quantile_unit = 1.0/num_quantiles
-
     # Init data dictionaries
     group_features = {}
     categories = {}
@@ -127,18 +118,22 @@ class Repairer(AbstractRepairer):
       group_offsets = {group: 0 for group in all_stratified_groups}
       col = data_dict[col_id]
 
+      num_quantiles = min(len(val_sets[group][col_id]) for group in all_stratified_groups)
+      quantile_unit = 1.0/num_quantiles
+
       if repair_types[col_id] in {int, float}:
         for quantile in range(num_quantiles):
           median_at_quantiles = []
           indices_per_group = {}
 
           for group in all_stratified_groups:
-            offset = int(round(group_offsets[group]*sizes[group]))
-            number_to_get = int(round((group_offsets[group] + quantile_unit)*sizes[group]) - offset)
+            group_data_at_col = stratified_group_data[group][col_id]
+            offset = int(round(group_offsets[group]*len(group_data_at_col)))
+            number_to_get = int(round((group_offsets[group] + quantile_unit)*len(group_data_at_col)) - offset)
             group_offsets[group] += quantile_unit
+            if number_to_get == 0: continue
 
             # Get data at this quantile from this Y column such that stratified X = group
-            group_data_at_col = stratified_group_data[group][col_id]
             offset_data = group_data_at_col[offset:offset+number_to_get]
             indices_per_group[group] = [i for val_indices, _ in offset_data for i in val_indices]
             values = sorted([float(val) for _, val in offset_data])

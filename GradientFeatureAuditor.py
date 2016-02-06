@@ -9,7 +9,7 @@ import time
 import os
 import json
 
-ENABLE_MULTIPROCESSING = True
+ENABLE_MULTIPROCESSING = False
 SAVE_REPAIRED_DATA = True
 SAVE_PREDICTION_DETAILS = True
 
@@ -93,6 +93,8 @@ class GradientFeatureAuditor(object):
     if ENABLE_MULTIPROCESSING:
       pool = Pool(processes=cpu_count()/2 or 1, maxtasksperchild=1)
       conf_table_tuples = pool.map(_audit_worker, worker_params)
+      pool.close()
+      pool.join()
       del pool
     else:
       conf_table_tuples = [_audit_worker(params) for params in worker_params]
@@ -125,7 +127,7 @@ class GradientFeatureAuditor(object):
 
 
 class MockModel(AbstractModelVisitor):
-  def test(self, test_set, arff_prefix="test", response_col=0):
+  def test(self, test_set, arff_prefix="test", response_col=0, test_name=""):
     return [(entry[response_col], entry[response_col]) for entry in test_set]
 
 def test():
@@ -135,9 +137,7 @@ def test():
   test = train[:] # Copy the training data.
   repair_steps = 5
   gfa = GradientFeatureAuditor(model, headers, train, test,
-                               repair_steps=repair_steps,
-                               save_repaired_data=True,
-                               save_prediction_details = True)
+                               repair_steps=repair_steps)
   output_files = gfa.audit()
 
   print "correct # of audit files produced? --", len(output_files) == len(train[0]) # The number of features.
