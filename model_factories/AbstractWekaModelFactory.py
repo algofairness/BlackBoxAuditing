@@ -8,7 +8,7 @@ import io
 import csv
 import os
 
-WEKA_PATH = "/usr/share/java/weka.jar"
+WEKA_PATH = "/home/bpsmith/Thesis/weka/weka.jar"
 TMP_DIR = "tmp/"
 
 if not os.path.isfile(WEKA_PATH):
@@ -39,6 +39,7 @@ class AbstractWekaModelFactory(AbstractModelFactory):
 
     # Call WEKA to generate the model file.
     command = "java {} -t {} -d {} -p 0 -c {}".format(self.train_command, train_arff_file, model_file, response_index + 1)
+    print command
     run_weka_command(command)
 
     return self.model_visitor_type(model_file, arff_types, response_index)
@@ -100,17 +101,26 @@ def list_to_arff_file(arff_type_dict, data, arff_file_output):
       formatter = io.BytesIO()
       writer = csv.writer(formatter)
       unique_values = list(set(types))
+      unique_values = ["\"{}\"".format(val) if " " in val else val for val in unique_values]
+      unique_values = [val.replace(',','') if type(val) == str else val for val in unique_values]
       writer.writerow(unique_values)
       types = "{" + formatter.getvalue().strip('\r\n') + "}"
     attribute = attribute.replace(" ","_")
+    types = types.replace('"""','"')
     arff_header += "@attribute {} {}\n".format(attribute, types)
 
   arff_header += "\n@data\n"
 
   # Write the data in a CSV-like format to avoid weird escaping issues.
   data_output = io.BytesIO()
-  csv_writer = csv.writer(data_output)
+  csv_writer = csv.writer(data_output,delimiter=',',lineterminator='\r\n',quotechar = "'")
   for row in data:
+    for i,val in enumerate(row):
+      try:
+	row[i] = val.replace(",","")
+      except:
+	row[i] = val
+    row = ['\"{}\"'.format(val) if " " in str(val) else val for val in row]
     csv_writer.writerow(row)
 
   # Dump everything into the intended ARFF file.

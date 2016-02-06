@@ -8,6 +8,7 @@ def load_data():
     headers = data.pop(0)
 
     correct_types = [str] * len(headers) # All categorical.
+    correct_types[10] = int
 
     for i, row in enumerate(data):
       for j, correct_type in enumerate(correct_types):
