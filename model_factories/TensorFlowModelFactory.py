@@ -25,13 +25,17 @@ class ModelFactory(AbstractModelFactory):
 
     possible_values = set(row[self.response_index] for row in self.all_data)
     self.num_labels = len(possible_values)
+    self.response_dict = {val:i for i,val in enumerate(possible_values)}
 
     self.hidden_layer_sizes = [50] # If empty, no hidden layers are used.
     self.layer_types = [tf.nn.softmax,  # Input Layer
                         tf.nn.softmax]     # 2nd Hidden Layer
 
   def build(self, train_set):
-    train_matrix, train_labels = list_to_tf_input(train_set, self.response_index, self.num_labels)
+    # In case the class is a string, translate it.
+    translated_train_set = translate_response(self.response_index, train_set, self.response_dict)
+
+    train_matrix, train_labels = list_to_tf_input(translated_train_set, self.response_index, self.num_labels)
     train_size, num_features = train_matrix.shape
 
     # Construct the layer architecture.
@@ -79,26 +83,32 @@ class ModelFactory(AbstractModelFactory):
         # Save the model file each step.
         saver.save(tf_session, CHECKPOINT_DIR + 'model.ckpt', global_step=step+1)
 
-    return ModelVisitor(saver, self.response_index, self.num_labels, x, y_, y)
+    return ModelVisitor(saver, self.response_index, self.num_labels, x, y_, y, self.response_dict)
 
 
 class ModelVisitor(AbstractModelVisitor):
 
-  def __init__(self, model_saver, response_index, num_labels, x, y_, y):
+  def __init__(self, model_saver, response_index, num_labels, x, y_, y, response_dict):
     self.model_saver = model_saver
     self.response_index = response_index
     self.num_labels = num_labels
     self.x = x
     self.y_ = y_
     self.y = y
+    self.response_dict = response_dict
 
-  def test(self, test_set):
-    test_matrix, test_labels = list_to_tf_input(test_set, self.response_index, self.num_labels)
+  def test(self, test_set, test_name=""):
+    translated_test_set = translate_response(self.response_index, test_set, self.response_dict)
+
+    test_matrix, test_labels = list_to_tf_input(translated_test_set, self.response_index, self.num_labels  )
 
     with tf.Session() as tf_session:
       ckpt = tf.train.get_checkpoint_state(CHECKPOINT_DIR)
       self.model_saver.restore(tf_session, ckpt.model_checkpoint_path)
       predictions = tf.argmax(self.y, 1).eval(feed_dict={self.x: test_matrix, self.y_:test_labels}, session=tf_session)
+
+    predictions_dict = {i:key for key,i in self.response_dict.items()}
+    predictions = [predictions_dict[pred] for pred in predictions]
 
     return zip([row[self.response_index] for row in test_set], predictions)
 
@@ -110,7 +120,21 @@ def list_to_tf_input(data, response_index, num_labels):
 
   return matrix, labels_onehot
 
+def translate_response(response_index, data_set, response_dict):
+  translated_set = []
+  for row in data_set:
+    response = row[response_index]
+    translation = response_dict[response]
+    new_row = row[:response_index]+[translation]+row[response_index+1:]
+    translated_set.append(new_row)
+  return translated_set
+
 def test():
+  test_list_to_tf_input()
+  test_basic_model()
+  test_categorical_model()
+
+def test_list_to_tf_input():
   data = [[0,0],[0,1],[0,2]]
   tf_matrix, tf_onehot = list_to_tf_input(data, 1, 3)
   correct_matrix = [[0],[0],[0]]
@@ -118,6 +142,7 @@ def test():
   print "list_to_tf_input matrix correct? --",np.array_equal(tf_matrix, correct_matrix)
   print "list_to_tf_input onehot correct? --",np.array_equal(tf_onehot, correct_onehot)
 
+def test_basic_model():
   headers = ["predictor 1", "predictor 2", "response"]
   response = "response"
   train_set = [[i,0,0] for i in range(1,50)] + [[0,i,1] for i in range(1,50)]
@@ -133,7 +158,25 @@ def test():
   predictions = model.test(test_set)
   resp_index = headers.index(response)
   intended_predictions = [(row[resp_index], row[resp_index]) for row in test_set]
-  print "predicting correctly? -- ", predictions == intended_predictions
+  print "predicting numeric categories correctly? -- ", predictions == intended_predictions
+
+def test_categorical_model():
+  headers = ["predictor 1", "predictor 2", "response"]
+  response = "response"
+  train_set = [[i,0,"A"] for i in range(1,50)] + [[0,i,"B"] for i in range(1,50)]
+  test_set = [[i,0,"A"] for i in range(1,50)] + [[0,i,"C"] for i in range(1,50)]
+  all_data = train_set + test_set
+
+  factory = ModelFactory(all_data, headers, response, name_prefix="test")
+  print "factory settings valid? -- ",len(factory.hidden_layer_sizes)+1 == len(factory.layer_types)
+
+  model = factory.build(train_set)
+  print "factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor)
+
+  predictions = model.test(test_set)
+  resp_index = headers.index(response)
+  intended_predictions = [(test_row[resp_index], train_row[resp_index]) for train_row, test_row in zip(train_set,test_set)]
+  print "predicting string-categories correctly? -- ", predictions == intended_predictions
 
 if __name__=="__main__":
   test()

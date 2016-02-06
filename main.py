@@ -1,22 +1,13 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-import experiments.arrests as experiment
-from model_factories.RecidivismTensorFlowModelFactory import ModelFactory
+import experiments.adult as experiment
+from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy
-"""
-response_header = "Outcome"
+response_header = "income-per-year"
 graph_measurers = [accuracy]
 rank_measurer = accuracy
 features_to_ignore = []
-"""
-response_header = "Classgeneral_violence"
-graph_measurers = [accuracy]
-rank_measurer = accuracy
-features_to_ignore = ["Classarrests","Classdrug","Classsexual_violence","Classfatal_violence","Classproperty"]
-
 verbose = True # Set to `True` to allow for more detailed status updates.
-save_repaired_data = True # Set to `True` to allow repaired data to be saved.
-save_predictions_details = True # Set to `True` to save per-entry prediction info.
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # NOTE: You should not need to change anything below this point.
@@ -62,9 +53,7 @@ def run():
 
   # Perform the Gradient Feature Audit and dump the audit results into files.
   auditor = GradientFeatureAuditor(model, headers, train_set, test_set,
-                                   features_to_ignore=feature_indexes_to_ignore,
-                                   save_repaired_data=save_repaired_data,
-                                   save_prediction_details=save_predictions_details)
+                                   features_to_ignore=feature_indexes_to_ignore)
   audit_filenames = auditor.audit(verbose=verbose)
 
   # Graph the audit files.
@@ -85,7 +74,7 @@ def run():
   # Store a summary of this experiment.
   summary_file = "{}/summary.txt".format(auditor.OUTPUT_DIR)
   with open(summary_file, "w") as f:
-    f.write("Experiment Location: {}".format(experiment.__file__))
+    f.write("Experiment Location: {}\n".format(experiment.__file__))
     f.write("Audit Start Time: {}\n".format(start_time))
     f.write("Audit End Time: {}\n".format(end_time))
     f.write("Model Type: {}\n".format(model_factory.verbose_factory_name))

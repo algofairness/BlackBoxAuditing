@@ -34,6 +34,8 @@ def test():
     elif all( isinstance(row[i],str) for row in train + test ):
       gathered_types.append(str)
 
+  print "Test and train not empty? -- ", len(train)>0 and len(test)>0
+
   print "load_data types are correct? -- ", gathered_types == correct_types
 
 

@@ -5,18 +5,13 @@ train_filename = "test_data/adult.csv"
 test_filename = "test_data/adult.test.csv"
 max_entries = None
 correct_types = [int, str, int, str, int, str, str, str,
-                 int, int, int, str, str]
-features_to_remove = ["race", "sex"]
+                 str,str, int, int, int, str, str]
 
 def load_data():
   with open(train_filename) as f:
     reader = csv.reader(f)
     train = [row for row in reader]
     headers = train.pop(0)
-
-    blacklist = {headers.index(feature) for feature in features_to_remove}
-    headers = [h for i,h in enumerate(headers) if i not in blacklist]
-    train = [[e for i, e in enumerate(row) if i not in blacklist] for row in train]
 
     if max_entries:
       train = random.sample(train, max_entries/2)
@@ -28,7 +23,6 @@ def load_data():
   with open(test_filename) as f:
     reader = csv.reader(f)
     test = [row for row in reader][1:] # Ignore headers.
-    test = [[e for i, e in enumerate(row) if i not in blacklist] for row in test]
 
     if max_entries:
       test = random.sample(test, max_entries/2)

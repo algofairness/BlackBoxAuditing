@@ -53,8 +53,8 @@ class AbstractWekaModelVisitor(AbstractModelVisitor):
     self.response_index = response_index
     self.test_command = ""
 
-  def test(self, test_set, arff_prefix=""):
-    test_arff_file = "{}.{}.test.arff".format(self.model_file, arff_prefix)
+  def test(self, test_set, test_name=""):
+    test_arff_file = "{}.{}.test.arff".format(self.model_file, test_name)
     list_to_arff_file(self.arff_types, test_set, test_arff_file)
     results_path = "{}.out".format(test_arff_file)
 
@@ -94,6 +94,12 @@ def get_arff_type_dict(headers, data):
 
 
 def list_to_arff_file(arff_type_dict, data, arff_file_output):
+  def arff_format(string):
+    # Remove empty strings and quote strings with spaces.
+    if string == "":
+      string = "N/A"
+    return '"{}"'.format(string) if " " in str(string) else string
+
   # Produce the relevant file headers for the ARFF.
   arff_header = "@relation BlackBoxAuditing\n"
   for attribute, types in arff_type_dict.items():
@@ -103,8 +109,10 @@ def list_to_arff_file(arff_type_dict, data, arff_file_output):
       unique_values = list(set(types))
       unique_values = ["\"{}\"".format(val) if " " in val else val for val in unique_values]
       unique_values = [val.replace(',','') if type(val) == str else val for val in unique_values]
+      unique_values = [arff_format(val) for val in unique_values]
       writer.writerow(unique_values)
-      types = "{" + formatter.getvalue().strip('\r\n') + "}"
+      formatted = formatter.getvalue().strip('\r\n').replace('"""','"')
+      types = "{" + formatted + "}"
     attribute = attribute.replace(" ","_")
     types = types.replace('"""','"')
     arff_header += "@attribute {} {}\n".format(attribute, types)
@@ -121,8 +129,10 @@ def list_to_arff_file(arff_type_dict, data, arff_file_output):
       except:
 	row[i] = val
     row = ['\"{}\"'.format(val) if " " in str(val) else val for val in row]
+    row = [arff_format(val) for val in row]
     csv_writer.writerow(row)
 
   # Dump everything into the intended ARFF file.
   with open(arff_file_output, "w") as f:
-    f.write(arff_header + data_output.getvalue())
+    output = data_output.getvalue().replace('"""','"')
+    f.write(arff_header + output)
