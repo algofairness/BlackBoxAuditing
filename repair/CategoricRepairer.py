@@ -57,7 +57,7 @@ class Repairer(AbstractRepairer):
     unique_col_vals = {}
     index_lookup = {}
     for col_id in not_I_col_ids:
-      col_values = data_dict[col_id] #TODO: Make this use all_data
+      col_values = data_dict[col_id]
       # extract unique values from column and sort
       col_values = sorted(list(set(col_values)))
       unique_col_vals[col_id] = col_values
@@ -112,6 +112,7 @@ class Repairer(AbstractRepairer):
     categories_count_norm = {}
     distribution = {}
 
+
     # Repair Data and retrieve the results
     for col_id in cols_to_repair:
       # which bucket value we're repairing
@@ -128,18 +129,20 @@ class Repairer(AbstractRepairer):
 
           for group in all_stratified_groups:
             group_data_at_col = stratified_group_data[group][col_id]
-            offset = int(round(group_offsets[group]*len(group_data_at_col)))
-            number_to_get = int(round((group_offsets[group] + quantile_unit)*len(group_data_at_col)) - offset)
+            num_vals = len(group_data_at_col)
+            offset = int(round(group_offsets[group]*num_vals))
+            number_to_get = int(round((group_offsets[group] + quantile_unit)*num_vals) - offset)
             group_offsets[group] += quantile_unit
-            if number_to_get == 0: continue
 
-            # Get data at this quantile from this Y column such that stratified X = group
-            offset_data = group_data_at_col[offset:offset+number_to_get]
-            indices_per_group[group] = [i for val_indices, _ in offset_data for i in val_indices]
-            values = sorted([float(val) for _, val in offset_data])
+            if number_to_get > 0:
 
-            # Find this group's median value at this quantile
-            median_at_quantiles.append( get_median(values) )
+              # Get data at this quantile from this Y column such that stratified X = group
+              offset_data = group_data_at_col[offset:offset+number_to_get]
+              indices_per_group[group] = [i for val_indices, _ in offset_data for i in val_indices]
+              values = sorted([float(val) for _, val in offset_data])
+
+              # Find this group's median value at this quantile
+              median_at_quantiles.append( get_median(values) )
 
           # Find the median value of all groups at this quantile (chosen from each group's medians)
           median = get_median(median_at_quantiles)
