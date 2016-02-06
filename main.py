@@ -1,12 +1,18 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-import experiments.sample as experiment
-from model_factories.SVM_ModelFactory import ModelFactory
+import experiments.arrests as experiment
+from model_factories.RecidivismTensorFlowModelFactory import ModelFactory
 from measurements import accuracy
+"""
 response_header = "Outcome"
 graph_measurers = [accuracy]
 rank_measurer = accuracy
 features_to_ignore = []
+"""
+response_header = "Classgeneral_violence"
+graph_measurers = [accuracy]
+rank_measurer = accuracy
+features_to_ignore = ["Classarrests","Classdrug","Classsexual_violence","Classfatal_violence","Classproperty"]
 
 verbose = True # Set to `True` to allow for more detailed status updates.
 save_repaired_data = True # Set to `True` to allow repaired data to be saved.
