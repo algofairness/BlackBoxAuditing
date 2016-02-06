@@ -10,64 +10,74 @@ import os
 import json
 
 ENABLE_MULTIPROCESSING = True
+SAVE_REPAIRED_DATA = True
+SAVE_PREDICTION_DETAILS = True
+
+# Used to share a copy of the dataset between multiprocessing processes.
+shared_all = None
+shared_test = None
+
+def _audit_worker(params):
+  global shared_all
+  global shared_test
+
+  model, headers, ignored_features, feature_to_repair, repair_level, output_file = params
+
+  index_to_repair = headers.index(feature_to_repair)
+
+  repairer = Repairer(shared_all, index_to_repair,
+                      repair_level, features_to_ignore=ignored_features)
+  rep_test = repairer.repair(shared_test)
+  del repairer
+
+  test_name = "{}_{}".format(index_to_repair, repair_level)
+  pred_tuples = model.test(rep_test, test_name=test_name)
+  conf_table = get_conf_matrix(pred_tuples)
+
+  # Save the repaired version of the data if specified.
+  if SAVE_REPAIRED_DATA:
+    with open(output_file + ".repaired_{}.data".format(repair_level), "w") as f:
+      writer = csv.writer(f)
+      for row in [headers]+rep_test:
+        writer.writerow(row)
+
+  del rep_test
+
+  # Save the prediction_tuples and the original values of the features to repair.
+  if SAVE_PREDICTION_DETAILS:
+    with open(output_file + ".repaired_{}.predictions".format(repair_level), "w") as f:
+      writer = csv.writer(f)
+      file_headers = ["Pre-Repaired Feature", "Response", "Prediction"]
+      writer.writerow(file_headers)
+      for i, orig_row in enumerate(shared_test):
+        row = [orig_row[index_to_repair], pred_tuples[i][0], pred_tuples[i][1]]
+        writer.writerow(row)
+
+  return (repair_level, conf_table)
 
 class GradientFeatureAuditor(object):
   def __init__(self, model, headers, train_set, test_set, repair_steps=10,
-                features_to_ignore = [], save_repaired_data=False,
-                save_prediction_details = True):
+                features_to_ignore = []):
     self.repair_steps = repair_steps
     self.model = model
-    self.train_set = train_set
-    self.test_set = test_set
     self.headers = headers
     self.features_to_ignore = features_to_ignore
     self.AUDIT_DIR = "audits"
     self.OUTPUT_DIR = "{}/{}".format(self.AUDIT_DIR, time.time())
 
+    global shared_all
+    global shared_test
+
+    shared_all = train_set + test_set
+    shared_test = test_set
+
     # Set to `True` to allow the repaired data to be saved to a file.
     # Note: Be cautious when using this on large-sized datasets.
-    self.save_repaired_data = save_repaired_data
-    self.save_prediction_details = save_prediction_details
 
     # Create any output directories that don't exist.
     for directory in [self.AUDIT_DIR, self.OUTPUT_DIR]:
       if not os.path.exists(directory):
         os.makedirs(directory)
-
-  def __call__(self, params):
-    # When the GFA is called from the multiprocessing Pool, spawn a worker.
-    return self._audit_worker(*params)
-
-  def _audit_worker(self, feature_to_repair, repair_level, output_file):
-    all_data = self.train_set + self.test_set
-    index_to_repair = self.headers.index(feature_to_repair)
-
-    repairer = Repairer(all_data, index_to_repair, repair_level,
-                        features_to_ignore=self.features_to_ignore)
-    rep_test = repairer.repair(self.test_set)
-
-    test_name = "{}_{}".format(index_to_repair, repair_level)
-    pred_tuples = self.model.test(rep_test, test_name=test_name)
-    conf_table = get_conf_matrix(pred_tuples)
-
-    # Save the repaired version of the data if specified.
-    if self.save_repaired_data:
-      with open(output_file + ".repaired_{}.data".format(repair_level), "w") as f:
-        writer = csv.writer(f)
-        for row in [self.headers]+rep_test:
-          writer.writerow(row)
-
-    # Save the prediction_tuples and the original values of the features to repair.
-    if self.save_prediction_details:
-      with open(output_file + ".repaired_{}.predictions".format(repair_level), "w") as f:
-        writer = csv.writer(f)
-        file_headers = ["Pre-Repaired Feature", "Response", "Prediction"]
-        writer.writerow(file_headers)
-        for i, orig_row in enumerate(self.test_set):
-          row = [orig_row[index_to_repair], pred_tuples[i][0], pred_tuples[i][1]]
-          writer.writerow(row)
-
-    return (repair_level, conf_table)
 
   def audit_feature(self, feature_to_repair, output_file):
     repair_increase_per_step = 1.0/self.repair_steps
@@ -75,14 +85,17 @@ class GradientFeatureAuditor(object):
 
     worker_params = []
     while repair_level <= 1.0:
-      worker_params.append( (feature_to_repair, repair_level, output_file) )
+
+      call_params = (self.model, self.headers, self.features_to_ignore, feature_to_repair, repair_level, output_file)
+      worker_params.append( call_params )
       repair_level += repair_increase_per_step
 
     if ENABLE_MULTIPROCESSING:
-      pool = Pool(processes=cpu_count()/2 or 1)
-      conf_table_tuples = pool.map(self, worker_params)
+      pool = Pool(processes=cpu_count()/2 or 1, maxtasksperchild=1)
+      conf_table_tuples = pool.map(_audit_worker, worker_params)
+      del pool
     else:
-      conf_table_tuples = [self(params) for params in worker_params]
+      conf_table_tuples = [_audit_worker(params) for params in worker_params]
 
     conf_table_tuples.sort(key=lambda tuples: tuples[0])
 
