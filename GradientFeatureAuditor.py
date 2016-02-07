@@ -10,7 +10,7 @@ import os
 import json
 import gc
 
-ENABLE_MULTIPROCESSING = True
+ENABLE_MULTIPROCESSING = False
 SAVE_REPAIRED_DATA = True
 SAVE_PREDICTION_DETAILS = True
 
@@ -25,9 +25,11 @@ def _audit_worker(params):
   model, headers, ignored_features, feature_to_repair, repair_level, output_file = params
 
   index_to_repair = headers.index(feature_to_repair)
+  #print "-- partial: ",repair_level #TODO:
 
   repairer = Repairer(shared_all, index_to_repair,
                       repair_level, features_to_ignore=ignored_features)
+
 
   rep_test = repairer.repair(shared_test)
 
@@ -90,10 +92,12 @@ class GradientFeatureAuditor(object):
 
     worker_params = []
     while repair_level <= 1.0:
+      #repair_level = 0.5#TODO
 
       call_params = (self.model, self.headers, self.features_to_ignore, feature_to_repair, repair_level, output_file)
       worker_params.append( call_params )
       repair_level += repair_increase_per_step
+      #break#TODO
 
     if ENABLE_MULTIPROCESSING:
       pool = Pool(processes=cpu_count()/2 or 1, maxtasksperchild=1)
@@ -117,6 +121,7 @@ class GradientFeatureAuditor(object):
 
     output_files = []
     for i, feature in enumerate(features_to_audit):
+      if feature!="Random Feature": continue #TODO
       message = "Auditing: '{}' ({}/{}).".format(feature,i+1,len(features_to_audit))
       vprint(message, verbose)
 
