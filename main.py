@@ -3,10 +3,10 @@
 import experiments.sample as experiment
 from model_factories.J48_ModelFactory import ModelFactory
 from measurements import accuracy
-response_header = "Classgeneral_violence"
+response_header = "Outcome"
 graph_measurers = [accuracy]
 rank_measurer = accuracy
-features_to_ignore = ["Classfatal_violence","Classsexual_violence","Classarrests","Classdrug","Classproperty"]
+features_to_ignore = []
 verbose = True # Set to `True` to allow for more detailed status updates.
 
 REPAIR_STEPS = 10
