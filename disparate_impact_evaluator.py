@@ -97,5 +97,8 @@ def run():
   vprint("Summary file written to: {}".format(summary_file), verbose)
 
 
+def test():
+  print "No tests yet"
+
 if __name__=="__main__":
-  run()
+  test()
