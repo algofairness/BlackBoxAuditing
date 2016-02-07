@@ -16,18 +16,21 @@ class Repairer(AbstractRepairer):
     binned_data = [row[:] for row in data_to_repair]
     index_bins = make_histogram_bins(bin_calculator, data_to_repair, self.feature_to_repair)
 
+    category_medians = {}
     for i, index_bin in enumerate(index_bins):
       bin_name = "BIN_{}".format(i) # IE, the "category" to replace numeric values.
       for j in index_bin:
         binned_data[j][self.feature_to_repair] = bin_name
+      category_vals = [data_to_repair[j][self.feature_to_repair] for j in index_bin]
+      category_medians[bin_name] = get_median(category_vals)
 
     repaired_data = self.categoric_repairer.repair(binned_data)
 
     # Replace the "feature_to_repair" column with the median numeric value.
-    median = get_median([row[self.feature_to_repair] for row in data_to_repair])
     for i in xrange(len(repaired_data)):
       if self.repair_level > 0:
-        repaired_data[i][self.feature_to_repair] = median
+        rep_category = repaired_data[i][self.feature_to_repair]
+        repaired_data[i][self.feature_to_repair] = category_medians[rep_category]
       else:
         repaired_data[i][self.feature_to_repair] = data_to_repair[i][self.feature_to_repair]
     return repaired_data

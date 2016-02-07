@@ -24,7 +24,7 @@ class Repairer(AbstractRepairer):
     col_type_dict = {col_id: col_type for col_id, col_type in zip(col_ids, col_types)}
 
     not_I_col_ids = filter(lambda x: col_type_dict[x] != "I", col_ids)
-    cols_to_repair = filter(lambda x: col_type_dict[x] == "Y", col_ids)
+    cols_to_repair = filter(lambda x: col_type_dict[x] in "YX", col_ids)
 
     # To prevent potential perils with user-provided column names, map them to safe column names
     safe_stratify_cols = [self.feature_to_repair]
@@ -112,6 +112,7 @@ class Repairer(AbstractRepairer):
     categories_count_norm = {}
     distribution = {}
 
+    mode_feature_to_repair = get_mode(data_dict[self.feature_to_repair])
 
     # Repair Data and retrieve the results
     for col_id in cols_to_repair:
@@ -172,7 +173,7 @@ class Repairer(AbstractRepairer):
         median = get_median_per_category(categories, col_id, categories_count_norm)
 
         desired_categories_count[col_id],desired_categories_dist[col_id] = \
-          get_desired_data(all_stratified_groups, col_id, categories, median, group_size, self.repair_level, categories_count_norm, categories_count)
+          get_desired_data(all_stratified_groups, col_id, categories, median, group_size, self.repair_level, categories_count_norm, categories_count, self.feature_to_repair, mode_feature_to_repair)
 
         group_features[col_id], overflow = flow_on_group_features(all_stratified_groups, col_id, group_features, desired_categories_count)
 
@@ -187,15 +188,10 @@ class Repairer(AbstractRepairer):
 
     # Replace stratified groups with their mode value, to remove it's information
     repaired_data = []
-    mode = get_mode([row[self.feature_to_repair] for row in data_to_repair])
     for i, orig_row in enumerate(data_to_repair):
-      new_row = [orig_row[j] if j in self.features_to_ignore else data_dict[j][i] for j in col_ids]
-
-      # Replace the "feature_to_replace" column with the mode value.
-      if self.repair_level > 0:
-        new_row[self.feature_to_repair] = mode
-
+      new_row = [orig_row[j] if j not in cols_to_repair else data_dict[j][i] for j in col_ids]
       repaired_data.append(new_row)
+
     return repaired_data
 
 def get_col_ids(data_to_repair):
@@ -254,7 +250,7 @@ def get_median_per_category(categories, col_id, categories_count_norm):
   return {cat: get_median(categories_count_norm[col_id][cat]) for cat in categories[col_id]}
 
 # Find the desired category count for each group, by using the repair_level (lambda). Desired category count is the desired distribution multiplied by the total number of observations in the group
-def get_desired_data(all_stratified_groups, col_id, categories, median, group_size, repair_level, categories_count_norm, categories_count):
+def get_desired_data(all_stratified_groups, col_id, categories, median, group_size, repair_level, categories_count_norm, categories_count, feature_to_remove, mode_feature):
   dict1={}
   dict2={}
   for i, group in enumerate(all_stratified_groups):
@@ -266,7 +262,16 @@ def get_desired_data(all_stratified_groups, col_id, categories, median, group_si
       # desired-proportion = (1-lambda)*original-count  + (lambda)*median-count
       count = categories_count[col_id][category][i]
       estimate = math.floor(((1-repair_level)*count)+(repair_level)*med*size)
-      temp=((1 - repair_level)*categories_count_norm[col_id][category][i]) + (repair_level*med)
+
+      # Depending on the feature,
+      if feature_to_remove == col_id:
+        if category == mode_feature:
+          temp = 1
+        else:
+          temp = (1-repair_level)*categories_count_norm[col_id][category][i]
+      else:
+        temp=((1 - repair_level)*categories_count_norm[col_id][category][i]) + (repair_level*med)
+
       # our desired-count = floor(desired-proportion * group-size)
       dict1[group][category] = estimate
       dict2[group][category] = temp
