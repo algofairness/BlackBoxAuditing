@@ -4,6 +4,7 @@ from binning.Binner import make_histogram_bins
 from binning.BinSizes import FreedmanDiaconisBinSize as bin_calculator
 from calculators import get_median
 
+
 class Repairer(AbstractRepairer):
   def __init__(self, *args, **kwargs):
     super(Repairer, self).__init__(*args, **kwargs)
