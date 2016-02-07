@@ -8,6 +8,7 @@ import csv
 import time
 import os
 import json
+import gc
 
 ENABLE_MULTIPROCESSING = True
 SAVE_REPAIRED_DATA = True
@@ -27,8 +28,8 @@ def _audit_worker(params):
 
   repairer = Repairer(shared_all, index_to_repair,
                       repair_level, features_to_ignore=ignored_features)
+
   rep_test = repairer.repair(shared_test)
-  del repairer
 
   test_name = "{}_{}".format(index_to_repair, repair_level)
   pred_tuples = model.test(rep_test, test_name=test_name)
@@ -41,7 +42,6 @@ def _audit_worker(params):
       for row in [headers]+rep_test:
         writer.writerow(row)
 
-  del rep_test
 
   # Save the prediction_tuples and the original values of the features to repair.
   if SAVE_PREDICTION_DETAILS:
@@ -53,7 +53,12 @@ def _audit_worker(params):
         row = [orig_row[index_to_repair], pred_tuples[i][0], pred_tuples[i][1]]
         writer.writerow(row)
 
+  del rep_test
+  del repairer
+  gc.collect()
+
   return (repair_level, conf_table)
+
 
 class GradientFeatureAuditor(object):
   def __init__(self, model, headers, train_set, test_set, repair_steps=10,

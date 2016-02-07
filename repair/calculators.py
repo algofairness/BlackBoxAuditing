@@ -1,3 +1,4 @@
+from copy import deepcopy
 
 def get_median(values):
   """
@@ -11,11 +12,13 @@ def get_median(values):
   if not values:
     raise Exception("Cannot calculate median of list with no values!")
 
-  values = sorted(values)
+  sorted_values = deepcopy(values)
+  sorted_values.sort() # Not calling `sorted` b/c `sorted_values` may not be list.
+
   if len(values) % 2 == 0:
-    return values[len(values)/2-1]
+    return sorted_values[len(values)/2-1]
   else:
-    return values[len(values)/2]
+    return sorted_values[len(values)/2]
 
 
 def test():
