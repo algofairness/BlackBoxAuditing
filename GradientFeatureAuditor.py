@@ -25,7 +25,7 @@ def _audit_worker(params):
   model, headers, ignored_features, feature_to_repair, repair_level, output_file = params
 
   index_to_repair = headers.index(feature_to_repair)
-  #print "-- partial: ",repair_level #TODO:
+  #print "-- partial: ",repair_level#TODO
 
   repairer = Repairer(shared_all, index_to_repair,
                       repair_level, features_to_ignore=ignored_features)
@@ -121,7 +121,7 @@ class GradientFeatureAuditor(object):
 
     output_files = []
     for i, feature in enumerate(features_to_audit):
-      if feature!="Random Feature": continue #TODO
+      #if feature!="Random Feature": continue #TODO
       message = "Auditing: '{}' ({}/{}).".format(feature,i+1,len(features_to_audit))
       vprint(message, verbose)
 

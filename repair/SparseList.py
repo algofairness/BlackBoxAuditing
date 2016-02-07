@@ -1,9 +1,11 @@
-
 class SparseList(list):
-  def __init__(self, default=0):
+  def __init__(self, default=0, data=None):
     self.default = default
     self.vals = {}
     self.size = 0
+
+    if data:
+      self.extend(data)
 
   def __setitem__(self, index, value):
     if self.default != value:
@@ -23,7 +25,15 @@ class SparseList(list):
     return "<SparseList {}>".format(self.vals)
 
   def append(self, val):
-    self[self.size] = val
+    if self.default != val:
+      self.vals[self.size] = val
+    self.size += 1
+
+  def extend(self, iterator):
+    for val in iterator:
+      if self.default != val:
+        self.vals[self.size] = val
+      self.size += 1
 
   def sort(self):
     values = sorted(self.vals.values())
@@ -36,7 +46,31 @@ class SparseList(list):
       if need_to_add_default and self.default < value:
           self.size += (old_size - len(values))
           need_to_add_default = False
-      self.append(value)
+
+      if self.default != value:
+        self.vals[self.size] = value
+      self.size += 1
+
+def audit_test():
+  N=25000
+  l = SparseList(default=0)
+  for i in xrange(N):
+    l.append(0)
+
+  for i in xrange(N):
+    l.append(i)
+
+  for i in xrange(N):
+    l.append(0)
+
+  l.extend(xrange(N))
+
+  l.sort()
+
+  for i in xrange(3*N):
+    l[i] # Call the `getter`
+
+  print "Big SparseList size correct?", len(l) == 3*N
 
 def test():
   l = SparseList(default=0)
@@ -61,4 +95,5 @@ def test():
 
 if __name__=="__main__":
   test()
+  audit_test()
 

@@ -110,6 +110,7 @@ class Repairer(AbstractRepairer):
 
     # Repair Data and retrieve the results
     for col_id in cols_to_repair:
+      #print "-- -- repairing: ",col_id #TODO
       # which bucket value we're repairing
       group_offsets = {group: 0 for group in all_stratified_groups}
       col = data_dict[col_id]
@@ -210,12 +211,9 @@ def get_group_data(all_stratified_groups,stratified_group_data, col_id):
 # Count the observations in each category. e.g. categories_count[1] = {'A':[1,2,3], 'B':[3,1,4]}, for column 1, category 'A' has 1 observation from group 'x', 2 from 'y', ect.
 #@profile
 def get_categories_count(categories, all_stratified_groups, group_feature):
-  count_dict={category: SparseList() for category in categories}
-  for group in all_stratified_groups:
-    for category in categories:
-      category_count = group_feature[group].category_count
-      count = category_count[category] if category in category_count else 0
-      count_dict[category].append(count)
+  # Grossness for speed efficiency. Don't worry, it made me sad, too.
+  count_dict={cat: SparseList(data=(group_feature[group].category_count[cat] if cat in group_feature[group].category_count else 0 for group in all_stratified_groups)) for cat in categories}
+
   return count_dict
 
 # Find the normalized count for each category, where normalized count is count divided by the number of people in that group

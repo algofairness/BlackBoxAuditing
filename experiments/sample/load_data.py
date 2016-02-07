@@ -1,7 +1,7 @@
 import random
 
 def load_data():
-  N = 1000
+  N = 500
   headers = ["Feature A (i)", "Feature B (2i)", "Feature C (-i)",
              "Constant Feature", "Random Feature", "Outcome"]
   train = [[i, 2*i, -i, 1, random.random(), "A"] for i in range(0,N)] + \
