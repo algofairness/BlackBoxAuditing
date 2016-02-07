@@ -4,21 +4,27 @@ class SparseList(list):
     self.default = default
     self.vals = {}
     self.size = 0
+
   def __setitem__(self, index, value):
     if self.default != value:
       self.vals[index] = value
     self.size += 1
+
   def __len__(self):
     return self.size
+
   def __getitem__(self, index):
-    try:
+    if index in self.vals:
       return self.vals[index]
-    except (KeyError, IndexError):
+    else:
       return self.default
+
   def __repr__(self):
     return "<SparseList {}>".format(self.vals)
+
   def append(self, val):
     self[self.size] = val
+
   def sort(self):
     values = sorted(self.vals.values())
     self.vals = {}
