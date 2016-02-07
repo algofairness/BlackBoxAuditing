@@ -168,11 +168,12 @@ class Repairer(AbstractRepairer):
 
         median = get_median_per_category(categories, categories_count_norm)
 
-        desired_categories_count,desired_categories_dist = get_desired_data(all_stratified_groups, col_id, categories, median, group_features, self.repair_level, categories_count_norm, categories_count, self.feature_to_repair, mode_feature_to_repair)
+        # Partially fill-out the gen_desired_data function to simplify later calls.
+        repair_generator = lambda group_index, group, category : gen_desired_data(group_index, group, category, col_id, median, group_features, self.repair_level, categories_count_norm, categories_count, self.feature_to_repair, mode_feature_to_repair)
 
-        group_features, overflow = flow_on_group_features(all_stratified_groups, group_features, desired_categories_count)
+        group_features, overflow = flow_on_group_features(all_stratified_groups, group_features, repair_generator)
 
-        group_features, assigned_overflow, distribution = assign_overflow(desired_categories_dist, all_stratified_groups, categories, overflow, group_features)
+        group_features, assigned_overflow, distribution = assign_overflow(all_stratified_groups, categories, overflow, group_features, repair_generator)
 
         # Return our repaired feature in the form of our original dataset
         for group in all_stratified_groups:
@@ -225,44 +226,35 @@ def get_categories_count_norm(categories, all_stratified_groups, categories_coun
 def get_median_per_category(categories, categories_count_norm):
   return {cat: get_median(categories_count_norm[cat]) for cat in categories}
 
-# Find the desired category count for each group, by using the repair_level (lambda). Desired category count is the desired distribution multiplied by the total number of observations in the group
-def get_desired_data(all_stratified_groups, col_id, categories, median, group_features, repair_level, categories_count_norm, categories_count, feature_to_remove, mode_feature):
-  dict1={}
-  dict2={}
-  for i, group in enumerate(all_stratified_groups):
-    dict1[group] = {}
-    dict2[group] = {}
-    for category in categories:
+# Generate the desired distribution and desired "count" for a given group-category-feature combination.
+def gen_desired_data(group_index, group, category, col_id, median, group_features, repair_level, categories_count_norm, categories_count, feature_to_remove, mode_feature):
       med=median[category]
       size = len(group_features[group].data)
-      # desired-proportion = (1-lambda)*original-count  + (lambda)*median-count
-      count = categories_count[category][i]
-      estimate = math.floor(((1-repair_level)*count)+(repair_level)*med*size)
+      # des-proportion = (1-lambda)*original-count  + (lambda)*median-count
+      count = categories_count[category][group_index]
+      des_count = math.floor(((1-repair_level)*count)+(repair_level)*med*size)
 
       # Depending on the feature,
       if feature_to_remove == col_id:
         if category == mode_feature:
-          temp = 1
+          des_dist = 1
         else:
-          temp = (1-repair_level)*categories_count_norm[category][i]
+          des_dist = (1-repair_level)*categories_count_norm[category][group_index]
       else:
-        temp=((1 - repair_level)*categories_count_norm[category][i]) + (repair_level*med)
+        des_dist=((1 - repair_level)*categories_count_norm[category][group_index]) + (repair_level*med)
 
-      # our desired-count = floor(desired-proportion * group-size)
-      dict1[group][category] = estimate
-      dict2[group][category] = temp
-  return dict1, dict2
+      return des_count, des_dist
 
  # Run Max-flow to distribute as many observations to categories as possible. Overflow are those observations that are left over
-def flow_on_group_features(all_stratified_groups, group_features, desired_categories_count):
+def flow_on_group_features(all_stratified_groups, group_features, repair_generator):
   dict1= {}
   dict2={}
-  for group in all_stratified_groups:
+  for i, group in enumerate(all_stratified_groups):
     feature = group_features[group]
-    feature.desired_category_count = desired_categories_count[group]
+    count_generator = lambda category : repair_generator(i, group, category)[0]
 
     # Create directed graph from nodes that supply the original countes to nodes that demand the desired counts, with a overflow node as total desired count is at most total original counts
-    DG=feature.create_graph()
+    DG=feature.create_graph(count_generator)
 
     # Run max-flow, and record overflow count (total and per-group)
     new_feature,overflow = feature.repair(DG)
@@ -274,12 +266,14 @@ def flow_on_group_features(all_stratified_groups, group_features, desired_catego
   return dict1, dict2
 
 # Assign overflow observations to categories based on the group's desired distribution
-def assign_overflow(desired_dists, all_stratified_groups, categories, overflow, group_features):
+def assign_overflow(all_stratified_groups, categories, overflow, group_features, repair_generator):
   feature = deepcopy(group_features)
   assigned_overflow = {}
   desired_dict_list = {}
-  for group in all_stratified_groups:
-    cat_props = [desired_dists[group][cat] for cat in categories]
+  for group_index, group in enumerate(all_stratified_groups):
+    dist_generator = lambda cat: repair_generator(group_index, group, cat)[1]
+    cat_props = [dist_generator(cat) for cat in categories]
+
     if all(elem==0 for elem in cat_props): #TODO: Check that this is correct!
       cat_props = [1.0/len(cat_props)] * len(cat_props)
     s = float(sum(cat_props))
@@ -321,7 +315,7 @@ def test():
   test_get_categories_count()
   test_get_categories_count_norm()
   test_get_median_per_category()
-  test_get_desired_data()
+  test_gen_desired_data()
   test_assign_overflow()
   test_categorical()
   test_repeated_values()
@@ -388,24 +382,8 @@ def test_get_median_per_category():
   median = get_median_per_category(categories, col_id, categories_count_norm)
   print "Test get_median_per_category -- medians are correct?", median == {'A':0.0,'C':0.0,'B':0.0,  'D':0.4}
 
-def test_get_desired_data():
-  desired_categories_count={}
-  desired_categories_dist={}
-  all_stratified_groups = [('y',),('z',)]
-  col_id =1
-  categories = {1:['A','B']}
-  median = {'A':0.5,'B':0.5}
-  group_size = {1: {('y',): 4,('z',): 8}}
-  repair_level = 0.5
-  categories_count_norm = {1:{'A':[0.5,0.5],'B':[0.5,0.5]}}
-  categories_count = {1:{'A':[2, 4],'B':[2,4]}}
-
-  desired_categories_count[col_id],desired_categories_dist[col_id] = \
-      get_desired_data(all_stratified_groups, col_id, categories, median, group_size, repair_level, categories_count_norm, categories_count)
-  print "Test get_desired_data -- Desired category counts correct?", \
-    desired_categories_count[col_id] =={('y',):{'A':2.0, 'B':2.0}, ('z',):{'A':4.0,'B':4.0}}
-  print "Test get_desired_data -- Desired category distribution correct?", \
-    desired_categories_dist[col_id] == {('y',):{'A':0.5, 'B':0.5}, ('z',):{'A':0.5, 'B':0.5}}
+def test_gen_desired_data():
+  return "Fix this test", False
 
 def test_assign_overflow():
   random.seed(10)

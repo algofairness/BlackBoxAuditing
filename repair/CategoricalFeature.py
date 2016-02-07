@@ -34,11 +34,10 @@ class CategoricalFeature:
     self.bin_index_dict_reverse = d4
 
 
-  def create_graph(self): #creates graph given a CategoricalFeature object
+  def create_graph(self, count_generator): #creates graph given a CategoricalFeature object
     DG=nx.DiGraph() #using networkx package
     bin_list = self.bin_data.items()
     bin_index_dict_reverse = self.bin_index_dict_reverse
-    desired_category_count = self.desired_category_count
     k = self.num_bins
     DG.add_node('s')
     DG.add_node('t')
@@ -48,7 +47,8 @@ class CategoricalFeature:
     for i in range(k, 2*k): #righthand side nodes have capacity = DESIRED number of observations in category i
       DG.add_node(i)
       cat = bin_index_dict_reverse[i-k]
-      DG.add_edge(i, 't', {'capacity' : desired_category_count[cat], 'weight' : 0})
+      desired_count = count_generator(cat)
+      DG.add_edge(i, 't', {'capacity' : desired_count, 'weight' : 0})
     #Add special node to hold overflow
     DG.add_node(2*k)
     DG.add_edge(2*k, 't', {'weight' : 0})
@@ -96,19 +96,19 @@ def test():
   DG = test_feature.create_graph()
   [new_feature, overflow] = test_feature.repair(DG)
   edges = [
-  (0, 8, {'weight': 2}), (0, 4, {'weight': 0}), (0, 5, {'weight': 1}), (0, 6, {'weight': 1}), (0, 7, {'weight': 1}), 
-  (1, 8, {'weight': 2}), (1, 4, {'weight': 1}), (1, 5, {'weight': 0}), (1, 6, {'weight': 1}), (1, 7, {'weight': 1}), 
-  (2, 8, {'weight': 2}), (2, 4, {'weight': 1}), (2, 5, {'weight': 1}), (2, 6, {'weight': 0}), (2, 7, {'weight': 1}), 
-  (3, 8, {'weight': 2}), (3, 4, {'weight': 1}), (3, 5, {'weight': 1}), (3, 6, {'weight': 1}), (3, 7, {'weight': 0}), 
-  (4, 't', {'capacity': 1, 'weight': 0}), (5, 't', {'capacity': 2, 'weight': 0}), (6, 't', {'capacity': 2, 'weight': 0}), 
-  (7, 't', {'capacity': 3, 'weight': 0}), 
-  (8, 't', {'weight': 0}), 
+  (0, 8, {'weight': 2}), (0, 4, {'weight': 0}), (0, 5, {'weight': 1}), (0, 6, {'weight': 1}), (0, 7, {'weight': 1}),
+  (1, 8, {'weight': 2}), (1, 4, {'weight': 1}), (1, 5, {'weight': 0}), (1, 6, {'weight': 1}), (1, 7, {'weight': 1}),
+  (2, 8, {'weight': 2}), (2, 4, {'weight': 1}), (2, 5, {'weight': 1}), (2, 6, {'weight': 0}), (2, 7, {'weight': 1}),
+  (3, 8, {'weight': 2}), (3, 4, {'weight': 1}), (3, 5, {'weight': 1}), (3, 6, {'weight': 1}), (3, 7, {'weight': 0}),
+  (4, 't', {'capacity': 1, 'weight': 0}), (5, 't', {'capacity': 2, 'weight': 0}), (6, 't', {'capacity': 2, 'weight': 0}),
+  (7, 't', {'capacity': 3, 'weight': 0}),
+  (8, 't', {'weight': 0}),
   ('s', 0, {'capacity': 3, 'weight': 0}), ('s', 1, {'capacity': 3, 'weight': 0}),
   ('s', 2, {'capacity': 3, 'weight': 0}), ('s', 3, {'capacity': 3, 'weight': 0})]
   new_data = [0, 0, 'C', 'D', 'D', 'D', 'C', 'B', 'A', 0, 'B', 0]
   print "CategoricalFeature has correct number of categories?", 4 == test_feature.num_bins
   print "Directed Graph has correct edges and edge weights?", DG.edges(data=True) == edges
-  print "mincostFlow has correct overflow?", overflow == 4 
-  print "mincostFlow has correct output data?", new_feature.data == new_data 
+  print "mincostFlow has correct overflow?", overflow == 4
+  print "mincostFlow has correct output data?", new_feature.data == new_data
 
 if __name__=="__main__": test()
