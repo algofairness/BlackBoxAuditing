@@ -354,9 +354,10 @@ def test_get_categories_count():
                       ('z',): CategoricalFeature(['B','B','D','D'])}}\
 
   categories_count[col_id] = get_categories_count(categories[col_id], all_stratified_groups, group_features[col_id])
-  #SparseList is making this test not run
-  #print "Test get_categories_count -- category counts correct?",\
-  # categories_count[col_id] == {'A': <SparseList {0: 2}>, 'C': <SparseList {0: 3}>, 'B': <SparseList {0: 1, 1: 2}>, 'D': <SparseList {1: 2}>}
+  #SparseList makes us test for correctness strangely
+  print "Test get_categories_count -- category counts correct?",\
+   categories_count[col_id]['A'][0] ==2 and categories_count[col_id]['C'][0] ==3 and categories_count[col_id]['B'][0] ==1\
+   and categories_count[col_id]['B'][1] ==2 and categories_count[col_id]['D'][1] ==2
 
 def test_get_categories_count_norm():
   categories_count_norm = {}
@@ -369,10 +370,9 @@ def test_get_categories_count_norm():
   group_features = {1:{('y',): CategoricalFeature(['A','A','A','A','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B']),
                         ('z',): CategoricalFeature([])}}
   categories_count_norm[col_id] = get_categories_count_norm(categories[col_id], all_stratified_groups, categories_count[col_id], group_features[col_id])
-  #SparseList is making this test not run
-  #print "Test get_categories_count_norm -- normalized category counts correct?",\
-  #  categories_count_norm[col_id] == {'A': <SparseList {0: 0.2}>, 'B': <SparseList {0: 0.8}>}
-
+  #SparseList makes us test for correctness strangely
+  print "Test get_categories_count_norm -- normalized category counts correct?",\
+    categories_count_norm[col_id]['A'][0] == 0.2 and  categories_count_norm[col_id]['B'][0] == 0.8
 
 def test_get_median_per_category():
   categories = {1:['A','B','C','D']}
@@ -382,69 +382,105 @@ def test_get_median_per_category():
   print "Test get_median_per_category -- medians are correct?", median == {'A':0.0,'C':0.0,'B':0.0,  'D':0.4}
 
 def test_gen_desired_count():
+  #Case 1: feature with category with no values
   group_index = 0
   group = ('y',)
-  category = 'B'
   median = {'A': 0.0 ,'B':0.0}
   group_features =  {('y',): CategoricalFeature(['A','A','A','A','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B']),
                         ('z',): CategoricalFeature([])}
-  repair_level = 1
+  repair_level = .25
   categories_count = {'A':[4,0],'B':[16,0]}
-   
-  feature_to_remove = 0
-  mode_feature = 'B' 
-  des_count = gen_desired_count(group_index, group, category, median, group_features, repair_level, categories_count)
-  print "Test gen_desired_count -- desired count correct?", des_count == 0 
+  category = 'B'
+  des_countB = gen_desired_count(group_index, group, category, median, group_features, repair_level, categories_count)
+  category = 'A'
+  des_countA = gen_desired_count(group_index, group, category, median, group_features, repair_level, categories_count)
+  print "Test gen_desired_count -- desired count correct for feature with category with no values?", des_countB==12 and des_countA==3
 
+  #Case 2: feature with regular categories
   group_index = 0
   group = ('y',)
-  category = 'Y'
+  median = {'A': 0.2 ,'B':0.75}
+  group_features =  {('y',): CategoricalFeature(['A','A','A','A', 'A','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B']),
+                        ('z',): CategoricalFeature(['A','A','B','B','B','B','B','B','B','B'])}
+  repair_level = 0.001
+  categories_count = {'A':[5,2],'B':[15,8]}
+  category = 'B'
+  des_countB = gen_desired_count(group_index, group, category, median, group_features, repair_level, categories_count)
+  category = 'A'
+  des_countA = gen_desired_count(group_index, group, category, median, group_features, repair_level, categories_count)
+  print "Test gen_desired_count -- desired count correct for standard feature?", des_countB==15 and des_countA==4 
+
+  #Case 3: Repair feature after having repaired the other features on such feature 
   col_id = 0
   median = {'Y': 0.0 ,'Z':0.0}
   group_features =  {('y',): CategoricalFeature(['Y','Y','Y','Y']),
                        ('z',): CategoricalFeature(['Z','Z'])}
-  repair_level = 1
-  categories_count_norm =  {'Y':[1.0,0.0],'Z':[0.0,1.0]}
+  repair_level = .5
   categories_count = {'Y':[4,0],'Z':[0,2]}
-
-  feature_to_remove = 0
   mode_feature = 'Y' 
-  des_count = gen_desired_count(group_index, group, category, median, group_features, repair_level, categories_count)
-
-  print "Test gen_desired_count -- desired count correct?", des_count == 0 
+  group_index = 0
+  group = ('y',)
+  category = 'Y'
+  des_countY = gen_desired_count(group_index, group, category, median, group_features, repair_level, categories_count)
+  group_index = 1
+  group = ('z',)
+  category = 'Z'
+  des_countZ = gen_desired_count(group_index, group, category, median, group_features, repair_level, categories_count)
+  print "Test gen_desired_count -- desired count correct for mode category when repairing feature to remove?", des_countY==2 and des_countZ==1
+  # If you are confused why desired count for Z is 2, it is beacuse our group_index is for group y 
   
 def test_gen_desired_dist():
+  #Case 1: feature with category with no values
   group_index = 0
-  group = ('y',)
-  category = 'B'
+  #group = ('y',)
   col_id = 1
   median = {'A': 0.0 ,'B':0.0}
-  group_features =  {('y',): CategoricalFeature(['A','A','A','A','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B']),
-                        ('z',): CategoricalFeature([])}
-  repair_level = 1
+  #group_features =  {('y',): CategoricalFeature(['A','A','A','A','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B']),
+  #                      ('z',): CategoricalFeature([])}
+  repair_level = .5
   categories_count_norm =  {'A':[0.2,0.0],'B':[0.8,0.0]}
-  categories_count = {'A':[4,0],'B':[16,0]}
-   
+  #categories_count = {'A':[4,0],'B':[16,0]}
   feature_to_remove = 0
   mode_feature = 'B' 
-  des_dist = gen_desired_dist(group_index, category, col_id, median, repair_level, categories_count_norm, feature_to_remove, mode_feature)
-  print "Test gen_desired_dist -- desired distribution correct?", des_dist == 0 
+  category = 'B'
+  des_distB = gen_desired_dist(group_index, category, col_id, median, repair_level, categories_count_norm, feature_to_remove, mode_feature)
+  category = 'A'
+  des_distA = gen_desired_dist(group_index, category, col_id, median, repair_level, categories_count_norm, feature_to_remove, mode_feature)
+  print "Test gen_desired_dist -- desired distribution correct for feature with category with no values?", des_distB == .4 and des_distA == .1
   
+  #Case 2: feature with regular categories
   group_index = 0
-  group = ('y',)
-  category = 'Y'
+  #group = ('y',)
+  median = {'A': 0.2 ,'B':0.75}
+  #group_features =  {('y',): CategoricalFeature(['A','A','A','A', 'A','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B']),
+  #                      ('z',): CategoricalFeature(['A','A','B','B','B','B','B','B','B','B'])}
+  repair_level = 0.001
+  categories_count_norm =  {'A':[0.25,0.2],'B':[0.75,0.8]}
+  #categories_count = {'A':[5,2],'B':[15,8]}
+  feature_to_remove = 0
+  category = 'B'
+  des_distB = gen_desired_dist(group_index, category, col_id, median, repair_level, categories_count_norm, feature_to_remove, mode_feature)
+  category = 'A'
+  des_distA = gen_desired_dist(group_index, category, col_id, median, repair_level, categories_count_norm, feature_to_remove, mode_feature)
+  print "Test gen_desired_dist -- desired distribution correct for standard feature?", des_distB == .75 and des_distA == .24995 
+
+  #Case 3: Repair feature after having repaired the other features on such feature 
   col_id = 0
   median = {'Y': 0.0 ,'Z':0.0}
-  group_features =  {('y',): CategoricalFeature(['Y','Y','Y','Y']),
-                       ('z',): CategoricalFeature(['Z','Z'])}
-  repair_level = 1
+  #group_features =  {('y',): CategoricalFeature(['Y','Y','Y','Y']),
+  #                     ('z',): CategoricalFeature(['Z','Z'])}
+  repair_level = .5
   categories_count_norm =  {'Y':[1.0,0.0],'Z':[0.0,1.0]}
-  categories_count = {'Y':[4,0],'Z':[0,2]}
-
+  #categories_count = {'Y':[4,0],'Z':[0,2]}
   feature_to_remove = 0
   mode_feature = 'Y' 
-  des_dist = gen_desired_dist(group_index, category, col_id, median, repair_level, categories_count_norm, feature_to_remove, mode_feature)
-  print "Test gen_desired_dist -- desired distribution correct for mode category when repairing feature to remove?", des_dist == 1 
+  group_index = 0
+  category = 'Y'
+  des_distY = gen_desired_dist(group_index, category, col_id, median, repair_level, categories_count_norm, feature_to_remove, mode_feature)
+  group_index = 1
+  category = 'Z'
+  des_distZ = gen_desired_dist(group_index, category, col_id, median, repair_level, categories_count_norm, feature_to_remove, mode_feature)
+  print "Test gen_desired_dist -- desired distribution correct for mode category when repairing feature to remove?", des_distY==1 and des_distZ==.5
 
 def test_assign_overflow():
   group_index = 0
@@ -510,6 +546,19 @@ def test_categorical():
 
   print "Categorical Minimal Dataset -- partial repaired_data altered?", part_repaired_data != all_data
   print "Categorical Minimal Dataset -- partial repaired_data correct?", part_repaired_data == correct_part_repaired_data
+
+  repair_level=0.2
+  feature_to_repair = 0
+  repairer = Repairer(all_data, feature_to_repair, repair_level)
+  part_repaired_data=repairer.repair(all_data)
+
+  correct_part2_repaired_data =  [
+  ['x', 'A'], ['x', 'A'], ['x', 'B'], ['x', 'B'], ['z', 'B'], 
+  ['y', 'A'], ['y', 'A'], ['y', 'A'], ['y', 'B'], 
+  ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'B']]
+
+  print "Categorical Minimal Dataset -- partial repaired_data altered?", part_repaired_data != all_data
+  print "Categorical Minimal Dataset -- partial repaired_data correct?", part_repaired_data == correct_part2_repaired_data
 
 
 if __name__== "__main__":
