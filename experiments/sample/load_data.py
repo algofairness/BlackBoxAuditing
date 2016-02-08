@@ -4,7 +4,7 @@ import random
 train_percentage = 2.0/3.0
 
 def load_data():
-  N = 500
+  N = 6000
   headers = ["Feature A (i)", "Feature B (2i)", "Feature C (-i)",
              "Constant Feature", "Random Feature", "Outcome"]
 
