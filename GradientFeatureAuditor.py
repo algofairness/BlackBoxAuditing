@@ -34,7 +34,6 @@ def _audit_worker(params):
 
   # Build a model on repaired training data if specified.
   if isinstance(model_or_factory, AbstractModelFactory):
-    print "Training new model on repaired training data."
     rep_train = repairer.repair(shared_train)
     model = model_or_factory.build(rep_train)
 

@@ -31,36 +31,47 @@ class AbstractWekaModelFactory(AbstractModelFactory):
   def build(self, train_set):
 
     # Prepare the ARFF file that will train the model.
-    arff_types = get_arff_type_dict(self.headers, self.all_data,self.features_to_ignore)
+    arff_types = get_arff_type_dict(self.headers, self.all_data)
     model_file = TMP_DIR + "{}_{}_{}.model".format(self.verbose_factory_name, self.factory_name, time.time())
     train_arff_file = model_file + ".train.arff"
-    list_to_arff_file(self.headers,arff_types, train_set, train_arff_file)
 
-    response_index = self.headers.index(self.response_header)
+    # Remove ignored features from the dataset.
+    ignored_indices = [i for i,h in enumerate(self.headers) if h in self.features_to_ignore]
+    actual_headers = [h for i,h in enumerate(self.headers) if i not in ignored_indices]
+    train_set = [[elem for i,elem in enumerate(row) if i not in ignored_indices] for row in train_set]
+
+    # Convert the final dataset to an ARFF for WEKA.
+    list_to_arff_file(actual_headers,arff_types, train_set, train_arff_file)
 
     # Call WEKA to generate the model file.
+    response_index = actual_headers.index(self.response_header)
     command = "java {} -t {} -d {} -p 0 -c {}".format(self.train_command, train_arff_file, model_file, response_index + 1)
     run_weka_command(command)
 
-    return self.model_visitor_type(model_file, arff_types, response_index, self.headers)
+    return self.model_visitor_type(model_file, arff_types, response_index, actual_headers, ignored_indices)
 
 
 class AbstractWekaModelVisitor(AbstractModelVisitor):
 
-  def __init__(self, model_name, arff_types, response_index, headers):
+  def __init__(self, model_name, arff_types, response_index, headers, ignored_indices):
     self.model_name = model_name
     self.arff_types = arff_types
     self.response_index = response_index
     self.headers = headers
+    self.ignored_indices = ignored_indices
     self.test_command = ""
 
   def test(self, test_set, test_name=""):
+    # Remove ignored features from the test-set.
+    test_set = [[elem for i,elem in enumerate(row) if i not in self.ignored_indices] for row in test_set]
+
+    # Convert the final test-set to an ARFF for WEKA.
     test_arff_file = "{}.{}.test.arff".format(self.model_name, test_name)
     list_to_arff_file(self.headers, self.arff_types, test_set, test_arff_file)
-    results_path = "{}.out".format(test_arff_file)
 
     # Produce predictions for the test set.
     # Note: The "-c" option is 1-indexed by Weka
+    results_path = "{}.out".format(test_arff_file)
     command = "java {} -T {} -l {} -p 0 -c {} 1> {}".format(self.test_command, test_arff_file, self.model_name, self.response_index+1, results_path)
     run_weka_command(command)
 
@@ -79,8 +90,8 @@ def run_weka_command(command):
   subprocess.check_output(set_path + command, shell=True)
 
 
-def get_arff_type_dict(headers, data, features_to_ignore=[]):
-  values = {header:[row[i] for row in data] for i, header in enumerate(headers) if header not in features_to_ignore}
+def get_arff_type_dict(headers, data):
+  values = {header:[row[i] for row in data] for i, header in enumerate(headers)}
   arff_type = OrderedDict()
   for header in headers:
     if all( map(lambda x: isinstance(x, float), values[header]) ):
@@ -103,7 +114,8 @@ def list_to_arff_file(headers, arff_type_dict, data, arff_file_output):
 
   # Produce the relevant file headers for the ARFF.
   arff_header = "@relation BlackBoxAuditing\n"
-  for attribute, types in arff_type_dict.items():
+  for header in headers:
+    types = arff_type_dict[header]
     if type(types) == list:
       formatter = io.BytesIO()
       writer = csv.writer(formatter)
@@ -112,9 +124,9 @@ def list_to_arff_file(headers, arff_type_dict, data, arff_file_output):
       writer.writerow(unique_values)
       formatted = formatter.getvalue().strip('\r\n')
       types = "{" + formatted + "}"
-    attribute = attribute.replace(" ","_")
+    header = header.replace(" ","_")
     types = types.replace('"""','"')
-    arff_header += "@attribute {} {}\n".format(attribute, types)
+    arff_header += "@attribute {} {}\n".format(header, types)
 
   arff_header += "\n@data\n"
 
