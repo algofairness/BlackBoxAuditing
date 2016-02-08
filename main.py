@@ -10,6 +10,7 @@ features_to_ignore = []
 verbose = True # Set to `True` to allow for more detailed status updates.
 
 REPAIR_STEPS = 10
+RETRAIN_MODEL_PER_REPAIR = False
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # NOTE: You should not need to change anything below this point.
@@ -36,36 +37,51 @@ def run():
    the correct and incorrect predictions of the model.
   """
 
-  vprint("Training initial model.",verbose)
   all_data = train_set + test_set
-  model_factory = ModelFactory(all_data, headers, response_header)
-  model = model_factory.build(train_set)
+  model_factory = ModelFactory(all_data, headers, response_header,
+                               features_to_ignore=features_to_ignore)
 
-  # Check the quality of the initial model on verbose runs.
-  if verbose:
-    pred_tuples = model.test(test_set)
-    conf_matrix = get_conf_matrix(pred_tuples)
-    for measurer in graph_measurers:
-      print "\t{}: {}".format(measurer.__name__, measurer(conf_matrix))
+  if not RETRAIN_MODEL_PER_REPAIR:
+    vprint("Training initial model.",verbose)
+    model = model_factory.build(train_set)
 
-  # Don't audit the response feature.
-  features_to_ignore.append(response_header)
+    # Check the quality of the initial model on verbose runs.
+    if verbose:
+      pred_tuples = model.test(test_set)
+      conf_matrix = get_conf_matrix(pred_tuples)
+      for measurer in graph_measurers:
+        print "\t{}: {}".format(measurer.__name__, measurer(conf_matrix))
+    model_or_factory = model
+  else:
+    model_or_factory = model_factory
 
   # Translate the headers into indexes for the auditor.
-  feature_indexes_to_ignore = [headers.index(f) for f in features_to_ignore]
+  audit_indices_to_ignore = [headers.index(f) for f in features_to_ignore]
+
+  # Don't audit the response feature.
+  audit_indices_to_ignore.append(headers.index(response_header))
 
   # Prepare the auditor.
-  auditor = GradientFeatureAuditor(model, headers, train_set, test_set,
+  auditor = GradientFeatureAuditor(model_or_factory, headers, train_set, test_set,
                                    repair_steps=REPAIR_STEPS,
-                                   features_to_ignore=feature_indexes_to_ignore)
+                                   features_to_ignore=audit_indices_to_ignore)
 
-  vprint("Dumping training data.", verbose)
+  vprint("Dumping original training data.", verbose)
   # Dump the train data to the log.
-  train_dump = "{}/train_data.csv".format(auditor.OUTPUT_DIR)
+  train_dump = "{}/original_train_data.csv".format(auditor.OUTPUT_DIR)
   with open(train_dump, "w") as f:
     writer = csv.writer(f)
     writer.writerow(headers)
     for row in train_set:
+      writer.writerow(row)
+
+  vprint("Dumping original testing data.", verbose)
+  # Dump the train data to the log.
+  test_dump = "{}/original_test_data.csv".format(auditor.OUTPUT_DIR)
+  with open(test_dump, "w") as f:
+    writer = csv.writer(f)
+    writer.writerow(headers)
+    for row in test_set:
       writer.writerow(row)
 
   # Perform the Gradient Feature Audit and dump the audit results into files.
@@ -92,6 +108,7 @@ def run():
     f.write("Experiment Location: {}\n".format(experiment.__file__))
     f.write("Audit Start Time: {}\n".format(start_time))
     f.write("Audit End Time: {}\n".format(end_time))
+    f.write("Retrained Per Repair: {}\n".format(RETRAIN_MODEL_PER_REPAIR))
     f.write("Model Type: {}\n".format(model_factory.verbose_factory_name))
     f.write("Train Size: {}\n".format(len(train_set)))
     f.write("Test Size: {}\n".format(len(test_set)))

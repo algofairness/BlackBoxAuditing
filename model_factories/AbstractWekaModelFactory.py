@@ -7,6 +7,7 @@ import subprocess
 import io
 import csv
 import os
+import time
 
 WEKA_PATH = "/usr/share/java/weka.jar"
 TMP_DIR = "tmp/"
@@ -30,10 +31,10 @@ class AbstractWekaModelFactory(AbstractModelFactory):
   def build(self, train_set):
 
     # Prepare the ARFF file that will train the model.
-    arff_types = get_arff_type_dict(self.headers, self.all_data)
-    model_file = TMP_DIR + "{}_{}.model".format(self.verbose_factory_name, self.model_name)
+    arff_types = get_arff_type_dict(self.headers, self.all_data,self.features_to_ignore)
+    model_file = TMP_DIR + "{}_{}_{}.model".format(self.verbose_factory_name, self.factory_name, time.time())
     train_arff_file = model_file + ".train.arff"
-    list_to_arff_file(arff_types, train_set, train_arff_file)
+    list_to_arff_file(self.headers,arff_types, train_set, train_arff_file)
 
     response_index = self.headers.index(self.response_header)
 
@@ -41,25 +42,26 @@ class AbstractWekaModelFactory(AbstractModelFactory):
     command = "java {} -t {} -d {} -p 0 -c {}".format(self.train_command, train_arff_file, model_file, response_index + 1)
     run_weka_command(command)
 
-    return self.model_visitor_type(model_file, arff_types, response_index)
+    return self.model_visitor_type(model_file, arff_types, response_index, self.headers)
 
 
 class AbstractWekaModelVisitor(AbstractModelVisitor):
 
-  def __init__(self, model_file, arff_types, response_index):
-    self.model_file = model_file
+  def __init__(self, model_name, arff_types, response_index, headers):
+    self.model_name = model_name
     self.arff_types = arff_types
     self.response_index = response_index
+    self.headers = headers
     self.test_command = ""
 
   def test(self, test_set, test_name=""):
-    test_arff_file = "{}.{}.test.arff".format(self.model_file, test_name)
-    list_to_arff_file(self.arff_types, test_set, test_arff_file)
+    test_arff_file = "{}.{}.test.arff".format(self.model_name, test_name)
+    list_to_arff_file(self.headers, self.arff_types, test_set, test_arff_file)
     results_path = "{}.out".format(test_arff_file)
 
     # Produce predictions for the test set.
     # Note: The "-c" option is 1-indexed by Weka
-    command = "java {} -T {} -l {} -p 0 -c {} 1> {}".format(self.test_command, test_arff_file, self.model_file, self.response_index+1, results_path)
+    command = "java {} -T {} -l {} -p 0 -c {} 1> {}".format(self.test_command, test_arff_file, self.model_name, self.response_index+1, results_path)
     run_weka_command(command)
 
     # Read the output file.
@@ -77,8 +79,8 @@ def run_weka_command(command):
   subprocess.check_output(set_path + command, shell=True)
 
 
-def get_arff_type_dict(headers, data):
-  values = {header:[row[i] for row in data] for i, header in enumerate(headers)}
+def get_arff_type_dict(headers, data, features_to_ignore=[]):
+  values = {header:[row[i] for row in data] for i, header in enumerate(headers) if header not in features_to_ignore}
   arff_type = OrderedDict()
   for header in headers:
     if all( map(lambda x: isinstance(x, float), values[header]) ):
@@ -92,7 +94,7 @@ def get_arff_type_dict(headers, data):
   return arff_type
 
 
-def list_to_arff_file(arff_type_dict, data, arff_file_output):
+def list_to_arff_file(headers, arff_type_dict, data, arff_file_output):
   def arff_format(string):
     # Remove empty strings and quote strings with spaces.
     if string == "":
@@ -120,7 +122,7 @@ def list_to_arff_file(arff_type_dict, data, arff_file_output):
   data_output = io.BytesIO()
   csv_writer = csv.writer(data_output)
   for row in data:
-    row = [arff_format(val) for val in row]
+    row = [arff_format(val) for h, val in zip(headers,row) if h in arff_type_dict]
     csv_writer.writerow(row)
 
   # Dump everything into the intended ARFF file.
