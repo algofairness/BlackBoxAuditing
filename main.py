@@ -20,6 +20,7 @@ from GradientFeatureAuditor import GradientFeatureAuditor
 from audit_reading import graph_audit, graph_audits, rank_audit_files
 from measurements import get_conf_matrix
 from datetime import datetime
+import csv
 
 def run():
 
@@ -53,10 +54,21 @@ def run():
   # Translate the headers into indexes for the auditor.
   feature_indexes_to_ignore = [headers.index(f) for f in features_to_ignore]
 
-  # Perform the Gradient Feature Audit and dump the audit results into files.
+  # Prepare the auditor.
   auditor = GradientFeatureAuditor(model, headers, train_set, test_set,
                                    repair_steps=REPAIR_STEPS,
                                    features_to_ignore=feature_indexes_to_ignore)
+
+  vprint("Dumping training data.", verbose)
+  # Dump the train data to the log.
+  train_dump = "{}/train_data.csv".format(auditor.OUTPUT_DIR)
+  with open(train_dump, "w") as f:
+    writer = csv.writer(f)
+    writer.writerow(headers)
+    for row in train_set:
+      writer.writerow(row)
+
+  # Perform the Gradient Feature Audit and dump the audit results into files.
   audit_filenames = auditor.audit(verbose=verbose)
 
   # Graph the audit files.
