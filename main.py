@@ -2,10 +2,10 @@
 #       across experiments on different datasets and ML model types.
 import experiments.sample as experiment
 from model_factories.SVM_ModelFactory import ModelFactory
-from measurements import accuracy
+from measurements import accuracy, complement_BER
 response_header = "Outcome"
-graph_measurers = [accuracy]
-rank_measurers = [accuracy]
+graph_measurers = [accuracy, complement_BER]
+rank_measurers = [accuracy, complement_BER]
 features_to_ignore = []
 
 verbose = True # Set to `True` to allow for more detailed status updates.
