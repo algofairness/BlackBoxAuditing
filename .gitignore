@@ -2,4 +2,3 @@ audits/*
 *.pyc
 
 test_data/DRP.csv
-experiments/DRP/*
