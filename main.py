@@ -119,7 +119,7 @@ def run():
     f.write("Features: {}\n".format(headers))
 
     for ranker, ranks in ranked_features:
-      f.write("Ranked Features by {}: {}\n".format(rank_measurer.__name__, ranks))
+      f.write("Ranked Features by {}: {}\n".format(ranker.__name__, ranks))
 
   vprint("Summary file written to: {}".format(summary_file), verbose)
 
