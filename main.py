@@ -1,15 +1,14 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-
-import experiments.arrests as experiment
-from model_factories.RecidivismTensorFlowModelFactory import ModelFactory
-from measurements import accuracy
-response_header = "Class"
-graph_measurers = [accuracy]
-rank_measurer = accuracy
+import experiments.sample as experiment
+from model_factories.SVM_ModelFactory import ModelFactory
+from measurements import accuracy, complement_BER
+response_header = "Outcome"
+graph_measurers = [accuracy, complement_BER]
+rank_measurers = [accuracy, complement_BER]
 features_to_ignore = []
-verbose = True # Set to `True` to allow for more detailed status updates.
 
+verbose = True # Set to `True` to allow for more detailed status updates.
 REPAIR_STEPS = 10
 RETRAIN_MODEL_PER_REPAIR = False
 
@@ -48,6 +47,7 @@ def run():
 
     # Check the quality of the initial model on verbose runs.
     if verbose:
+      print "Calculating original model statistics on test data:"
       pred_tuples = model.test(test_set)
       conf_matrix = get_conf_matrix(pred_tuples)
       for measurer in graph_measurers:
@@ -94,12 +94,14 @@ def run():
     audit_image_filename = audit_filename + ".png"
     graph_audit(audit_filename, graph_measurers, audit_image_filename)
 
-  ranked_graph_filename = "{}/{}.png".format(auditor.OUTPUT_DIR, rank_measurer.__name__)
-  graph_audits(audit_filenames, rank_measurer, ranked_graph_filename)
-
-  vprint("Ranking audit files.",verbose)
-  ranked_features = rank_audit_files(audit_filenames, rank_measurer)
-  vprint("Ranked Features: {}".format(ranked_features), verbose)
+  ranked_features = []
+  for rank_measurer in rank_measurers:
+    vprint("Ranking audit files by {}.".format(rank_measurer.__name__),verbose)
+    ranked_graph_filename = "{}/{}.png".format(auditor.OUTPUT_DIR, rank_measurer.__name__)
+    graph_audits(audit_filenames, rank_measurer, ranked_graph_filename)
+    ranks = rank_audit_files(audit_filenames, rank_measurer)
+    vprint("Ranked Features: {}".format(ranks), verbose)
+    ranked_features.append( (rank_measurer, ranks) )
 
   end_time = datetime.now()
 
@@ -110,11 +112,15 @@ def run():
     f.write("Audit Start Time: {}\n".format(start_time))
     f.write("Audit End Time: {}\n".format(end_time))
     f.write("Retrained Per Repair: {}\n".format(RETRAIN_MODEL_PER_REPAIR))
+    f.write("Model Factory ID: {}\n".format(model_factory.factory_name))
     f.write("Model Type: {}\n".format(model_factory.verbose_factory_name))
     f.write("Train Size: {}\n".format(len(train_set)))
     f.write("Test Size: {}\n".format(len(test_set)))
     f.write("Features: {}\n".format(headers))
-    f.write("Ranked Features: {}\n".format(ranked_features))
+
+    for ranker, ranks in ranked_features:
+      f.write("Ranked Features by {}: {}\n".format(rank_measurer.__name__, ranks))
+
   vprint("Summary file written to: {}".format(summary_file), verbose)
 
 

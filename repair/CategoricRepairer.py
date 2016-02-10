@@ -314,8 +314,46 @@ def test():
   test_repeated_values()
 
 def test_repeated_values():
-  #TODO: Add this test (which is why Ricci broke originally)
-  print "NEED TO ADD TEST FOR REPEATED VALUES IN CATEGORICAL REPAIR!", False
+  all_data = [
+  ["x","A"], ["x","B"], ["x","C"], ["x","D"], ["x","E"],
+  ["y","F"], ["y","G"], ["y","H"], ["y","I"],
+  ["z","J"], ["z","K"], ["z","L"], ["z","M"], ["z","N"], ["z","O"]]
+
+  random.seed(10)
+
+  repair_level=.5
+  feature_to_repair = 0
+  repairer = Repairer(all_data, feature_to_repair, repair_level)
+  repaired_data=repairer.repair(all_data)
+
+  correct_repaired_data = [
+  ['x', 'E'], ['x', 'C'], ['x', 'C'], ['z', 'E'], ['x', 'B'], 
+  ['y', 'I'], ['y', 'I'], ['y', 'G'], ['z', 'H'], 
+  ['z', 'N'], ['z', 'N'], ['z', 'L'], ['z', 'K'], ['z', 'K'], ['z', 'K']]
+
+  print "Test unique values -- .5 repaired_data altered?", repaired_data != all_data
+  print "Test unique values -- .5 repaired_data correct?", repaired_data == correct_repaired_data
+
+  all_data = [
+  ["x","A"], ["x","A"], ["x","A"], ["x","A"], ["x","A"],
+  ["y","A"], ["y","A"], ["y","A"], ["y","A"],
+  ["z","A"], ["z","A"], ["z","A"], ["z","A"], ["z","A"], ["z","A"]]
+
+  random.seed(10)
+
+  repair_level=.5
+  feature_to_repair = 0
+  repairer = Repairer(all_data, feature_to_repair, repair_level)
+  repaired_data=repairer.repair(all_data)
+
+  correct_repaired_data = [
+  ['x', 'A'], ['x', 'A'], ['x', 'A'], ['z', 'A'], ['x', 'A'], 
+  ['y', 'A'], ['y', 'A'], ['y', 'A'], ['z', 'A'], 
+  ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A']]
+
+
+  print "Test repeated values -- .5 repaired_data altered?", repaired_data != all_data
+  print "Test repeated values -- .5 repaired_data correct?", repaired_data == correct_repaired_data
 
 def test_minimal():
   class_1 = [[float(i),"A"] for i in xrange(0, 100)]
@@ -324,7 +362,7 @@ def test_minimal():
   print "HERE"
 
   feature_to_repair = 1
-  repairer = Repairer(data, feature_to_repair, 0.5)
+  repairer = Repairer(data, feature_to_repair, 1)
   repaired_data = repairer.repair(data)
   print "Minimal Dataset -- repaired_data altered?", repaired_data != data
 
@@ -544,8 +582,8 @@ def test_categorical():
   ['y', 'A'], ['y', 'A'], ['y', 'A'], ['y', 'B'], 
   ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'B']]
 
-  print "Categorical Minimal Dataset -- partial repaired_data altered?", part_repaired_data != all_data
-  print "Categorical Minimal Dataset -- partial repaired_data correct?", part_repaired_data == correct_part_repaired_data
+  print "Categorical Minimal Dataset -- partial (.5) repaired_data altered?", part_repaired_data != all_data
+  print "Categorical Minimal Dataset -- partial (.5) repaired_data correct?", part_repaired_data == correct_part_repaired_data
 
   repair_level=0.2
   feature_to_repair = 0
@@ -557,8 +595,8 @@ def test_categorical():
   ['y', 'A'], ['y', 'A'], ['y', 'A'], ['y', 'B'], 
   ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'B']]
 
-  print "Categorical Minimal Dataset -- partial repaired_data altered?", part_repaired_data != all_data
-  print "Categorical Minimal Dataset -- partial repaired_data correct?", part_repaired_data == correct_part2_repaired_data
+  print "Categorical Minimal Dataset -- partial (.2) repaired_data altered?", part_repaired_data != all_data
+  print "Categorical Minimal Dataset -- partial (.2) repaired_data correct?", part_repaired_data == correct_part2_repaired_data
 
 
 if __name__== "__main__":
