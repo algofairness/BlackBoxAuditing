@@ -19,7 +19,7 @@ class ModelFactory(AbstractModelFactory):
     self.verbose_factory_name = "TensorFlow_Network"
 
     self.num_epochs = 500
-    self.batch_size = 50
+    self.batch_size = 500
 
     self.response_index = self.headers.index(self.response_header)
 
@@ -31,7 +31,7 @@ class ModelFactory(AbstractModelFactory):
     self.layer_types = [tf.nn.softmax,  # Input Layer
                         tf.nn.softmax]     # 2nd Hidden Layer
 
-  def build(self, train_set):
+  def build(self, train_set): #TODO: Add a features-to-ignore option.
     # In case the class is a string, translate it.
     translated_train_set = translate_response(self.response_index, train_set, self.response_dict)
 

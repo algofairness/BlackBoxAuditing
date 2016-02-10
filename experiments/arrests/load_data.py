@@ -1,4 +1,10 @@
+from splitters import split_by_percent
 import csv
+import random
+
+train_percentage = 2.0/3.0
+#train_percentage = 0.8
+print train_percentage
 
 def load_data():
   filename = "test_data/arrests_full_categorical.csv"
@@ -8,14 +14,12 @@ def load_data():
     headers = data.pop(0)
 
     correct_types = [str] * len(headers) # All categorical.
-    correct_types[10] = int
 
     for i, row in enumerate(data):
       for j, correct_type in enumerate(correct_types):
         data[i][j] = correct_type(row[j])
 
-    train = data[:len(data)/2]
-    test = data[len(data)/2:]
+    train, test = split_by_percent(data, train_percentage)
 
   return headers, train, test
 

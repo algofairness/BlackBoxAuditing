@@ -1,7 +1,9 @@
 import time
+import csv
 
-def expand_to_one_hot(data,expand = True):
-    header_dict = {'ALCABUS':0,'PRIRCAT':1,'TMSRVC':2,'Classproperty':3,'Classfatal_violence':4,'Classdrug':5,'SEX1':6,'Classarrests':7,'RELTYP':8,'RACE':9,'age_1st_arrest':10,'Classsexual_violence':11,'DRUGAB':12,'Classgeneral_violence':13,'RLAGE':14,'NFRCTNS':15}
+def expand_to_one_hot(data,expand = True,use_alternative=False):
+    header_dict = {'ALCABUS':0,'PRIRCAT':1,'TMSRVC':2,'SEX1':3,'RACE':4,'RELTYP':5,'age_1st_arrest':6,'DRUGAB':7,'Class':8,'RLAGE':9,'NFRCTNS':10}
+
     new_data = []
     for entry in data:
 	temp = {}
@@ -76,22 +78,13 @@ def expand_to_one_hot(data,expand = True):
 		temp['released_conditional'] = 0
 		temp['released_unconditional'] = 0
 		temp['released_other'] = 1
-
-	    try:
-		bdate = datetime.date(int(entry['YEAROB2']),int(entry['MNTHOB2']), int(entry['DAYOB2']))
-		first_arrest = datetime.date(int(entry['A001YR']),int(entry['A001MO']),int(entry['A001DA']))
-		first_arrest_age = first_arrest - bdate
-		temp['age_1st_arrest'] = first_arrest_age.days
-	    except:
-		temp['age_1st_arrest'] = entry[header_dict['age_1st_arrest']]
-
-	    # Add in the Y values
-	    temp['Classarrests'] = entry[header_dict['Classarrests']]
-	    temp['Classgeneral_violence'] = entry[header_dict['Classgeneral_violence']]
-	    temp['Classfatal_violence'] = entry[header_dict['Classfatal_violence']]
-	    temp['Classproperty'] = entry[header_dict['Classproperty']]
-	    temp['Classsexual_violence'] = entry[header_dict['Classsexual_violence']]
-	    temp['Classdrug'] = entry[header_dict['Classdrug']]
+	    
+	    first_arrest_cats = ['UNDER 17','BETWEEN 18 AND 24','BETWEEN 25 AND 29','BETWEEN 30 AND 39','OVER 40']
+	    for cat in first_arrest_cats:
+		if entry[header_dict['age_1st_arrest']] == cat:
+		    temp['age_first_arrest_'+cat] = 1
+		else:
+		    temp['age_first_arrest_'+cat] = 0
 	else:
 	    temp['SEX1'] = entry['SEX1']
 	    temp['RELTYP'] = entry['RELTYP']
@@ -114,5 +107,12 @@ def expand_to_one_hot(data,expand = True):
 
 
     # convert from dictionary to list of lists
-    fin = [[entry[key] for key in entry.keys()] for entry in new_data]
+    fin = [[int(entry[key]) for key in entry.keys()] for entry in new_data]
+    """
+    with open("brandon_testing/test_"+str(time.clock())+".csv","w") as f:
+	writer = csv.writer(f,delimiter=",")
+	for row in fin:
+	    writer.writerow(row)
+    """
+
     return fin
