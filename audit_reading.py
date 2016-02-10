@@ -121,6 +121,49 @@ def rank_audit_files(filenames, measurer):
   return scores
 
 
+def group_audit_ranks(filenames, measurer):
+  score_dict = {}
+  for filename in filenames:
+    with open(filename) as audit_file:
+      header_line = audit_file.readline()[:-1] # Remove the trailing endline.
+      feature = header_line[header_line.index(":")+1:]
+
+    confusion_matrices = load_audit_confusion_matrices(filename)
+    for rep_level, matrix in confusion_matrices:
+      score = measurer(matrix)
+      if rep_level not in score_dict:
+        score_dict[rep_level] = []
+      score_dict[rep_level].append( (feature, score) )
+
+  print "SCORE_DICT", score_dict
+
+  # Sort by repair level.
+  score_keys = sorted(score_dict.keys())
+
+  boundary = 0.05
+  for score_key in score_keys:
+    groups = []
+    feature_scores = score_dict[score_key]
+    for feature, score in feature_scores:
+      added_to_group = False
+
+      # Check to see if the feature belongs in a group with any other features.
+      for i, group in enumerate(groups):
+        mean_score, group_feature_scores = group
+        print group_feature_scores
+        if abs(group[0] - score) < boundary:
+          groups[i][1].append( (feature, score) )
+
+          # Recalculate the representative mean.
+          groups[i][0] = sum([s for _, s in group_feature_scores])/len(group_feature_scores)
+
+      if not added_to_group:
+        groups.append( [score, [(feature,score)]] )
+
+    print "GROUPS", score_key, groups
+  return groups
+
+
 def test():
   TMP_DIR = "tmp"
   if not os.path.exists(TMP_DIR):

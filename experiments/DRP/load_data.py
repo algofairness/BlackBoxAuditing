@@ -2,6 +2,7 @@ from splitters import split_by_percent
 import csv
 import random
 
+from example_headers import example_headers
 str_headers = ["boolean_crystallisation_outcome_manual_0"]
 ignored_headers = ["notes", "rxnSpaceHash1_drpxxhash_0.02/0.4.3","reaction_ptr",
                    "labGroup", "user", "insertedDateTime", "performedDateTime",
@@ -10,10 +11,10 @@ ignored_headers = ["notes", "rxnSpaceHash1_drpxxhash_0.02/0.4.3","reaction_ptr",
                    "compound_2", "compound_2_role","compound_3", "compound_3_role",
                    "compound_4", "compound_4_role", "duplicateOf",
                    "crystallisation_outcome_manual_0",
+                   "crystallisation_purity_outcome_manual_0",
                    "legacyRecommendedFlag", "valid", "public",
-
                    #"boolean_crystallisation_outcome_manual_0"]
-                   ]
+                   ] + example_headers
 
 unknown_tokens = {"?", ""}
 train_percentage = 2.0/3.0
