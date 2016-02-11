@@ -1,7 +1,7 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-import experiments.arrests as experiment
-from model_factories.RecidivismTensorFlowModelFactory import ModelFactory
+import experiments.sample as experiment
+from model_factories.TensorFlowModelFactory import ModelFactory
 from measurements import accuracy, complement_BER
 response_header = "Class"
 graph_measurers = [accuracy, complement_BER]
@@ -11,6 +11,7 @@ features_to_ignore = []
 verbose = True # Set to `True` to allow for more detailed status updates.
 REPAIR_STEPS = 10
 RETRAIN_MODEL_PER_REPAIR = False
+WRITE_OVERVIEW_PREDICTIONS = True
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # NOTE: You should not need to change anything below this point.
@@ -18,7 +19,7 @@ RETRAIN_MODEL_PER_REPAIR = False
 
 from loggers import vprint
 from GradientFeatureAuditor import GradientFeatureAuditor
-from audit_reading import graph_audit, graph_audits, rank_audit_files
+from audit_reading import graph_audit, graph_audits, rank_audit_files, group_audit_ranks
 from measurements import get_conf_matrix
 from datetime import datetime
 import csv
@@ -48,10 +49,19 @@ def run():
     # Check the quality of the initial model on verbose runs.
     if verbose:
       print "Calculating original model statistics on test data:"
-      pred_tuples = model.test(test_set)
-      conf_matrix = get_conf_matrix(pred_tuples)
+      print "\tTraining Set:"
+      train_pred_tuples = model.test(train_set)
+      train_conf_matrix = get_conf_matrix(train_pred_tuples)
       for measurer in graph_measurers:
-        print "\t{}: {}".format(measurer.__name__, measurer(conf_matrix))
+        print "\t\t{}: {}".format(measurer.__name__, measurer(train_conf_matrix))
+
+      print "\tTesting Set:"
+      test_pred_tuples = model.test(test_set)
+      test_conf_matrix = get_conf_matrix(test_pred_tuples)
+      for measurer in graph_measurers:
+        print "\t\t{}: {}".format(measurer.__name__, measurer(test_conf_matrix))
+
+
     model_or_factory = model
   else:
     model_or_factory = model_factory
@@ -69,21 +79,39 @@ def run():
 
   vprint("Dumping original training data.", verbose)
   # Dump the train data to the log.
-  train_dump = "{}/original_train_data.csv".format(auditor.OUTPUT_DIR)
-  with open(train_dump, "w") as f:
+  train_dump = "{}/original_train_data".format(auditor.OUTPUT_DIR)
+  with open(train_dump + ".csv", "w") as f:
     writer = csv.writer(f)
     writer.writerow(headers)
     for row in train_set:
       writer.writerow(row)
 
+  if WRITE_OVERVIEW_PREDICTIONS:
+    # Dump the predictions on the test data.
+    with open(train_dump + ".predictions", "w") as f:
+      writer = csv.writer(f)
+      file_headers = ["Response", "Prediction"]
+      writer.writerow(file_headers)
+      for response, guess in train_pred_tuples:
+        writer.writerow([response, guess])
+
   vprint("Dumping original testing data.", verbose)
   # Dump the train data to the log.
-  test_dump = "{}/original_test_data.csv".format(auditor.OUTPUT_DIR)
-  with open(test_dump, "w") as f:
+  test_dump = "{}/original_test_data".format(auditor.OUTPUT_DIR)
+  with open(test_dump + ".csv", "w") as f:
     writer = csv.writer(f)
     writer.writerow(headers)
     for row in test_set:
       writer.writerow(row)
+
+  if WRITE_OVERVIEW_PREDICTIONS:
+    # Dump the predictions on the test data.
+    with open(test_dump + ".predictions", "w") as f:
+      writer = csv.writer(f)
+      file_headers = ["Response", "Prediction"]
+      writer.writerow(file_headers)
+      for response, guess in test_pred_tuples:
+        writer.writerow([response, guess])
 
   # Perform the Gradient Feature Audit and dump the audit results into files.
   audit_filenames = auditor.audit(verbose=verbose)
@@ -116,10 +144,13 @@ def run():
     f.write("Model Type: {}\n".format(model_factory.verbose_factory_name))
     f.write("Train Size: {}\n".format(len(train_set)))
     f.write("Test Size: {}\n".format(len(test_set)))
+    f.write("Non-standard Ignored Features: {}".format(features_to_ignore))
     f.write("Features: {}\n".format(headers))
 
     for ranker, ranks in ranked_features:
-      f.write("Ranked Features by {}: {}\n".format(rank_measurer.__name__, ranks))
+      f.write("Ranked Features by {}: {}\n".format(ranker.__name__, ranks))
+      groups = group_audit_ranks(audit_filenames, ranker)
+      f.write("  Approx. Trend Groups: {}\n".format(groups))
 
   vprint("Summary file written to: {}".format(summary_file), verbose)
 
