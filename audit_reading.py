@@ -68,7 +68,7 @@ def graph_audit(filename, measurers, output_image_file):
     headers = ["Repair Level"] + [calc.__name__ for calc in measurers]
     writer.writerow(headers)
     for i, repair_level in enumerate(x_axis):
-      writer.writerow([repair_level] + [y_axis[i] for y_axis in y_axes])
+      writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
 
 def graph_audits(filenames, measurer, output_image_file):
   features = []
@@ -100,8 +100,7 @@ def graph_audits(filenames, measurer, output_image_file):
     headers = ["Repair Level"] + features
     writer.writerow(headers)
     for i, repair_level in enumerate(x_axis):
-      writer.writerow([repair_level] + [y_axis[i] for y_axis in y_axes])
-
+      writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
 
 
 def rank_audit_files(filenames, measurer):
@@ -121,46 +120,65 @@ def rank_audit_files(filenames, measurer):
   return scores
 
 
-def group_audit_ranks(filenames, measurer):
-  score_dict = {}
-  for filename in filenames:
-    with open(filename) as audit_file:
-      header_line = audit_file.readline()[:-1] # Remove the trailing endline.
-      feature = header_line[header_line.index(":")+1:]
+def group_audit_ranks(filenames, measurer, similarity_bound=0.05):
+  """
+  Given a list of audit files, rank them using the `measurer` and
+  return the features that never deviate more than `similarity_bound`
+  across repairs.
+  """
 
-    confusion_matrices = load_audit_confusion_matrices(filename)
-    for rep_level, matrix in confusion_matrices:
-      score = measurer(matrix)
-      if rep_level not in score_dict:
-        score_dict[rep_level] = []
-      score_dict[rep_level].append( (feature, score) )
-
-  print "SCORE_DICT", score_dict
-
-  # Sort by repair level.
-  score_keys = sorted(score_dict.keys())
-
-  boundary = 0.05
-  for score_key in score_keys:
+  def _partition_groups(feature_scores):
     groups = []
-    feature_scores = score_dict[score_key]
     for feature, score in feature_scores:
       added_to_group = False
 
       # Check to see if the feature belongs in a group with any other features.
       for i, group in enumerate(groups):
         mean_score, group_feature_scores = group
-        print group_feature_scores
-        if abs(group[0] - score) < boundary:
+        if abs(mean_score - score) < similarity_bound:
           groups[i][1].append( (feature, score) )
 
           # Recalculate the representative mean.
           groups[i][0] = sum([s for _, s in group_feature_scores])/len(group_feature_scores)
+          added_to_group = True
+          break
 
+      # If this feature did not much with the current groups, create another group.
       if not added_to_group:
         groups.append( [score, [(feature,score)]] )
 
-    print "GROUPS", score_key, groups
+    # Return just the features.
+    return [[feature for feature, score in group] for _, group in groups]
+
+
+  score_dict = {}
+  features = []
+  for filename in filenames:
+    with open(filename) as audit_file:
+      header_line = audit_file.readline()[:-1] # Remove the trailing endline.
+      feature = header_line[header_line.index(":")+1:]
+      features.append(feature)
+
+    confusion_matrices = load_audit_confusion_matrices(filename)
+    for rep_level, matrix in confusion_matrices:
+      score = measurer(matrix)
+      if rep_level not in score_dict:
+        score_dict[rep_level] = {}
+      score_dict[rep_level][feature] = score
+
+  # Sort by repair level increasing repair level.
+  score_keys = sorted(score_dict.keys())
+
+  groups = [features]
+  while score_keys:
+    key = score_keys.pop()
+    new_groups = []
+    for group in groups:
+      group_features = [(f, score_dict[key][f]) for f in group]
+      sub_groups = _partition_groups(group_features)
+      new_groups.extend(sub_groups)
+    groups = new_groups
+
   return groups
 
 

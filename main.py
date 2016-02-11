@@ -18,7 +18,7 @@ RETRAIN_MODEL_PER_REPAIR = False
 
 from loggers import vprint
 from GradientFeatureAuditor import GradientFeatureAuditor
-from audit_reading import graph_audit, graph_audits, rank_audit_files
+from audit_reading import graph_audit, graph_audits, rank_audit_files, group_audit_ranks
 from measurements import get_conf_matrix
 from datetime import datetime
 import csv
@@ -120,6 +120,8 @@ def run():
 
     for ranker, ranks in ranked_features:
       f.write("Ranked Features by {}: {}\n".format(ranker.__name__, ranks))
+      groups = group_audit_ranks(audit_filenames, ranker)
+      f.write("  Approx. Trend Groups: {}\n".format(groups))
 
   vprint("Summary file written to: {}".format(summary_file), verbose)
 
