@@ -20,7 +20,7 @@ class ModelFactory(AbstractModelFactory):
     self.verbose_factory_name = "TensorFlow_Network"
     self.model_name = "Recidivism TensorFlow"
 
-    self.num_epochs = 100
+    self.num_epochs = 2000
     self.batch_size = 500
 
     self.response_index = self.headers.index(self.response_header)
@@ -102,9 +102,6 @@ class ModelVisitor(AbstractModelVisitor):
     self.response_dict = response_dict
 
   def test(self, test_set, test_name=""):
-    print sum([1 if i==1 else 0 for i in test_set])
-    print sum([1 if i==0 else 1 for i in test_set])
-
     translated_test_set = translate_response(self.response_index, test_set, self.response_dict)
 
     test_matrix, test_labels = list_to_tf_input(translated_test_set, self.response_index, self.num_labels  )

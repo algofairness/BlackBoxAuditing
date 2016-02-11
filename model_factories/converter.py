@@ -1,6 +1,38 @@
 import time
 import csv
 
+def expand_to_one_hot_general(data,cat_list):
+    cat_columns = [val for val in range(len(data[0])) if type(data[0][val])==str]
+    """
+    cat_list = []
+    for col in range(len(data[0])):
+	cat_list.append([])
+	if col in cat_columns: 
+	    for row in data:
+		if not row[col] in cat_list[col]:
+		    cat_list[col].append(row[col])
+    """
+
+    new_data = []
+    for entry in data:
+	temp = []
+	for j,val in enumerate(entry):
+	    if not j in cat_columns:
+		temp.append(val)
+	    else:
+		for cat in cat_list[j]:
+		    if val == cat:
+			temp.append(1)
+		    else:
+			temp.append(0)
+	new_data.append(temp)
+
+    return new_data
+		
+def test():
+    data = [['hello','there','my'],['name','is','brandon']]
+    print expand_to_one_hot_general(data)
+
 def expand_to_one_hot(data,expand = True,use_alternative=False):
     header_dict = {'ALCABUS':0,'PRIRCAT':1,'TMSRVC':2,'SEX1':3,'RACE':4,'RELTYP':5,'age_1st_arrest':6,'DRUGAB':7,'Class':8,'RLAGE':9,'NFRCTNS':10}
 
