@@ -15,8 +15,8 @@ class ModelFactory(AbstractModelFactory):
   def __init__(self, *args, **kwargs):
     super(ModelFactory, self).__init__(*args, **kwargs)
 
-    self.num_epochs = 100
-    self.batch_size = 500
+    self.num_epochs = 500
+    self.batch_size = 300
     self.learning_rate = 0.01
     self.hidden_layer_sizes = [] # If empty, no hidden layers are used.
     self.layer_types = [tf.nn.softmax,  # Input Layer
@@ -166,7 +166,10 @@ def translate_dataset(response_index, data_set, trans_dict, headers, normalizers
         new_row.extend(val_list)
       else:
         norm = normalizers[header]
-        normed = (val-norm["mean"])/(norm["max"]-norm["min"])
+        if (norm["max"]-norm["min"]) > 0:
+          normed = (val-norm["mean"])/(norm["max"]-norm["min"])
+        else:
+          normed = 0.0
         new_row.append(normed)
     translated_set.append(new_row)
   return translated_set

@@ -1,6 +1,6 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-import experiments.sample_2 as experiment
+import experiments.sample as experiment
 from model_factories.TensorFlowModelFactory import ModelFactory
 from measurements import accuracy, complement_BER
 response_header = "Outcome"
