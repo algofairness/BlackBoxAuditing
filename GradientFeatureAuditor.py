@@ -159,10 +159,10 @@ class MockModel(AbstractModelVisitor):
     return [(entry[response_col], entry[response_col]) for entry in test_set]
 
 def test():
-  model = MockModel()
   headers = ["response", "duplicate", "constant"]
   train = [[i,i,1] for i in xrange(100)]
   test = train[:] # Copy the training data.
+  model = MockModel(test)
   repair_steps = 5
   gfa = GradientFeatureAuditor(model, headers, train, test,
                                repair_steps=repair_steps)
