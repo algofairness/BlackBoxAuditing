@@ -18,7 +18,7 @@ ignored_headers = ["notes", "rxnSpaceHash1_drpxxhash_0.02/0.4.3","reaction_ptr",
 
 unknown_tokens = {"?", ""}
 train_percentage = 2.0/3.0
-max_entries = None
+max_entries = 3500
 filename = "test_data/DRP.csv"
 
 remove_constant_features = True
@@ -38,15 +38,11 @@ def load_data():
     headers = [h for i,h in enumerate(headers) if i not in ignored_indices]
     data = [[e for i,e in enumerate(row) if i not in ignored_indices] for row in data]
 
-    # Limit data size
-    if max_entries:
-      data = random.sample(data, max_entries)
-
     # Correct data-types
     for i, row in enumerate(data):
       for j, header in enumerate(headers):
         correct_type = correct_types[header]
-        data[i][j] = correct_type(row[j]) if row[j] not in unknown_tokens else 0.0
+        data[i][j] = correct_type(row[j]) if row[j] not in unknown_tokens else -1.0
 
     # Remove features that only have a single value (if specified).
     if remove_constant_features:
@@ -58,6 +54,10 @@ def load_data():
 
       data = [[e for i,e in enumerate(row) if i not in constant_features] for row in data]
       headers = [h for i,h in enumerate(headers) if i not in constant_features]
+
+    # Limit data size
+    if max_entries:
+      data = random.sample(data, max_entries)
 
     train, test = split_by_percent(data, train_percentage)
 

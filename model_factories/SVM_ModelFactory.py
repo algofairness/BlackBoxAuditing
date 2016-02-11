@@ -7,7 +7,8 @@ class ModelFactory(AbstractWekaModelFactory):
     self.model_visitor_type = ModelVisitor
     self.verbose_factory_name = "Support_Vector_Machine"
 
-    self.kernel = "" # Weka defaults to a traditional linear classifier.
+    #self.kernel = "" # Weka defaults to a traditional linear classifier.
+    self.kernel = "weka.classifiers.functions.supportVector.Puk -O 0.5 -S 7"
     command = "weka.classifiers.functions.SMO"
 
     # If a kernel option is listed, include it in the command.

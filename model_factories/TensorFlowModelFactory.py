@@ -15,11 +15,12 @@ class ModelFactory(AbstractModelFactory):
   def __init__(self, *args, **kwargs):
     super(ModelFactory, self).__init__(*args, **kwargs)
 
-    self.num_epochs = 2000
+    self.num_epochs = 100
     self.batch_size = 500
-    self.hidden_layer_sizes = [100] # If empty, no hidden layers are used.
+    self.learning_rate = 0.01
+    self.hidden_layer_sizes = [] # If empty, no hidden layers are used.
     self.layer_types = [tf.nn.softmax,  # Input Layer
-                        tf.nn.softmax]     # 2nd Hidden Layer
+                        ]#tf.nn.softmax]     # 2nd Hidden Layer
 
     self.verbose_factory_name = "TensorFlow_Network"
     self.response_index = self.headers.index(self.response_header)
@@ -37,6 +38,13 @@ class ModelFactory(AbstractModelFactory):
     #TODO: Make this nicer, ye unholy PEP-traitor.
     self.trans_dict = {h:{v:i for i,v in enumerate(vals)} for h, vals in val_set.items() if h in headers_to_translate}
 
+    #TODO: Make this nicer.
+    self.normalizers = {h:{
+      "mean": len(val_set[h]) if all(type(e)==str for e in val_set[h]) else sum(r[i] for r in self.all_data)/float(len(self.all_data)),
+      "max": None if all(type(e)==str for e in val_set[h]) else max(val_set[h]),
+      "min": None if all(type(e)==str for e in val_set[h]) else min(val_set[h]),
+      } for i,h in enumerate(self.headers)}
+
     # If the response column is shifted by expanding categorical features,
     # update where the response index should be.
     response_col_shift = 0
@@ -49,7 +57,7 @@ class ModelFactory(AbstractModelFactory):
 
   def build(self, train_set): #TODO: Add a features-to-ignore option.
     # In case the class is a string, translate it.
-    translated_train_set = translate_dataset(self.response_index, train_set, self.trans_dict, self.headers)
+    translated_train_set = translate_dataset(self.response_index, train_set, self.trans_dict, self.headers, self.normalizers)
 
     train_matrix, train_labels = list_to_tf_input(translated_train_set, self.relative_response_index, self.num_labels)
     train_size, num_features = train_matrix.shape
@@ -79,7 +87,7 @@ class ModelFactory(AbstractModelFactory):
 
     # Optimization.
     cross_entropy = -tf.reduce_sum(y_*tf.log(y))
-    train_step = tf.train.GradientDescentOptimizer(0.01).minimize(cross_entropy)
+    train_step = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(cross_entropy)
 
     saver = tf.train.Saver()  # Defaults to saving all variables.
 
@@ -100,12 +108,12 @@ class ModelFactory(AbstractModelFactory):
         model_name="{}/{}_{}_{}.model".format(TMP_DIR, self.verbose_factory_name, self.factory_name, time.time())
         checkpoint = saver.save(tf_session, model_name, global_step=step+1)
 
-    return ModelVisitor(model_name, checkpoint, saver, self.response_header, self.response_index, self.relative_response_index, self.num_labels, x, y_, y, self.trans_dict, self.headers)
+    return ModelVisitor(model_name, checkpoint, saver, self.response_header, self.response_index, self.relative_response_index, self.num_labels, x, y_, y, self.trans_dict, self.headers, self.normalizers)
 
 
 class ModelVisitor(AbstractModelVisitor):
 
-  def __init__(self, model_name, checkpoint, model_saver, response_header, response_index, relative_response_index, num_labels, x, y_, y, trans_dict, headers):
+  def __init__(self, model_name, checkpoint, model_saver, response_header, response_index, relative_response_index, num_labels, x, y_, y, trans_dict, headers, normalizers):
     super(ModelVisitor,self).__init__(model_name)
     self.model_saver = model_saver
     self.checkpoint = checkpoint
@@ -118,9 +126,10 @@ class ModelVisitor(AbstractModelVisitor):
     self.y = y
     self.trans_dict = trans_dict
     self.headers = headers
+    self.normalizers = normalizers
 
   def test(self, test_set, test_name=""):
-    translated_test_set = translate_dataset(self.response_index, test_set, self.trans_dict, self.headers)
+    translated_test_set = translate_dataset(self.response_index, test_set, self.trans_dict, self.headers, self.normalizers)
 
     test_matrix, test_labels = list_to_tf_input(translated_test_set, self.relative_response_index, self.num_labels  )
 
@@ -141,7 +150,7 @@ def list_to_tf_input(data, response_index, num_labels):
 
   return matrix, labels_onehot
 
-def translate_dataset(response_index, data_set, trans_dict, headers):
+def translate_dataset(response_index, data_set, trans_dict, headers, normalizers):
   translated_set = []
   for i, row in enumerate(data_set):
     new_row = []
@@ -156,7 +165,9 @@ def translate_dataset(response_index, data_set, trans_dict, headers):
         val_list[translated] = 1
         new_row.extend(val_list)
       else:
-        new_row.append(val)
+        norm = normalizers[header]
+        normed = (val-norm["mean"])/(norm["max"]-norm["min"])
+        new_row.append(normed)
     translated_set.append(new_row)
   return translated_set
 

@@ -1,7 +1,7 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-import experiments.sample as experiment
-from model_factories.SVM_ModelFactory import ModelFactory
+import experiments.sample_2 as experiment
+from model_factories.TensorFlowModelFactory import ModelFactory
 from measurements import accuracy, complement_BER
 response_header = "Outcome"
 graph_measurers = [accuracy, complement_BER]
@@ -50,7 +50,7 @@ def run():
     if verbose:
       print "Calculating original model statistics on test data:"
       print "\tTraining Set:"
-      train_pred_tuples = model.test(test_set)
+      train_pred_tuples = model.test(train_set)
       train_conf_matrix = get_conf_matrix(train_pred_tuples)
       for measurer in graph_measurers:
         print "\t\t{}: {}".format(measurer.__name__, measurer(train_conf_matrix))
