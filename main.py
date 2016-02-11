@@ -1,9 +1,9 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-import experiments.sample as experiment
-from model_factories.SVM_ModelFactory import ModelFactory
+import experiments.arrests as experiment
+from model_factories.RecidivismTensorFlowModelFactory import ModelFactory
 from measurements import accuracy, complement_BER
-response_header = "Outcome"
+response_header = "Class"
 graph_measurers = [accuracy, complement_BER]
 rank_measurers = [accuracy, complement_BER]
 features_to_ignore = []
