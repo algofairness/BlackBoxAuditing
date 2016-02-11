@@ -4,38 +4,54 @@ from AbstractModelVisitor import AbstractModelVisitor
 import os
 import numpy as np
 import tensorflow as tf
+import time
 
 TMP_DIR = "tmp/"
-CHECKPOINT_DIR = "tmp/tensorflow_checkpoints/"
-for directory in [TMP_DIR, CHECKPOINT_DIR]:
-  if not os.path.exists(directory):
-    os.makedirs(directory)
-
+if not os.path.exists(TMP_DIR):
+  os.makedirs(TMP_DIR)
 
 class ModelFactory(AbstractModelFactory):
 
   def __init__(self, *args, **kwargs):
     super(ModelFactory, self).__init__(*args, **kwargs)
-    self.verbose_factory_name = "TensorFlow_Network"
 
-    self.num_epochs = 500
+    self.num_epochs = 2000
     self.batch_size = 500
-
-    self.response_index = self.headers.index(self.response_header)
-
-    possible_values = set(row[self.response_index] for row in self.all_data)
-    self.num_labels = len(possible_values)
-    self.response_dict = {val:i for i,val in enumerate(possible_values)}
-
-    self.hidden_layer_sizes = [50] # If empty, no hidden layers are used.
+    self.hidden_layer_sizes = [100] # If empty, no hidden layers are used.
     self.layer_types = [tf.nn.softmax,  # Input Layer
                         tf.nn.softmax]     # 2nd Hidden Layer
 
+    self.verbose_factory_name = "TensorFlow_Network"
+    self.response_index = self.headers.index(self.response_header)
+
+    #TODO: Make this nicer, ye unholy PEP-traitor.
+    val_set = {h:{r[i] for r in self.all_data} for i,h in enumerate(self.headers)}
+
+    # Mark any categorical features for column expansion.
+    headers_to_translate = []
+    for i, header in enumerate(self.headers):
+      categorical = all(type(val)==str for val in val_set[header])
+      if i == self.response_index or categorical:
+        headers_to_translate.append(header)
+
+    #TODO: Make this nicer, ye unholy PEP-traitor.
+    self.trans_dict = {h:{v:i for i,v in enumerate(vals)} for h, vals in val_set.items() if h in headers_to_translate}
+
+    # If the response column is shifted by expanding categorical features,
+    # update where the response index should be.
+    response_col_shift = 0
+    for header in self.headers[:self.response_index]:
+      if header in self.trans_dict:
+        response_col_shift += len(self.trans_dict[header])-1
+    self.relative_response_index = self.response_index + response_col_shift
+
+    self.num_labels = len(val_set[self.response_header])
+
   def build(self, train_set): #TODO: Add a features-to-ignore option.
     # In case the class is a string, translate it.
-    translated_train_set = translate_response(self.response_index, train_set, self.response_dict)
+    translated_train_set = translate_dataset(self.response_index, train_set, self.trans_dict, self.headers)
 
-    train_matrix, train_labels = list_to_tf_input(translated_train_set, self.response_index, self.num_labels)
+    train_matrix, train_labels = list_to_tf_input(translated_train_set, self.relative_response_index, self.num_labels)
     train_size, num_features = train_matrix.shape
 
     # Construct the layer architecture.
@@ -81,33 +97,38 @@ class ModelFactory(AbstractModelFactory):
         train_step.run(feed_dict={x: batch_data, y_: batch_labels})
 
         # Save the model file each step.
-        saver.save(tf_session, CHECKPOINT_DIR + 'model.ckpt', global_step=step+1)
+        model_name="{}/{}_{}_{}.model".format(TMP_DIR, self.verbose_factory_name, self.factory_name, time.time())
+        checkpoint = saver.save(tf_session, model_name, global_step=step+1)
 
-    return ModelVisitor(saver, self.response_index, self.num_labels, x, y_, y, self.response_dict)
+    return ModelVisitor(model_name, checkpoint, saver, self.response_header, self.response_index, self.relative_response_index, self.num_labels, x, y_, y, self.trans_dict, self.headers)
 
 
 class ModelVisitor(AbstractModelVisitor):
 
-  def __init__(self, model_saver, response_index, num_labels, x, y_, y, response_dict):
+  def __init__(self, model_name, checkpoint, model_saver, response_header, response_index, relative_response_index, num_labels, x, y_, y, trans_dict, headers):
+    super(ModelVisitor,self).__init__(model_name)
     self.model_saver = model_saver
+    self.checkpoint = checkpoint
     self.response_index = response_index
+    self.response_header = response_header
+    self.relative_response_index = relative_response_index
     self.num_labels = num_labels
     self.x = x
     self.y_ = y_
     self.y = y
-    self.response_dict = response_dict
+    self.trans_dict = trans_dict
+    self.headers = headers
 
   def test(self, test_set, test_name=""):
-    translated_test_set = translate_response(self.response_index, test_set, self.response_dict)
+    translated_test_set = translate_dataset(self.response_index, test_set, self.trans_dict, self.headers)
 
-    test_matrix, test_labels = list_to_tf_input(translated_test_set, self.response_index, self.num_labels  )
+    test_matrix, test_labels = list_to_tf_input(translated_test_set, self.relative_response_index, self.num_labels  )
 
     with tf.Session() as tf_session:
-      ckpt = tf.train.get_checkpoint_state(CHECKPOINT_DIR)
-      self.model_saver.restore(tf_session, ckpt.model_checkpoint_path)
+      self.model_saver.restore(tf_session, self.checkpoint)
       predictions = tf.argmax(self.y, 1).eval(feed_dict={self.x: test_matrix, self.y_:test_labels}, session=tf_session)
 
-    predictions_dict = {i:key for key,i in self.response_dict.items()}
+    predictions_dict = {i:key for key,i in self.trans_dict[self.response_header].items()}
     predictions = [predictions_dict[pred] for pred in predictions]
 
     return zip([row[self.response_index] for row in test_set], predictions)
@@ -120,19 +141,30 @@ def list_to_tf_input(data, response_index, num_labels):
 
   return matrix, labels_onehot
 
-def translate_response(response_index, data_set, response_dict):
+def translate_dataset(response_index, data_set, trans_dict, headers):
   translated_set = []
-  for row in data_set:
-    response = row[response_index]
-    translation = response_dict[response]
-    new_row = row[:response_index]+[translation]+row[response_index+1:]
+  for i, row in enumerate(data_set):
+    new_row = []
+    for j, val in enumerate(row):
+      header = headers[j]
+      if j==response_index:
+        translated = trans_dict[header][val]
+        new_row.append(translated)
+      elif header in trans_dict:
+        translated = trans_dict[header][val]
+        val_list = [0]* len(trans_dict[header])
+        val_list[translated] = 1
+        new_row.extend(val_list)
+      else:
+        new_row.append(val)
     translated_set.append(new_row)
   return translated_set
 
 def test():
+  test_categorical_model()
+  test_categorical_response()
   test_list_to_tf_input()
   test_basic_model()
-  test_categorical_model()
 
 def test_list_to_tf_input():
   data = [[0,0],[0,1],[0,2]]
@@ -160,11 +192,29 @@ def test_basic_model():
   intended_predictions = [(row[resp_index], row[resp_index]) for row in test_set]
   print "predicting numeric categories correctly? -- ", predictions == intended_predictions
 
-def test_categorical_model():
+def test_categorical_response():
   headers = ["predictor 1", "predictor 2", "response"]
   response = "response"
   train_set = [[i,0,"A"] for i in range(1,50)] + [[0,i,"B"] for i in range(1,50)]
   test_set = [[i,0,"A"] for i in range(1,50)] + [[0,i,"C"] for i in range(1,50)]
+  all_data = train_set + test_set
+
+  factory = ModelFactory(all_data, headers, response, name_prefix="test")
+  print "factory settings valid? -- ",len(factory.hidden_layer_sizes)+1 == len(factory.layer_types)
+
+  model = factory.build(train_set)
+  print "factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor)
+
+  predictions = model.test(test_set)
+  resp_index = headers.index(response)
+  intended_predictions = [(test_row[resp_index], train_row[resp_index]) for train_row, test_row in zip(train_set,test_set)]
+  print "predicting string-categories correctly? -- ", predictions == intended_predictions
+
+def test_categorical_model():
+  headers = ["predictor", "response"]
+  response = "response"
+  train_set = [["A","A"] for i in range(1,50)] + [["B","B"] for i in range(1,50)]
+  test_set = [["A","A"] for i in range(1,50)] + [["B","C"] for i in range(1,50)]
   all_data = train_set + test_set
 
   factory = ModelFactory(all_data, headers, response, name_prefix="test")
