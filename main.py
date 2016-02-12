@@ -1,9 +1,9 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-import experiments.sample as experiment
-from model_factories.TensorFlowModelFactory import ModelFactory
+import experiments.DRP_old as experiment
+from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy, complement_BER
-response_header = "Outcome"
+response_header = "outcome"
 graph_measurers = [accuracy, complement_BER]
 rank_measurers = [accuracy, complement_BER]
 features_to_ignore = []
@@ -52,12 +52,14 @@ def run():
       print "\tTraining Set:"
       train_pred_tuples = model.test(train_set)
       train_conf_matrix = get_conf_matrix(train_pred_tuples)
+      print "\t\tConf-Matrix:", train_conf_matrix
       for measurer in graph_measurers:
         print "\t\t{}: {}".format(measurer.__name__, measurer(train_conf_matrix))
 
       print "\tTesting Set:"
       test_pred_tuples = model.test(test_set)
       test_conf_matrix = get_conf_matrix(test_pred_tuples)
+      print "\t\tConf-Matrix", test_conf_matrix
       for measurer in graph_measurers:
         print "\t\t{}: {}".format(measurer.__name__, measurer(test_conf_matrix))
 
@@ -144,13 +146,13 @@ def run():
     f.write("Model Type: {}\n".format(model_factory.verbose_factory_name))
     f.write("Train Size: {}\n".format(len(train_set)))
     f.write("Test Size: {}\n".format(len(test_set)))
-    f.write("Non-standard Ignored Features: {}".format(features_to_ignore))
-    f.write("Features: {}\n".format(headers))
+    f.write("Non-standard Ignored Features: {}\n".format(features_to_ignore))
+    f.write("Features: {}\n\n".format(headers))
 
     for ranker, ranks in ranked_features:
       f.write("Ranked Features by {}: {}\n".format(ranker.__name__, ranks))
       groups = group_audit_ranks(audit_filenames, ranker)
-      f.write("  Approx. Trend Groups: {}\n".format(groups))
+      f.write("\tApprox. Trend Groups: {}\n".format(groups))
 
   vprint("Summary file written to: {}".format(summary_file), verbose)
 
