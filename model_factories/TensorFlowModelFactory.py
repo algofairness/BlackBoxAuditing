@@ -15,12 +15,12 @@ class ModelFactory(AbstractModelFactory):
   def __init__(self, *args, **kwargs):
     super(ModelFactory, self).__init__(*args, **kwargs)
 
-    self.num_epochs = 500
+    self.num_epochs = 1500
     self.batch_size = 300
-    self.learning_rate = 0.01
-    self.hidden_layer_sizes = [] # If empty, no hidden layers are used.
-    self.layer_types = [tf.nn.softmax,  # Input Layer
-                        ]#tf.nn.softmax]     # 2nd Hidden Layer
+    self.learning_rate = 0.001
+    self.hidden_layer_sizes = [50] # If empty, no hidden layers are used.
+    self.layer_types = [tf.nn.tanh,  # Input Layer
+                        tf.nn.softmax]     # 2nd Hidden Layer
 
     self.verbose_factory_name = "TensorFlow_Network"
     self.response_index = self.headers.index(self.response_header)

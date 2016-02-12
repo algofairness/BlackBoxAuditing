@@ -18,7 +18,7 @@ ignored_headers = ["notes", "rxnSpaceHash1_drpxxhash_0.02/0.4.3","reaction_ptr",
 
 unknown_tokens = {"?", ""}
 train_percentage = 2.0/3.0
-max_entries = 3500
+max_entries = None
 filename = "test_data/DRP.csv"
 
 remove_constant_features = True
