@@ -1,9 +1,9 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-import experiments.DRP_old as experiment
+import experiments.sample as experiment
 from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy, complement_BER
-response_header = "outcome"
+response_header = "Outcome"
 graph_measurers = [accuracy, complement_BER]
 rank_measurers = [accuracy, complement_BER]
 features_to_ignore = []
@@ -20,6 +20,7 @@ WRITE_OVERVIEW_PREDICTIONS = True
 from loggers import vprint
 from GradientFeatureAuditor import GradientFeatureAuditor
 from audit_reading import graph_audit, graph_audits, rank_audit_files, group_audit_ranks
+from make_prediction_similarity_graph import graph_prediction_changes
 from measurements import get_conf_matrix
 from datetime import datetime
 import csv
@@ -132,6 +133,10 @@ def run():
     ranks = rank_audit_files(audit_filenames, rank_measurer)
     vprint("Ranked Features: {}".format(ranks), verbose)
     ranked_features.append( (rank_measurer, ranks) )
+
+  # Store a graph of how many predictions change as features are repaired.
+  output_image = auditor.OUTPUT_DIR + "/similarity_to_original_predictions.png"
+  graph_prediction_changes(auditor.OUTPUT_DIR, output_image)
 
   end_time = datetime.now()
 
