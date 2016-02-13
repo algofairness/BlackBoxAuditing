@@ -1,6 +1,5 @@
 from splitters import split_by_percent
 import csv
-import random
 
 train_percentage = 2.0/3.0
 #train_percentage = 0.8
