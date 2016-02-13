@@ -20,7 +20,7 @@ WRITE_OVERVIEW_PREDICTIONS = True
 from loggers import vprint
 from GradientFeatureAuditor import GradientFeatureAuditor
 from audit_reading import graph_audit, graph_audits, rank_audit_files, group_audit_ranks
-from make_prediction_similarity_graph import graph_prediction_changes
+from consistency_graph import graph_prediction_consistency
 from measurements import get_conf_matrix
 from datetime import datetime
 import csv
@@ -137,7 +137,7 @@ def run():
   # Store a graph of how many predictions change as features are repaired.
   vprint("Graphing prediction changes throughout repair.",verbose)
   output_image = auditor.OUTPUT_DIR + "/similarity_to_original_predictions.png"
-  graph_prediction_changes(auditor.OUTPUT_DIR, output_image)
+  graph_prediction_consistency(auditor.OUTPUT_DIR, output_image)
 
   end_time = datetime.now()
 

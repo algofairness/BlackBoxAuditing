@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from os import listdir
 from os.path import isfile, join
 
-def graph_prediction_changes(directory, output_image_file):
+def graph_prediction_consistency(directory, output_image_file):
   only_files = [f for f in listdir(directory) if isfile(join(directory, f))]
   preds = ["{}/{}".format(directory, f) for f in only_files if ".predictions" in f]
 
@@ -85,5 +85,5 @@ def similarity_to_original_preds(orig_pred_tups, new_pred_tups):
 if __name__=="__main__":
   directory = sys.argv[1]
   output_image = directory + "similarity_to_original_predictions.png"
-  graph_prediction_changes(directory, output_image)
+  graph_prediction_consistency(directory, output_image)
   print "Written to: {}".format(output_image)
