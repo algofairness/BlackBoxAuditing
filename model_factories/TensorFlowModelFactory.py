@@ -13,14 +13,28 @@ if not os.path.exists(TMP_DIR):
 class ModelFactory(AbstractModelFactory):
 
   def __init__(self, *args, **kwargs):
-    super(ModelFactory, self).__init__(*args, **kwargs)
+    self.num_epochs = 100
+    self.batch_size = 100
+    self.learning_rate = 0.01
+    self.hidden_layer_sizes = [] # If empty, no hidden layers are used.
+    self.layer_types = [tf.nn.softmax] # The first layer is the input layer.
 
-    self.num_epochs = 1500
-    self.batch_size = 300
-    self.learning_rate = 0.001
-    self.hidden_layer_sizes = [50] # If empty, no hidden layers are used.
-    self.layer_types = [tf.nn.tanh,  # Input Layer
-                        tf.nn.softmax]     # 2nd Hidden Layer
+    if "options" in kwargs:
+      options = kwargs["options"]
+      if "num_epochs"  in options:
+        self.num_epochs = options.pop("num_epochs")
+      if "batch_size"  in options:
+        self.batch_size = options.pop("batch_size")
+      if "learning_rate"  in options:
+        self.learning_rate = options.pop("learning_rate")
+      if "hidden_layer_sizes"  in options:
+        self.hidden_layer_sizes = options.pop("hidden_layer_sizes")
+      if "layer_types"  in options:
+        # Import the appropriate layer.
+        layer_names = options.pop("layer_types")
+        self.layer_types = [getattr(tf.nn, layer) for layer in layer_names]
+
+    super(ModelFactory, self).__init__(*args, **kwargs)
 
     self.verbose_factory_name = "TensorFlow_Network"
     self.response_index = self.headers.index(self.response_header)

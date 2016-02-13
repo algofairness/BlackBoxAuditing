@@ -1,12 +1,13 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
 import experiments.sample as experiment
-from model_factories.SVM_ModelFactory import ModelFactory
+from model_factories.TensorFlowModelFactory import ModelFactory
 from measurements import accuracy, complement_BER
 response_header = "Outcome"
 graph_measurers = [accuracy, complement_BER]
 rank_measurers = [accuracy, complement_BER]
 features_to_ignore = []
+model_options = {"layer_types":["softmax"]}
 
 verbose = True # Set to `True` to allow for more detailed status updates.
 REPAIR_STEPS = 10
@@ -41,7 +42,8 @@ def run():
 
   all_data = train_set + test_set
   model_factory = ModelFactory(all_data, headers, response_header,
-                               features_to_ignore=features_to_ignore)
+                               features_to_ignore=features_to_ignore,
+                               options=model_options)
 
   if not RETRAIN_MODEL_PER_REPAIR:
     vprint("Training initial model.",verbose)

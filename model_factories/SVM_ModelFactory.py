@@ -3,12 +3,19 @@ from AbstractWekaModelFactory import AbstractWekaModelFactory, AbstractWekaModel
 class ModelFactory(AbstractWekaModelFactory):
 
   def __init__(self, *args, **kwargs):
+
+    # Use the specified kernel if specified, or else use WEKA's default.
+    self.kernel = ""
+    if "options" in kwargs:
+      options = kwargs["options"]
+      if "kernel" in options:
+        self.kernel = options.pop("kernel")
+
     super(ModelFactory, self).__init__(*args,**kwargs)
+
     self.model_visitor_type = ModelVisitor
     self.verbose_factory_name = "Support_Vector_Machine"
 
-    self.kernel = "" # Weka defaults to a traditional linear classifier.
-    #self.kernel = "weka.classifiers.functions.supportVector.Puk -O 0.5 -S 7"
     command = "weka.classifiers.functions.SMO"
 
     # If a kernel option is listed, include it in the command.
