@@ -19,11 +19,10 @@ def graph_prediction_changes(directory, output_image_file):
   file_groups = {}
   for pred in preds:
     if any(i in pred for i in ignored): continue
-    feature = pred[len(directory)+1:pred.index(delim)] # Cut off the extra
+    feature = pred[len(directory)+1:pred.index(delim)] # Extract the feature name.
     if feature not in file_groups:
       file_groups[feature] = []
     file_groups[feature].append(pred)
-    file_groups[feature].sort()
 
   pred_groups = {}
   for feature, filenames in file_groups.items():
@@ -34,6 +33,7 @@ def graph_prediction_changes(directory, output_image_file):
       second_delim = filename.index(".predictions")
       repair_level = float(filename[first_delim:second_delim])
       pred_groups[feature].append( (repair_level, preds) )
+    pred_groups[feature].sort(key=lambda tup: tup[0]) # Sort by repair level.
 
   features = []
   y_axes = []

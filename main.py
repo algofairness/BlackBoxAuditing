@@ -131,10 +131,11 @@ def run():
     ranked_graph_filename = "{}/{}.png".format(auditor.OUTPUT_DIR, rank_measurer.__name__)
     graph_audits(audit_filenames, rank_measurer, ranked_graph_filename)
     ranks = rank_audit_files(audit_filenames, rank_measurer)
-    vprint("Ranked Features: {}".format(ranks), verbose)
+    vprint("\tRanked Features: {}".format(ranks), verbose)
     ranked_features.append( (rank_measurer, ranks) )
 
   # Store a graph of how many predictions change as features are repaired.
+  vprint("Graphing prediction changes throughout repair.",verbose)
   output_image = auditor.OUTPUT_DIR + "/similarity_to_original_predictions.png"
   graph_prediction_changes(auditor.OUTPUT_DIR, output_image)
 
