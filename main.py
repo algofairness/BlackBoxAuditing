@@ -4,15 +4,14 @@ import experiments.sample as experiment
 from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy, complement_BER
 response_header = "Outcome"
-graph_measurers = [accuracy, complement_BER]
-rank_measurers = [accuracy, complement_BER]
+measurers = [accuracy, complement_BER]
 features_to_ignore = []
-model_options = {} # See your specified ModelFactory for available options.
+model_options = {} # See your chosen ModelFactory for available options.
 
 verbose = True # Set to `True` to allow for more detailed status updates.
 REPAIR_STEPS = 10
 RETRAIN_MODEL_PER_REPAIR = False
-WRITE_OVERVIEW_PREDICTIONS = True
+WRITE_ORIGINAL_PREDICTIONS = True
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # NOTE: You should not need to change anything below this point.
@@ -56,14 +55,14 @@ def run():
       train_pred_tuples = model.test(train_set)
       train_conf_matrix = get_conf_matrix(train_pred_tuples)
       print "\t\tConf-Matrix:", train_conf_matrix
-      for measurer in graph_measurers:
+      for measurer in measurers:
         print "\t\t{}: {}".format(measurer.__name__, measurer(train_conf_matrix))
 
       print "\tTesting Set:"
       test_pred_tuples = model.test(test_set)
       test_conf_matrix = get_conf_matrix(test_pred_tuples)
       print "\t\tConf-Matrix", test_conf_matrix
-      for measurer in graph_measurers:
+      for measurer in measurers:
         print "\t\t{}: {}".format(measurer.__name__, measurer(test_conf_matrix))
 
 
@@ -91,7 +90,7 @@ def run():
     for row in train_set:
       writer.writerow(row)
 
-  if WRITE_OVERVIEW_PREDICTIONS:
+  if WRITE_ORIGINAL_PREDICTIONS:
     # Dump the predictions on the test data.
     with open(train_dump + ".predictions", "w") as f:
       writer = csv.writer(f)
@@ -109,7 +108,7 @@ def run():
     for row in test_set:
       writer.writerow(row)
 
-  if WRITE_OVERVIEW_PREDICTIONS:
+  if WRITE_ORIGINAL_PREDICTIONS:
     # Dump the predictions on the test data.
     with open(test_dump + ".predictions", "w") as f:
       writer = csv.writer(f)
@@ -125,16 +124,16 @@ def run():
   vprint("Graphing audit files.",verbose)
   for audit_filename in audit_filenames:
     audit_image_filename = audit_filename + ".png"
-    graph_audit(audit_filename, graph_measurers, audit_image_filename)
+    graph_audit(audit_filename, measurers, audit_image_filename)
 
   ranked_features = []
-  for rank_measurer in rank_measurers:
-    vprint("Ranking audit files by {}.".format(rank_measurer.__name__),verbose)
-    ranked_graph_filename = "{}/{}.png".format(auditor.OUTPUT_DIR, rank_measurer.__name__)
-    graph_audits(audit_filenames, rank_measurer, ranked_graph_filename)
-    ranks = rank_audit_files(audit_filenames, rank_measurer)
-    vprint("\tRanked Features: {}".format(ranks), verbose)
-    ranked_features.append( (rank_measurer, ranks) )
+  for measurer in measurers:
+    vprint("Ranking audit files by {}.".format(measurer.__name__),verbose)
+    ranked_graph_filename = "{}/{}.png".format(auditor.OUTPUT_DIR, measurer.__name__)
+    graph_audits(audit_filenames, measurer, ranked_graph_filename)
+    ranks = rank_audit_files(audit_filenames, measurer)
+    vprint("\t{}".format(ranks), verbose)
+    ranked_features.append( (measurer, ranks) )
 
   # Store a graph of how many predictions change as features are repaired.
   vprint("Graphing prediction changes throughout repair.",verbose)

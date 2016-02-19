@@ -1,65 +1,39 @@
 from splitters import split_by_percent
-import csv
-import random
+from collections import OrderedDict
 
-from example_headers import example_headers
-str_headers = ["boolean_crystallisation_outcome_manual_0"]
-ignored_headers = ["notes", "rxnSpaceHash1_drpxxhash_0.02/0.4.3","reaction_ptr",
-                   "labGroup", "user", "insertedDateTime", "performedDateTime",
-                   "performedBy", "reference", "recommendation", "id",
-                   "compound_0", "compound_0_role","compound_1", "compound_1_role",
-                   "compound_2", "compound_2_role","compound_3", "compound_3_role",
-                   "compound_4", "compound_4_role", "duplicateOf",
-                   "crystallisation_outcome_manual_0",
-                   "crystallisation_purity_outcome_manual_0",
-                   "legacyRecommendedFlag", "valid", "public",
-                   #"boolean_crystallisation_outcome_manual_0"]
-                   ] + example_headers
-
-unknown_tokens = {"?", ""}
+train_filename = "test_data/DRP_old_train.arff"
+test_filename = "test_data/DRP_old_test.arff"
+response = "outcome"
 train_percentage = 2.0/3.0
-max_entries = None
-filename = "test_data/DRP.csv"
-
-remove_constant_features = True
 
 def load_data():
-  with open(filename) as f:
-    reader = csv.reader(f)
-    data = [row for row in reader]
-    headers = data.pop(0)
+  header_types = OrderedDict()
+  data = []
+  with open(train_filename) as f:
+    for line in f:
+      if "@ATTRIBUTE" in line:
+        _, header, arff_type = line.split()
+        header_types[header] = float if arff_type=="NUMERIC" else str
+      else:
+        row = line[:-1].split(",") #TODO: This is a naive way of splitting, captain.
+        row = [header_types[h](v) for h,v in zip(header_types, row)]
+        data.append(row)
 
-    # Assign the appropriate types to each header.
-    correct_types = {h:float for h in headers}
-    for h in str_headers: correct_types[h] = str
+  with open(train_filename) as f:
+    for line in f:
+      if "@ATTRIBUTE" not in line:
+        row = line[:-1].split(",") #TODO: This is a naive way of splitting, captain.
+        row = [header_types[h](v) for h,v in zip(header_types, row)]
+        data.append(row)
 
-    # Remove unhelpful headers from the dataset.
-    ignored_indices = {headers.index(header) for header in ignored_headers}
-    headers = [h for i,h in enumerate(headers) if i not in ignored_indices]
-    data = [[e for i,e in enumerate(row) if i not in ignored_indices] for row in data]
+  headers = header_types.keys()
 
-    # Correct data-types
-    for i, row in enumerate(data):
-      for j, header in enumerate(headers):
-        correct_type = correct_types[header]
-        data[i][j] = correct_type(row[j]) if row[j] not in unknown_tokens else -1.0
+  # Translate the response into a binary.
+  index = headers.index(response)
+  translate = lambda row: row[:index] + ["1" if row[index] in "34" else "0"] + row[index+1:]
+  data = map(translate, data)
 
-    # Remove features that only have a single value (if specified).
-    if remove_constant_features:
-      constant_features = []
-      for i in xrange(len(headers)):
-        col = [row[i] for row in data]
-        if len(set(col)) == 1:
-          constant_features.append(i)
-
-      data = [[e for i,e in enumerate(row) if i not in constant_features] for row in data]
-      headers = [h for i,h in enumerate(headers) if i not in constant_features]
-
-    # Limit data size
-    if max_entries:
-      data = random.sample(data, max_entries)
-
-    train, test = split_by_percent(data, train_percentage)
+  train, test = split_by_percent(data, train_percentage)
 
   return headers, train, test
 
