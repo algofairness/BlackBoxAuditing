@@ -84,6 +84,6 @@ def similarity_to_original_preds(orig_pred_tups, new_pred_tups):
 
 if __name__=="__main__":
   directory = sys.argv[1]
-  output_image = directory + "similarity_to_original_predictions.png"
+  output_image = directory + "/similarity_to_original_predictions.png"
   graph_prediction_consistency(directory, output_image)
   print "Written to: {}".format(output_image)
