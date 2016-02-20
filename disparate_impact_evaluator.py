@@ -2,103 +2,76 @@
 #       across experiments on different datasets and ML model types.
 
 from disparate_impact import disparate_impact
-
-import experiments.arrests as experiment
-from model_factories.J48_ModelFactory import ModelFactory
-from measurements import accuracy
+from consistency_graph import *
 
 
-response_header = "Classarrests"
-graph_measurers = [accuracy]
-rank_measurer = accuracy
-features_to_ignore = []
+from os import listdir
+from os.path import isfile, join
 
-verbose = True # Set to `True` to allow for more detailed status updates.
-save_repaired_data = True # Set to `True` to allow repaired data to be saved.
-save_predictions_details = True # Set to `True` to save per-entry prediction info.
+def load_trip_from_predictions(filename):
+  with open(filename) as f:
+    reader = csv.reader(f)
+    reader.next # Skip the headers.
+    return [(f,r,p) for f,r,p in reader]
+def graph_disparate_impact(directory, output_image_file):
+  only_files = [f for f in listdir(directory) if isfile(join(directory, f))]
+  preds = ["{}/{}".format(directory, f) for f in only_files if ".predictions" in f]
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# NOTE: You should not need to change anything below this point.
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  delim = ".audit.repaired_"
 
-from loggers import vprint
-from GradientFeatureAuditor import GradientFeatureAuditor
-from audit_reading import graph_audit, graph_audits, rank_audit_files
-from measurements import get_conf_matrix
-from datetime import datetime
+  ignored = ["original_train_data.predictions", "original_test_data.predictions"]
 
-def run():
+  file_groups = {}
+  for pred in preds:
+    if any(i in pred for i in ignored): continue
+    feature = pred[len(directory)+1:pred.index(delim)] # Extract the feature name.
+    if feature not in file_groups:
+      file_groups[feature] = []
+    file_groups[feature].append(pred)
 
-  start_time = datetime.now()
+  pred_groups = {}
+  for feature, filenames in file_groups.items():
+    pred_groups[feature] = []
+    for filename in filenames:
+      preds = load_trip_from_predictions(filename)
+      first_delim = filename.index(delim)+len(delim)
+      second_delim = filename.index(".predictions")
+      repair_level = float(filename[first_delim:second_delim])
+      pred_groups[feature].append( (repair_level, preds) )
+    pred_groups[feature].sort(key=lambda tup: tup[0]) # Sort by repair level.
 
-  headers, train_set, test_set = experiment.load_data()
+  protected_groups = ["BLACK", "UNKNOWN", "ASIAN/PACIFIC ISLANDER", "AMERICAN INDIAN/ALEUTIAN"]
+  unprotected_group = "WHITE"
+  features = []
+  y_axes = []
+  for feature, pred_tups in pred_groups.items():
+    if feature == "RACE":
+      for protected_group in protected_groups:
+        #TODO Figure out how to categorize feature values
+        x_axis = [rep_level for rep_level,_ in pred_tups]
+        #y_axis = [similarity_to_original_preds(orig, tups) for _, tups in pred_tups]
+        y_axis = [disparate_impact(triples[1:], unprotected_group, protected_group) for _,triples in pred_tups]    
+        #triples[0] = (Pre-Repaired Feature,Response,Prediction)
+        #triples[1] = (WHITE,1,1)
+        plt.plot(x_axis, y_axis, label=protected_group)
+        features.append(protected_group)
+        y_axes.append(y_axis)
 
-  """
-   ModelFactories require a `build` method that accepts some training data
-   with which to train a brand new model. This `build` method should output
-   a Model object that has a `test` method -- which, when given test data
-   in the same format as the training data, yields a confusion table detailing
-   the correct and incorrect predictions of the model.
-  """
+      # Format and save the graph to an image file.
+      plt.title("Disparate Impact")
+      plt.axis([0,1,0,1.8]) # Make all the plots consistently sized.
+      plt.xlabel("Repair Level")
+      plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+      plt.savefig(output_image_file, bbox_inches='tight')
+      plt.clf() # Clear the entire figure so future plots are empty.
 
-  vprint("Training initial model.",verbose)
-  all_data = train_set + test_set
-  model_factory = ModelFactory(all_data, headers, response_header)
-  model = model_factory.build(train_set)
-  
-
-  # Check the quality of the initial model on verbose runs.
-  if verbose:
-    pred_tuples = model.test(test_set)
-    conf_matrix = get_conf_matrix(pred_tuples)
-    
-    for measurer in graph_measurers:
-      print "\t{}: {}".format(measurer.__name__, measurer(conf_matrix))
-
-  # Don't audit the response feature.
-  features_to_ignore.append(response_header)
-
-  # Translate the headers into indexes for the auditor.
-  feature_indexes_to_ignore = [headers.index(f) for f in features_to_ignore]
-
-  # Perform the Gradient Feature Audit and dump the audit results into files.
-  auditor = GradientFeatureAuditor(model, headers, train_set, test_set,
-                                   features_to_ignore=feature_indexes_to_ignore,
-                                   save_repaired_data=save_repaired_data,
-                                   save_prediction_details=save_predictions_details)
-  audit_filenames = auditor.audit(verbose=verbose)
-
-  # Graph the audit files.
-  vprint("Graphing audit files.",verbose)
-  for audit_filename in audit_filenames:
-    audit_image_filename = audit_filename + ".png"
-    graph_audit(audit_filename, graph_measurers, audit_image_filename)
-
-  ranked_graph_filename = "{}/{}.png".format(auditor.OUTPUT_DIR, rank_measurer.__name__)
-  graph_audits(audit_filenames, rank_measurer, ranked_graph_filename)
-
-  vprint("Ranking audit files.",verbose)
-  ranked_features = rank_audit_files(audit_filenames, rank_measurer)
-  vprint("Ranked Features: {}".format(ranked_features), verbose)
-
-  end_time = datetime.now()
-
-  # Store a summary of this experiment.
-  summary_file = "{}/summary.txt".format(auditor.OUTPUT_DIR)
-  with open(summary_file, "w") as f:
-    f.write("Experiment Location: {}".format(experiment.__file__))
-    f.write("Audit Start Time: {}\n".format(start_time))
-    f.write("Audit End Time: {}\n".format(end_time))
-    f.write("Model Type: {}\n".format(model_factory.verbose_factory_name))
-    f.write("Train Size: {}\n".format(len(train_set)))
-    f.write("Test Size: {}\n".format(len(test_set)))
-    f.write("Features: {}\n".format(headers))
-    f.write("Ranked Features: {}\n".format(ranked_features))
-  vprint("Summary file written to: {}".format(summary_file), verbose)
-
-
-def test():
-  print "No tests yet"
+      # Save the data used to generate that image file.
+      with open(output_image_file + ".data", "w") as f:
+        writer = csv.writer(f)
+        headers = ["Repair Level"] + features
+        writer.writerow(headers)
+        for i, repair_level in enumerate(x_axis):
+          writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
 
 if __name__=="__main__":
-  test()
+  graph_disparate_impact("audits/1455586474.33", "disparate_impact_graphs/graph")
