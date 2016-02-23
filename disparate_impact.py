@@ -29,7 +29,7 @@ def disparate_impact(list_of_triples, nonprotected_group, protected_group):
 			group_x[i] = 1
 			if response[i] == 0:
 				group_x_and_a[i] = 1
-		elif group == protected_group:
+		if group == protected_group:
 			group_y[i] = 1 
 			if response[i] == 0:
 				group_y_and_a[i] = 1
