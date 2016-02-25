@@ -1,6 +1,6 @@
 # Black Box Auditing
 
-This repository contains a sample implementation of Gradient Feature Auditing (GFA) meant to be generalizable to most datasets.
+This repository contains a sample implementation of Gradient Feature Auditing (GFA) meant to be generalizable to most datasets.  For more information on the repair process, see our paper on [Certifying and Removing Disparate Impact](http://arxiv.org/abs/1412.3756).  For information on the full auditing process, see our paper on [Auditing Black-box Models by Obscuring Features](http://arxiv.org/abs/1602.07043).
 
 To run GFA on a dataset, use the `main.py` file. The top few lines of that file dictate what machine-learning technique is to be used (the "model factory"), what dataset should be loaded (the "experiment"), and what the response-feature of the data-set is. You also may specify certain dataset features to ignore in the training/auditing process, as well as which "measurers" you would like to use for GFA.
 
