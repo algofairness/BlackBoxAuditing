@@ -44,7 +44,7 @@ Dataset Sources:
  - Arrests/Recidivism Datasets [link](http://www.icpsr.umich.edu/icpsrweb/RCMD/studies/3355)
  - Linear Datasets ("sample_2" Experiment) [link](https://github.com/jasonbaldridge/try-tf)
 
-More information on DRP can be found at [Dark Reactions Project Moodle Group](https://moodlegroups.haverford.edu/course/view.php?id=65).
+More information on DRP can be found at the [Dark Reactions Project](http://darkreactions.haverford.edu/) official site.
 
 # Bug Reports and Feature-Requests
 
