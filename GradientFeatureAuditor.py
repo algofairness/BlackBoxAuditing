@@ -83,11 +83,12 @@ def _audit_worker(params):
 
 class GradientFeatureAuditor(object):
   def __init__(self, model_or_factory, headers, train_set, test_set, repair_steps=10,
-                features_to_ignore = []):
+                features_to_ignore = [], features_to_skip = []):
     self.repair_steps = repair_steps
     self.model_or_factory = model_or_factory
     self.headers = headers
     self.features_to_ignore = features_to_ignore
+    self.features_to_skip = features_to_skip
     self.AUDIT_DIR = "audits"
     self.OUTPUT_DIR = "{}/{}".format(self.AUDIT_DIR, time.time())
 
@@ -137,10 +138,14 @@ class GradientFeatureAuditor(object):
 
   def audit(self, verbose=False):
     features_to_audit = [h for i, h in enumerate(self.headers) if i not in self.features_to_ignore]
+    num_features_to_audit = len(features_to_audit) - len(self.features_to_skip)
 
     output_files = []
     for i, feature in enumerate(features_to_audit):
-      message = "Auditing: '{}' ({}/{}).".format(feature,i+1,len(features_to_audit))
+      if feature in self.features_to_skip:
+        continue
+
+      message = "Auditing: '{}' ({}/{}).".format(feature,i+1,num_features_to_audit)
       vprint(message, verbose)
 
       cleaned_feature_name = feature.replace(".","_").replace(" ","_")

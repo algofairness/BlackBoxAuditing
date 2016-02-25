@@ -9,7 +9,7 @@ import csv
 import os
 import time
 
-WEKA_PATH = "/usr/share/java/weka.jar"
+WEKA_PATH = "../weka-3-6-13/weka.jar"
 TMP_DIR = "tmp/"
 
 if not os.path.isfile(WEKA_PATH):

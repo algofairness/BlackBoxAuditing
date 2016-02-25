@@ -1,11 +1,13 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-import experiments.sample as experiment
+import experiments.sor as experiment
 from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy, complement_BER
-response_header = "Outcome"
+response_header = "incarcerated"
 measurers = [accuracy, complement_BER]
-features_to_ignore = []
+model_features_to_ignore = []
+audit_features_to_ignore = []
+audit_features_to_skip = ["yearofbirth","height","weight","haircolor","eyecolor","county","crime","convictionstate"]
 model_options = {} # See your chosen ModelFactory for available options.
 
 verbose = True # Set to `True` to allow for more detailed status updates.
@@ -41,7 +43,7 @@ def run():
 
   all_data = train_set + test_set
   model_factory = ModelFactory(all_data, headers, response_header,
-                               features_to_ignore=features_to_ignore,
+                               features_to_ignore=model_features_to_ignore,
                                options=model_options)
 
   if not RETRAIN_MODEL_PER_REPAIR:
@@ -71,7 +73,7 @@ def run():
     model_or_factory = model_factory
 
   # Translate the headers into indexes for the auditor.
-  audit_indices_to_ignore = [headers.index(f) for f in features_to_ignore]
+  audit_indices_to_ignore = [headers.index(f) for f in audit_features_to_ignore]
 
   # Don't audit the response feature.
   audit_indices_to_ignore.append(headers.index(response_header))
@@ -79,7 +81,8 @@ def run():
   # Prepare the auditor.
   auditor = GradientFeatureAuditor(model_or_factory, headers, train_set, test_set,
                                    repair_steps=REPAIR_STEPS,
-                                   features_to_ignore=audit_indices_to_ignore)
+                                   features_to_ignore=audit_indices_to_ignore,
+                                   features_to_skip=audit_features_to_skip)
 
   vprint("Dumping original training data.", verbose)
   # Dump the train data to the log.
@@ -153,7 +156,8 @@ def run():
     f.write("Model Type: {}\n".format(model_factory.verbose_factory_name))
     f.write("Train Size: {}\n".format(len(train_set)))
     f.write("Test Size: {}\n".format(len(test_set)))
-    f.write("Non-standard Ignored Features: {}\n".format(features_to_ignore))
+    f.write("Model Ignored Features: {}\n".format(model_features_to_ignore))
+    f.write("Audit Ignored Features: {}\n".format(audit_features_to_ignore))
     f.write("Features: {}\n\n".format(headers))
 
     for ranker, ranks in ranked_features:
