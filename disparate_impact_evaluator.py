@@ -1,32 +1,75 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-#sor
+#'''
+#sor j48
+custom_title = "SOR, J48 "
 source = "audits/1456373048.67"
-output1="disparate_impact_graphs/sor_DI_Accuracy"
-output2="disparate_impact_graphs/sor_DI_Simplarity_Predictions"
-output3="disparate_impact_graphs/sor_RepairLevel_DI"
+output1="disparate_impact_graphs/j48_sor_DI_Accuracy"
+axis1=[.85,1.1,.75,.85]
+output2="disparate_impact_graphs/j48_sor_DI_Simplarity_Predictions"
+axis2=[.85,1.1,.9,1.05]
+output3="disparate_impact_graphs/j48_sor_RepairLevel_DI"
+axis3=[0,1.0,.7,1.1]
 protected_groups = ["White","Black", "American Indian or Alaskan Native", "Asian or Pacific Islander", "Unknown"]
 unprotected_group = "White"
 race_feature = "race"
-
-#sor_predrace
-#source = "audits/1456377058.83"
-#output1="disparate_impact_graphs/sor_predrace_DI_Accuracy"
-#output2="disparate_impact_graphs/sor_predrace_DI_Simplarity_Predictions"
-#output3="disparate_impact_graphs/sor_predrace_RepairLevel_DI"
-#protected_groups = ["WHITE","BLACK", "HISPANIC"]
-#unprotected_group = "WHITE"
-#race_feature = "pred_race"
-
+#'''
+'''
+#sor_no_unknown j48
+custom_title = "SOR, J48, Ignore Unknown, "
+source = "audits/1456439286.2"
+output1="disparate_impact_graphs/j48_nounknown_sor_DI_Accuracy"
+axis1=[.65,1.1,.65,.85]
+output2="disparate_impact_graphs/j48_nounknown_sor_DI_Simplarity_Predictions"
+axis2=[.65,1.1,.6,1.05]
+output3="disparate_impact_graphs/j48_nounknown_sor_RepairLevel_DI"
+axis3=[0,1,.6,1.1]
+protected_groups = ["White","Black", "American Indian or Alaskan Native", "Asian or Pacific Islander"]
+unprotected_group = "White"
+race_feature = "race"
+'''
+'''
+#sor_predrace j48
+custom_title = "SOR-BISG, J48 "
+source = "audits/1456377058.83"
+output1="disparate_impact_graphs/j48_predrace_sor_DI_Accuracy"
+axis1=[.85,1.1,.75,.85]
+output2="disparate_impact_graphs/j48_predrace_sor_DI_Simplarity_Predictions"
+axis2=[.85,1.1,.85,1.2]
+output3="disparate_impact_graphs/j48_predrace_sor_RepairLevel_DI"
+axis3=[0,1.0,.70,1.1]
+protected_groups = ["WHITE","BLACK", "HISPANIC"]
+unprotected_group = "WHITE"
+race_feature = "pred_race"
+'''
+'''
+#sor svm
+custom_title = "SOR, SVM "
+source = "audits/1456396585.66"
+output1="disparate_impact_graphs/svm_sor_DI_Accuracy"
+axis1=[.85,1.1,.75,.85]
+output2="disparate_impact_graphs/svm_sor_DI_Simplarity_Predictions"
+axis2=[.85,1.1,.85,1.1]
+output3="disparate_impact_graphs/svm_sor_RepairLevel_DI"
+axis3=[0,1.1,.70,1.1]
+protected_groups = ["White","Black", "American Indian or Alaskan Native", "Asian or Pacific Islander", "Unknown"]
+unprotected_group = "White"
+race_feature = "race"
+'''
+'''
 #arrests
-#source = "audits/1455586474.33"
-#output1="disparate_impact_graphs/arrests_DI_Accuracy"
-#output2="disparate_impact_graphs/arrests_DI_Simplarity_Predictions"
-#output3="disparate_impact_graphs/arrests_RepairLevel_DI"
-#protected_groups = ["WHITE","BLACK", "UNKNOWN", "ASIAN/PACIFIC ISLANDER", "AMERICAN INDIAN/ALEUTIAN"]
-#unprotected_group = "WHITE"
-#race_feature = "RACE"
-
+custom_title = "Arrests, J48 "
+source = "audits/1455586474.33"
+output1="disparate_impact_graphs/j48_arrests_DI_Accuracy"
+axis1=[.85,1.1,.75,.85]
+output2="disparate_impact_graphs/j48_arrests_DI_Simplarity_Predictions"
+axis2=[.85,1.1,.75,.85]
+output3="disparate_impact_graphs/j48_arrests_RepairLevel_DI"
+axis3=[.85,1.1,.75,.85]
+protected_groups = ["WHITE","BLACK", "UNKNOWN", "ASIAN/PACIFIC ISLANDER", "AMERICAN INDIAN/ALEUTIAN"]
+unprotected_group = "WHITE"
+race_feature = "RACE"
+'''
 from disparate_impact import disparate_impact
 from consistency_graph import *
 
@@ -89,8 +132,8 @@ def graph_disparate_impact_accuracy(directory, output_image_file):
         y_axes.append(y_axis)
 
       # Format and save the graph to an image file.
-      plt.title("Accuracy")
-      plt.axis([.85,1.1,.75,.9]) # Make all the plots consistently sized.
+      plt.title(custom_title + "Accuracy")
+      plt.axis(axis1) # Make all the plots consistently sized.
       plt.xlabel("Disparate Impact: Pr(Good Outcome given Race = X) / Pr(Good Outcome given Race = WHITE)")
       plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
       plt.savefig(output_image_file, bbox_inches='tight')
@@ -155,8 +198,8 @@ def graph_disparate_impact_similarity_predictions(directory, output_image_file):
         y_axes.append(y_axis)
 
       # Format and save the graph to an image file.
-      plt.title("Similarity to Original Predictions")
-      plt.axis([.85,1.1,.9,1.05]) # Make all the plots consistently sized.
+      plt.title(custom_title + "Similarity to Original Predictions")
+      plt.axis(axis2) # Make all the plots consistently sized.
       plt.xlabel("Disparate Impact: Pr(Good Outcome given Race = X) / Pr(Good Outcome given Race = WHITE)")
       plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
       plt.savefig(output_image_file, bbox_inches='tight')
@@ -213,8 +256,8 @@ def graph_repair_level_disparate_impact(directory, output_image_file):
         y_axes.append(y_axis)
 
       # Format and save the graph to an image file.
-      plt.title("Disparate Impact: Pr(Good Outcome given Race = X) / Pr(Good Outcome given Race = WHITE)")
-      plt.axis([0,1,.75,1.2]) # Make all the plots consistently sized.
+      plt.title(custom_title + "Disparate Impact: Pr(Good Outcome given Race = X) / Pr(Good Outcome given Race = WHITE)")
+      plt.axis(axis3) # Make all the plots consistently sized.
       plt.xlabel("Repair Level")
       plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
       plt.savefig(output_image_file, bbox_inches='tight')
