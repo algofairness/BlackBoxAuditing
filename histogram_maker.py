@@ -3,7 +3,7 @@
 # TODO: Make this file generalizable to all datasets
 
 from experiments.arrests.load_data import load_data
-from repair.CategoricRepairer import Repairer
+from repairers.CategoricRepairer import Repairer
 import numpy as np
 import os
 

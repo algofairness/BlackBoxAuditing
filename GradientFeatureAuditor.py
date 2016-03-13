@@ -1,4 +1,4 @@
-from repair.GeneralRepairer import Repairer
+from repairers.GeneralRepairer import Repairer
 from loggers import vprint
 from measurements import get_conf_matrix
 from model_factories.AbstractModelFactory import AbstractModelFactory
