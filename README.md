@@ -28,7 +28,8 @@ The best way to create a model would be to use a ModelFactory and ModelVisitors.
 2. Install WEKA and/or Tensorflow (see below).
 3. Update the WEKA path in `model_factories/AbstractWekaModelFactory.py`.
 4. Install the Python dependencies listed in the requirements.txt file.
-5. Run `python main.py` to run the sample experiment.
+5. Install python-matplotlib if you do not already have it (`sudo apt-get install python-matplotlib`).
+6. Run `python main.py` to run the sample experiment.
 
 Many of the ModelVisitors rely on [Weka](http://www.cs.waikato.ac.nz/ml/weka/). Similarly, we use [TensorFlow 0.6.0](https://www.tensorflow.org/) for network-based machine learning. Any Python libraries that need to be installed are included in the `requirements.txt` file.
 - Weka 3.6.13 [download](http://www.cs.waikato.ac.nz/ml/weka/downloading.html)
