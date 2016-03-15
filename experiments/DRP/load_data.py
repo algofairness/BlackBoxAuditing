@@ -19,7 +19,7 @@ def load_data():
         row = [header_types[h](v) for h,v in zip(header_types, row)]
         data.append(row)
 
-  with open(train_filename) as f:
+  with open(test_filename) as f:
     for line in f:
       if "@ATTRIBUTE" not in line:
         row = line[:-1].split(",") #TODO: This is a naive way of splitting, captain.
@@ -53,6 +53,7 @@ def test():
       gathered_types.append(str)
 
   print "load_data types are correct? -- ", gathered_types == correct_types
+  print "load_data count is correct? -- ", 3955 == len(train) + len(test)
 
 
 if __name__=="__main__":
