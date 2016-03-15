@@ -11,9 +11,10 @@ def accuracy(conf_matrix):
       total += count
   return correct/total
 
-def complement_BER(conf_matrix):
+def BCR(conf_matrix):
   """
-  Given a confusion matrix, returns (1 - Balanced Error Rate).
+  Given a confusion matrix, returns Balanced Classification Rate.
+  BCR is (1 - Balanced Error Rate).
   BER Definition: http://research.ics.aalto.fi/events/eyechallenge2005/evaluation.shtml
   """
   parts = []
@@ -66,15 +67,15 @@ def test_conf_matrix():
 def test_measurers():
   conf_matrix = {"A":{"A":10}, "B":{"A":5,"B":5}}
   print "measurements -- accuracy correct? -- ", accuracy(conf_matrix) == 0.75
-  print "measurements -- 1-BER correct? -- ", complement_BER(conf_matrix) == 0.75
+  print "measurements -- 1-BER correct? -- ", BCR(conf_matrix) == 0.75
 
   conf_matrix = {"A":{"A":10}}
   print "measurements -- accuracy correct? -- ", accuracy(conf_matrix) == 1.0
-  print "measurements -- 1-BER correct? -- ", complement_BER(conf_matrix) == 1.0
+  print "measurements -- 1-BER correct? -- ", BCR(conf_matrix) == 1.0
 
   conf_matrix = {"A":{"A":95}, "B":{"A":5}}
   print "measurements -- accuracy correct? -- ", accuracy(conf_matrix) == 0.95
-  print "measurements -- 1-BER correct? -- ", complement_BER(conf_matrix) == 0.50
+  print "measurements -- 1-BER correct? -- ", BCR(conf_matrix) == 0.50
 
 if __name__=="__main__":
   test()

@@ -3,7 +3,7 @@ Development script for converting audit files into graphs.
 """
 
 from audit_reading import graph_audits, graph_audit, rank_audit_files
-from measurements import complement_BER, accuracy
+from measurements import BCR, accuracy
 
 from os import listdir
 from os.path import isfile, join
@@ -15,7 +15,7 @@ def audit_directory(directory):
   only_files = [f for f in listdir(directory) if isfile(join(directory, f))]
   audits = ["{}/{}".format(directory, f) for f in only_files if f[-6:]==".audit"]
 
-  measurers = [accuracy, complement_BER]
+  measurers = [accuracy, BCR]
   for audit in audits:
     audit_image_filename = audit + ".png"
     graph_audit(audit, measurers, audit_image_filename)

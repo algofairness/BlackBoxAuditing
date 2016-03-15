@@ -2,9 +2,9 @@
 #       across experiments on different datasets and ML model types.
 import experiments.sample as experiment
 from model_factories.SVM_ModelFactory import ModelFactory
-from measurements import accuracy, complement_BER
+from measurements import accuracy, BCR
 response_header = "Outcome"
-measurers = [accuracy, complement_BER]
+measurers = [accuracy, BCR]
 features_to_ignore = []
 model_options = {} # See your chosen ModelFactory for available options.
 
@@ -151,6 +151,7 @@ def run():
     f.write("Retrained Per Repair: {}\n".format(RETRAIN_MODEL_PER_REPAIR))
     f.write("Model Factory ID: {}\n".format(model_factory.factory_name))
     f.write("Model Type: {}\n".format(model_factory.verbose_factory_name))
+    f.write("Non-standard Model Options: {}\n".format(model_options))
     f.write("Train Size: {}\n".format(len(train_set)))
     f.write("Test Size: {}\n".format(len(test_set)))
     f.write("Non-standard Ignored Features: {}\n".format(features_to_ignore))
