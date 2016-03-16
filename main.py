@@ -1,13 +1,13 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-import experiments.sor as experiment
+import experiments.florida_sor_predrace as experiment
 from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy, complement_BER
-response_header = "incarcerated"
+response_header = "subject_type"
 measurers = [accuracy, complement_BER]
 model_features_to_ignore = []
 audit_features_to_ignore = []
-audit_features_to_skip = ["yearofbirth","height","weight","haircolor","eyecolor","county","crime","convictionstate"]
+audit_features_to_skip = ["eye_color","hair","height","weight","perm_state","perm_zip5","perm_county","victim_minor"]
 model_options = {} # See your chosen ModelFactory for available options.
 
 verbose = True # Set to `True` to allow for more detailed status updates.
