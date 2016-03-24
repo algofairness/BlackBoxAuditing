@@ -1,6 +1,34 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
 #'''
+#Prices (gas) SVM
+custom_title = "Gas Prices, SVM "
+source = "audits/1458835147.37"
+output1="disparate_impact_graphs/svm_Gas_DI_Accuracy"
+axis1=[.95,1.05,.84,.9]
+output2="disparate_impact_graphs/svm_Gas_DI_Simplarity_Predictions"
+axis2=[.95,1.05,.94,1]
+output3="disparate_impact_graphs/svm_Gas_RepairLevel_DI"
+axis3=[0,1.0,0,1.1]
+protected_groups = ["0","1"]
+unprotected_group = "0"
+race_feature = "asian_zip"
+#'''
+'''
+#Prices (PR with gas) SVM
+custom_title = "Princeton Review Prices, SVM "
+source = "audits/1458834701.09"
+output1="disparate_impact_graphs/svm_PR_DI_Accuracy"
+axis1=[.95,1.05,.84,.9]
+output2="disparate_impact_graphs/svm_PR_DI_Simplarity_Predictions"
+axis2=[.95,1.05,.94,1]
+output3="disparate_impact_graphs/svm_PR_RepairLevel_DI"
+axis3=[0,1.0,0,1.1]
+protected_groups = ["0","1"]
+unprotected_group = "0"
+race_feature = "asian_zip"
+'''
+'''
 #Florida sor svm
 custom_title = "Florida SOR, SVM "
 source = "audits/1457121057.1"

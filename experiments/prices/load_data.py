@@ -11,7 +11,10 @@ def load_data():
     print len(data)
     headers = data.pop(0)
     print headers
-    correct_types = [str,str, float, float, float, float]
+    #pr_label,gas_label,asian_zip,total_pop,ln_median_household_income,pop_density,prop_female,prop_under18,
+    #median_age,avg_house_size,prop_with_some_college,prop_school_enrollment,
+    #prop_dropout,prop_asian_unemployed,asian_median_household_income,prop_commute_by_car,avg_commute_time,gas_price
+    correct_types = [str,str,str,float, float, float, float, float, float, float, float, float, float, float, float, float, float, float]
     
     for i, row in enumerate(data):
       for j, correct_type in enumerate(correct_types):
@@ -53,7 +56,7 @@ def test():
   headers, train, test = load_data()
   print "load_data unpacks correctly? -- ", (headers != None and train != None and test != None)
 
-  correct_types = [str, str, float, float, float, float]
+  correct_types = [str,str,str,float, float, float, float, float, float, float, float, float, float, float, float, float, float, float]
   gathered_types = []
   for i, header in enumerate(headers):
     if all( isinstance(row[i],float) for row in train + test ):

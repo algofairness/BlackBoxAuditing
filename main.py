@@ -3,11 +3,11 @@
 import experiments.prices as experiment
 from model_factories.metaSVM_ModelFactory import ModelFactory
 from measurements import accuracy, complement_BER
-response_header = "pr_label"
+response_header = "gas_label"
 measurers = [accuracy, complement_BER]
-model_features_to_ignore = []
-audit_features_to_ignore = []
-audit_features_to_skip = []
+model_features_to_ignore = ["pr_label","gas_price"]
+audit_features_to_ignore = ["pr_label","gas_price"]
+audit_features_to_skip = ["pr_label","gas_price"]
 model_options = {} # See your chosen ModelFactory for available options.
 
 verbose = True # Set to `True` to allow for more detailed status updates.
