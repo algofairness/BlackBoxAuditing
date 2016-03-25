@@ -46,6 +46,7 @@ class AbstractWekaModelFactory(AbstractModelFactory):
     # Call WEKA to generate the model file.
     response_index = actual_headers.index(self.response_header)
     command = "java {} -t {} -d {} -p 0 -c {}".format(self.train_command, train_arff_file, model_file, response_index + 1)
+    print command
     run_weka_command(command)
 
     return self.model_visitor_type(model_file, arff_types, response_index, actual_headers, ignored_indices)
@@ -87,6 +88,7 @@ class AbstractWekaModelVisitor(AbstractModelVisitor):
 
 def run_weka_command(command):
   set_path = "export CLASSPATH=$CLASSPATH:{}; ".format(WEKA_PATH)
+  print set_path
   subprocess.check_output(set_path + command, shell=True)
 
 

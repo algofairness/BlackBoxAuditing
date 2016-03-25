@@ -1,9 +1,9 @@
 import csv
 import math 
 
-filename1 = "test_data/Florida_confusionmatrix.csv"
-truerace_index = 0
-predrace_index = 1
+filename1 = "census_block/Georgia_confusionmatrix_final.csv"
+truerace_index = 1
+predrace_index = 0
 other_index = 6
 def load_data():
   with open(filename1) as f:
@@ -27,12 +27,16 @@ def load_data():
   	confusion_dict[value1][value2] += 1
 
   total = float(0)
-
+  count = float(0)
   for value1 in confusion_dict:
-  	for value2 in confusion_dict[value1]:
-  		print "Actual: " + value1 + ", Predicted: " + value2 + ", Count: " + str(confusion_dict[value1][value2])
-  		total+=confusion_dict[value1][value2]
-  print "Accuracy: " + str((confusion_dict["W"]["WHITE"] + confusion_dict["B"]["BLACK"] + confusion_dict["A"]["ASIAN"]+ confusion_dict["I"]["ASIAN PACIFIC ISLANDER"])/total)
+    for value2 in confusion_dict[value1]:
+      print "Actual: " + value1 + ", Predicted: " + value2 + ", Count: " + str(confusion_dict[value1][value2])
+      total+=confusion_dict[value1][value2]
+      if value1 == value2:
+        count+=confusion_dict[value1][value2]
+
+  accuracy = count/total
+  print "Accuracy: " + str(accuracy)
   print total
   
   confusion_dict2 ={}
