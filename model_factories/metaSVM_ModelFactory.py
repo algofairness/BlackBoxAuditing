@@ -21,9 +21,9 @@ class ModelFactory(AbstractWekaModelFactory):
     class0 = 0
     class1 = 0
     for point in all_data:
-      if point[-1] == "0":
+      if point[0] == "0":
         class0 += 1
-      elif point[-1] == "1":
+      elif point[0] == "1":
         class1 += 1
       else:
         print "ERROR"

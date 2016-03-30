@@ -47,8 +47,8 @@ def load_data():
     train = [data[i] for i in range(len(data)) if i not in random_sample]
     test = [data[i] for i in random_sample]
 
-    train = random.sample(train, len(train)/20) 
-    test = random.sample(test, len(test)/20) 
+    #train = random.sample(train, len(train)) 
+    #test = random.sample(test, len(test)) 
   return headers, train, test
 
 

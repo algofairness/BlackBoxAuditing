@@ -1,13 +1,13 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-import experiments.sor as experiment
+import experiments.prices as experiment
 from model_factories.metaSVM_ModelFactory import ModelFactory
 from measurements import accuracy, complement_BER
-response_header = "predator"
+response_header = "pr_label"
 measurers = [accuracy, complement_BER]
-model_features_to_ignore = []
-audit_features_to_ignore = []
-audit_features_to_skip = []
+model_features_to_ignore = ["gas_price", "gas_label"]
+audit_features_to_ignore = ["gas_price", "gas_label"]
+audit_features_to_skip = ["gas_price", "gas_label"]
 model_options = {} # See your chosen ModelFactory for available options.
 
 verbose = True # Set to `True` to allow for more detailed status updates.
