@@ -1,7 +1,7 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
 
-options = ["gas prices", "pr prices without gas", "pr prices with gas", "sor", "sor_predrace", "arrests",\
+options = ["gas prices", "pr prices without gas", "pr prices with gas", "sor", "sor_predrace", "arrests", "arrests svm",\
 "gas prices j48", "pr prices without gas j48", "pr prices with gas j48", "sor j48", "sor_predrace j48"]
 #experiment="gas prices"
 def get_source(experiment):
@@ -11,7 +11,7 @@ def get_source(experiment):
     source = "audits/1460440466.09"
     output0="disparate_impact_graphs/3b_j48_Gas_Accuracy"
     output1="disparate_impact_graphs/3b_j48_Gas_DI_Accuracy"
-    axis1=[.2,1.05,.5,.8]
+    axis1=[.45,1.05,.625,.78]
     output2="disparate_impact_graphs/3b_j48_Gas_DI_Simplarity_Predictions"
     axis2=[.2,1.05,.5,1.1]
     output3="disparate_impact_graphs/3b_j48_Gas_RepairLevel_DI"
@@ -26,7 +26,7 @@ def get_source(experiment):
     source = "audits/1460440283.36"
     output0="disparate_impact_graphs/2b_j48_PR_Accuracy"
     output1="disparate_impact_graphs/2b_j48_PR_DI_Accuracy"
-    axis1=[.2,1.05,.5,1.1]
+    axis1=[.4,1.05,.7,.82]
     output2="disparate_impact_graphs/2b_j48_PR_DI_Simplarity_Predictions"
     axis2=[.2,1.05,.5,1.1]
     output3="disparate_impact_graphs/2b_j48_PR_RepairLevel_DI"
@@ -41,7 +41,7 @@ def get_source(experiment):
     source = "audits/1460440412.52" 
     output0="disparate_impact_graphs/4b_j48_PR_gas_Accuracy"
     output1="disparate_impact_graphs/4b_j48_PR_gas_DI_Accuracy"
-    axis1=[.2,1.05,.5,1.1]
+    axis1=[.3,1.05,.7,.82]
     output2="disparate_impact_graphs/4b_j48_PR_gas_DI_Simplarity_Predictions"
     axis2=[.2,1.05,.5,1.1]
     output3="disparate_impact_graphs/4b_j48_PR_gas_RepairLevel_DI"
@@ -56,11 +56,11 @@ def get_source(experiment):
     source = "audits/1460440872.03"
     output0="disparate_impact_graphs/5b_j48_sor_truerace_Accuracy"
     output1="disparate_impact_graphs/5b_j48_sor_truerace_DI_Accuracy"
-    axis1=[.6,1.5,.6,.9]
+    axis1=[.7,1.1,.9,.96]
     output2="disparate_impact_graphs/5b_j48_sor_truerace_DI_Simplarity_Predictions"
     axis2=[.6,1.5,.6,1.1]
     output3="disparate_impact_graphs/5b_j48_sor_truerace_RepairLevel_DI"
-    axis3=[0,1.1,.6,1.5]
+    axis3=[0,1.1,.8,1.2]
     protected_groups = ["White","Black", "American Indian or Alaskan Native", "Asian or Pacific Islander", "Unknown"]
     unprotected_group = "White"
     race_feature = "race"
@@ -71,11 +71,11 @@ def get_source(experiment):
     source = "audits/1460441005.61"
     output0="disparate_impact_graphs/6b_svm_sor_predrace_Accuracy"
     output1="disparate_impact_graphs/6b_svm_sor_predrace_DI_Accuracy"
-    axis1=[.6,1.5,.6,.8]
+    axis1=[.9,1.05,.91,.94]
     output2="disparate_impact_graphs/6b_svm_sor_predrace_DI_Simplarity_Predictions"
     axis2=[.6,1.5,.6,1.1]
     output3="disparate_impact_graphs/6b_svm_sor_predrace_RepairLevel_DI"
-    axis3=[0,1.1,.6,1.5]
+    axis3=[0,1.1,.86,1.05]
     protected_groups = ["White","Black", "Hispanic","American Indian or Alaskan Native", "Asian or Pacific Islander", "Other"]
     unprotected_group = "White"
     race_feature = "pred_race"
@@ -83,10 +83,10 @@ def get_source(experiment):
   if experiment == "arrests svm":
     #arrests  (29261.pts-28.pearl)
     custom_title = "Arrests, SVM "
-    source = "audits/"
+    source = "audits/1460477456.42"
     output0="disparate_impact_graphs/1a_svm_arrests_Accuracy"
     output1="disparate_impact_graphs/1a_svm_arrests_DI_Accuracy"
-    axis1=[.5,1.3,.65,.75]
+    axis1=[.6,1.3,.65,.69]
     output2="disparate_impact_graphs/1a_svm_arrests_DI_Simplarity_Predictions"
     axis2=[.5,1.3,.8,1.1]
     output3="disparate_impact_graphs/1a_svm_arrests_RepairLevel_DI"
@@ -102,7 +102,7 @@ def get_source(experiment):
     source = "audits/1459310114.24"
     output0="disparate_impact_graphs/3a_svm_Gas_Accuracy"
     output1="disparate_impact_graphs/3a_svm_Gas_DI_Accuracy"
-    axis1=[.2,1.05,.5,.8]
+    axis1=[.2,1.05,.6,.78]
     output2="disparate_impact_graphs/3a_svm_Gas_DI_Simplarity_Predictions"
     axis2=[.2,1.05,.5,1.1]
     output3="disparate_impact_graphs/3a_svm_Gas_RepairLevel_DI"
@@ -117,7 +117,7 @@ def get_source(experiment):
     source = "audits/1459310172.2"
     output0="disparate_impact_graphs/2a_svm_PR_Accuracy"
     output1="disparate_impact_graphs/2a_svm_PR_DI_Accuracy"
-    axis1=[.2,1.05,.5,1.1]
+    axis1=[.2,1.05,.7,.8]
     output2="disparate_impact_graphs/2a_svm_PR_DI_Simplarity_Predictions"
     axis2=[.2,1.05,.5,1.1]
     output3="disparate_impact_graphs/2a_svm_PR_RepairLevel_DI"
@@ -132,7 +132,7 @@ def get_source(experiment):
     source = "audits/1459309973.86"
     output0="disparate_impact_graphs/4a_svm_PR_gas_Accuracy" 
     output1="disparate_impact_graphs/4a_svm_PR_gas_DI_Accuracy"
-    axis1=[.2,1.05,.5,1.1]
+    axis1=[.3,1.05,.7,.85]
     output2="disparate_impact_graphs/4a_svm_PR_gas_DI_Simplarity_Predictions"
     axis2=[.2,1.05,.5,1.1]
     output3="disparate_impact_graphs/4a_svm_PR_gas_RepairLevel_DI"
@@ -147,7 +147,7 @@ def get_source(experiment):
     source = "audits/1459228686.97"
     output0="disparate_impact_graphs/5a_svm_sor_truerace_Accuracy"
     output1="disparate_impact_graphs/5a_svm_sor_truerace_DI_Accuracy"
-    axis1=[.6,1.5,.6,.9]
+    axis1=[.7,1.4,.71,.83]
     output2="disparate_impact_graphs/5a_svm_sor_truerace_DI_Simplarity_Predictions"
     axis2=[.6,1.5,.6,1.1]
     output3="disparate_impact_graphs/5a_svm_sor_truerace_RepairLevel_DI"
@@ -162,11 +162,11 @@ def get_source(experiment):
     source = "audits/1459229211.44"
     output0="disparate_impact_graphs/6a_svm_sor_predrace_Accuracy"
     output1="disparate_impact_graphs/6a_svm_sor_predrace_DI_Accuracy"
-    axis1=[.6,1.5,.6,.8]
+    axis1=[.89,1.35,.64,.74]
     output2="disparate_impact_graphs/6a_svm_sor_predrace_DI_Simplarity_Predictions"
     axis2=[.6,1.5,.6,1.1]
     output3="disparate_impact_graphs/6a_svm_sor_predrace_RepairLevel_DI"
-    axis3=[0,1.1,.6,1.5]
+    axis3=[0,1.1,.9,1.3]
     protected_groups = ["White","Black", "Hispanic","American Indian or Alaskan Native", "Asian or Pacific Islander", "Other"]
     unprotected_group = "White"
     race_feature = "pred_race"
@@ -178,7 +178,7 @@ def get_source(experiment):
     source = "audits/1455586474.33"
     output0="disparate_impact_graphs/1b_j48_arrests_Accuracy"
     output1="disparate_impact_graphs/1b_j48_arrests_DI_Accuracy"
-    axis1=[.5,1.3,.65,.75]
+    axis1=[.5,1.3,.67,.71]
     output2="disparate_impact_graphs/1b_j48_arrests_DI_Simplarity_Predictions"
     axis2=[.5,1.3,.8,1.1]
     output3="disparate_impact_graphs/1b_j48_arrests_RepairLevel_DI"
