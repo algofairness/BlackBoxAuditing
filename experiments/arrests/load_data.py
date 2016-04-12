@@ -11,7 +11,7 @@ def load_data():
     reader = csv.reader(f)
     data = [row for row in reader]
     headers = data.pop(0)
-
+    print headers
     correct_types = [str] * len(headers) # All categorical.
 
     for i, row in enumerate(data):

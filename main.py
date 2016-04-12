@@ -3,8 +3,8 @@
 import experiments.arrests as experiment
 from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy, complement_BER
-#gas_label pr_label, predator
-response_header = "Classfatal_violence"
+#gas_label pr_label, predator, Class!
+response_header = "Class"
 measurers = [accuracy, complement_BER]
 #gas_price, gas_label
 model_features_to_ignore = []

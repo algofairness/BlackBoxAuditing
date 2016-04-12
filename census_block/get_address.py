@@ -12,7 +12,6 @@ with open('Georgia_cleaned.csv') as csvfile:
 			dict_list_of_dicts[count] = []
 		dict={}
 		dict['id'] = id
-		if row['st']
 		dict['street_address'] = row['STREET NUMBER'] + " " + row['STREET']
 		dict['city'] = row['CITY']
 		dict['state'] = row['STATE']

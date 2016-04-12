@@ -32,9 +32,22 @@ with open('Georgia_cleaned.csv') as csvfile:
 			dict['predator'] = predator
 		except:
 			continue
+
+with open('block_groups.csv') as csvfile:
+	reader = csv.DictReader(csvfile)
+	for row in reader:
+		try: 
+			dict_of_dicts[row['id']]
+			dict=dict_of_dicts[row['id']]
+			if row['geo_code_precision'] == 'USAStreetAddr':
+				dict['block_level']="1"
+			else:
+				dict['block_level']="0"
+		except:
+			continue
 		
 with open('Georgia_confusionmatrix_final.csv', 'w') as csvfile:
-	    fieldnames = ['pred_race','race','black_zip','black_name','sex','yearofbirth','incarcerated','absconder','predator']
+	    fieldnames = ['pred_race','race','black_zip','black_name','sex','yearofbirth','incarcerated','absconder','predator', 'block_level']
 	    writer = csv.writer(csvfile)
 	    writer.writerow(fieldnames)
 	    for key,dict in dict_of_dicts.items():
