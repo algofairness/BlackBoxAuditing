@@ -1,13 +1,99 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
 
-#options: "gas_price", "pr prices without gas" "pr prices with gas" "sor" "sor_predrace" "arrests"
-experiment="pr prices with gas"
+#options: "gas prices", "pr prices without gas" "pr prices with gas" "sor" "sor_predrace" "arrests" 
+#"gas prices j48", "pr prices without gas j48" "pr prices with gas j48" "sor j48" "sor_predrace j48" "arrests svm"
+experiment="gas prices"
+
+if experiment == "gas prices j48":
+  #Prices (gas) J48( 27705.pts-19.cook)
+  custom_title = "Gas Prices, J48 "
+  source = "audits/"
+  output1="disparate_impact_graphs/j48_Gas_DI_Accuracy"
+  axis1=[.2,1.05,.5,.8]
+  output2="disparate_impact_graphs/j48_Gas_DI_Simplarity_Predictions"
+  axis2=[.2,1.05,.5,1.1]
+  output3="disparate_impact_graphs/j48_Gas_RepairLevel_DI"
+  axis3=[0,1.0,0,1.1]
+  protected_groups = ["0","1"]
+  unprotected_group = "0"
+  race_feature = "asian_zip"
+
+if experiment == "pr prices without gas j48":
+  #Prices (PR without gas) J48 (10719.pts-2.fried)
+  custom_title = "PR Prices without Gas Price, J48 "
+  source = "audits/"
+  output1="disparate_impact_graphs/j48_PR_DI_Accuracy"
+  axis1=[.2,1.05,.5,1.1]
+  output2="disparate_impact_graphs/j48_PR_DI_Simplarity_Predictions"
+  axis2=[.2,1.05,.5,1.1]
+  output3="disparate_impact_graphs/j48_PR_RepairLevel_DI"
+  axis3=[0,1.0,0,1.1]
+  protected_groups = ["0","1"]
+  unprotected_group = "0"
+  race_feature = "asian_zip"
+
+if experiment == "pr prices with gas j48":
+  #Prices (PR with gas) J48 (23653.pts-2.fried)
+  custom_title = "PR Prices with Gas Price, J48 "
+  source = "audits/" 
+  output1="disparate_impact_graphs/j48_PR_gas_DI_Accuracy"
+  axis1=[.2,1.05,.5,1.1]
+  output2="disparate_impact_graphs/j48_PR_gas_DI_Simplarity_Predictions"
+  axis2=[.2,1.05,.5,1.1]
+  output3="disparate_impact_graphs/j48_PR_gas_RepairLevel_DI"
+  axis3=[0,1.0,0,1.1]
+  protected_groups = ["0","1"]
+  unprotected_group = "0"
+  race_feature = "asian_zip"
+
+if experiment == "sor j48":
+  #Georgia sor TRUERACE j48 28811.pts-19.cook
+  custom_title = "SOR using True Race, J48 "
+  source = "audits/"
+  output1="disparate_impact_graphs/j48_sor_truerace_DI_Accuracy"
+  axis1=[.6,1.5,.6,.9]
+  output2="disparate_impact_graphs/j48_sor_truerace_DI_Simplarity_Predictions"
+  axis2=[.6,1.5,.6,1.1]
+  output3="disparate_impact_graphs/j48_sor_truerace_RepairLevel_DI"
+  axis3=[0,1.1,.6,1.5]
+  protected_groups = ["White","Black", "American Indian or Alaskan Native", "Asian or Pacific Islander", "Unknown"]
+  unprotected_group = "White"
+  race_feature = "race"
+
+if experiment == "sor_predrace j48":
+  #Georgia sor PREDRACE j48 29151.pts-28.pearl
+  custom_title = "SOR using Predicted Race, J48 "
+  source = "audits/"
+  output1="disparate_impact_graphs/svm_sor_predrace_DI_Accuracy"
+  axis1=[.6,1.5,.6,.8]
+  output2="disparate_impact_graphs/svm_sor_predrace_DI_Simplarity_Predictions"
+  axis2=[.6,1.5,.6,1.1]
+  output3="disparate_impact_graphs/svm_sor_predrace_RepairLevel_DI"
+  axis3=[0,1.1,.6,1.5]
+  protected_groups = ["White","Black", "Hispanic","American Indian or Alaskan Native", "Asian or Pacific Islander", "Other"]
+  unprotected_group = "White"
+  race_feature = "pred_race"
+
+  if experiment == "arrests svm":
+  #arrests  GAVE ME AN ERROR :(
+  custom_title = "Arrests, SVM "
+  source = "audits/"
+  output1="disparate_impact_graphs/svm_arrests_DI_Accuracy"
+  axis1=[.5,1.3,.65,.75]
+  output2="disparate_impact_graphs/svm_arrests_DI_Simplarity_Predictions"
+  axis2=[.5,1.3,.8,1.1]
+  output3="disparate_impact_graphs/svm_arrests_RepairLevel_DI"
+  axis3=[0,1,.4,1.4]
+  protected_groups = ["WHITE","BLACK", "UNKNOWN", "ASIAN/PACIFIC ISLANDER", "AMERICAN INDIAN/ALEUTIAN"]
+  unprotected_group = "WHITE"
+  race_feature = "RACE"
+
 
 if experiment == "gas prices":
-  #Prices (gas) SVM (Screen 23653 fried)
+  #Prices (gas) SVM 
   custom_title = "Gas Prices, SVM "
-  source = "audits/1459301586.78"
+  source = "audits/1459310114.24"
   output1="disparate_impact_graphs/svm_Gas_DI_Accuracy"
   axis1=[.2,1.05,.5,.8]
   output2="disparate_impact_graphs/svm_Gas_DI_Simplarity_Predictions"
@@ -19,9 +105,9 @@ if experiment == "gas prices":
   race_feature = "asian_zip"
 
 if experiment == "pr prices without gas":
-  #Prices (PR without gas) SVM (Screen 16400 cook)
+  #Prices (PR without gas) SVM 
   custom_title = "PR Prices without Gas Price, SVM "
-  source = "audits/1459278486.13"
+  source = "audits/1459310172.2"
   output1="disparate_impact_graphs/svm_PR_DI_Accuracy"
   axis1=[.2,1.05,.5,1.1]
   output2="disparate_impact_graphs/svm_PR_DI_Simplarity_Predictions"
@@ -33,9 +119,9 @@ if experiment == "pr prices without gas":
   race_feature = "asian_zip"
 
 if experiment == "pr prices with gas":
-  #Prices (PR with gas) SVM (Screen 10719 fried)
+  #Prices (PR with gas) SVM 
   custom_title = "PR Prices with Gas Price, SVM "
-  source = "audits/1459260623.13" 
+  source = "audits/1459309973.86" 
   output1="disparate_impact_graphs/svm_PR_gas_DI_Accuracy"
   axis1=[.2,1.05,.5,1.1]
   output2="disparate_impact_graphs/svm_PR_gas_DI_Simplarity_Predictions"
@@ -73,7 +159,6 @@ if experiment == "sor_predrace":
   protected_groups = ["White","Black", "Hispanic","American Indian or Alaskan Native", "Asian or Pacific Islander", "Other"]
   unprotected_group = "White"
   race_feature = "pred_race"
-
 
 
 if experiment == "arrests":
