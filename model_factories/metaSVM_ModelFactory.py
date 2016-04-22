@@ -20,10 +20,11 @@ class ModelFactory(AbstractWekaModelFactory):
     total = float(len(all_data))
     class0 = 0
     class1 = 0
+        #change between 0 (prices PR). 1 (prices GAS), and -1 (sor)
     for point in all_data:
-      if point[0] == "0":
+      if point[1] == "0":
         class0 += 1
-      elif point[0] == "1":
+      elif point[1] == "1":
         class1 += 1
       else:
         print "ERROR"

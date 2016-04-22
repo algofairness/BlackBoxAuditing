@@ -1,14 +1,14 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-
+#options = ["gas prices"]
 options = ["gas prices", "pr prices without gas", "pr prices with gas", "sor", "sor_predrace", "arrests", "arrests svm",\
 "gas prices j48", "pr prices without gas j48", "pr prices with gas j48", "sor j48", "sor_predrace j48"]
 #experiment="gas prices"
 def get_source(experiment):
   if experiment == "gas prices j48":
-    #Prices (gas) J48( 27705.pts-19.cook)
+    #Prices (gas) J48( 10719.pts-2.fried)
     custom_title = "Gas Prices, J48 "
-    source = "audits/1460440466.09"
+    source = "audits/1460753737.07"
     output0="disparate_impact_graphs/3b_j48_Gas_Accuracy"
     output1="disparate_impact_graphs/3b_j48_Gas_DI_Accuracy"
     axis1=[.45,1.05,.625,.78]
@@ -97,9 +97,9 @@ def get_source(experiment):
 
 
   if experiment == "gas prices":
-    #Prices (gas) SVM 
+    #Prices (gas) SVM  
     custom_title = "Gas Prices, SVM "
-    source = "audits/1459310114.24"
+    source = "audits/1460753865.17"
     output0="disparate_impact_graphs/3a_svm_Gas_Accuracy"
     output1="disparate_impact_graphs/3a_svm_Gas_DI_Accuracy"
     axis1=[.2,1.05,.6,.78]
@@ -218,6 +218,7 @@ def accuracy(triples):
 def graph_accuracy(directory, output_image_file):
   copyfile(directory + "/accuracy.png", output_image_file)
   copyfile(directory + "/accuracy.png.data", output_image_file + ".csv")
+  copyfile(directory + "/accuracy.png.data", output_image_file + ".data")
 
 def graph_disparate_impact_accuracy(directory, output_image_file):
   only_files = [f for f in listdir(directory) if isfile(join(directory, f))]
@@ -273,6 +274,8 @@ def graph_disparate_impact_accuracy(directory, output_image_file):
         writer.writerow(headers)
         for i, repair_level in enumerate(x_axis):
           writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
+
+
 
 def graph_disparate_impact_similarity_predictions(directory, output_image_file):
   only_files = [f for f in listdir(directory) if isfile(join(directory, f))]
@@ -400,10 +403,93 @@ def graph_repair_level_disparate_impact(directory, output_image_file):
         for i, repair_level in enumerate(x_axis):
           writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
 
+      # Save the data used to generate that image file.
+      with open(output_image_file + ".data", "w") as f:
+        writer = csv.writer(f)
+        headers = ["Repair Level"] + features
+        writer.writerow(headers)
+        for i, repair_level in enumerate(x_axis):
+          writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
+def graph_repair_level_disparate_impact_special(directory1, director2, output_image_file, custom_title):
+  only_files = [f for f in listdir(directory) if isfile(join(directory, f))]
+  preds = ["{}/{}".format(directory, f) for f in only_files if ".predictions" in f]
+
+  delim = ".audit.repaired_"
+
+  ignored = ["original_train_data.predictions", "original_test_data.predictions"]
+
+  file_groups = {}
+  for pred in preds:
+    if any(i in pred for i in ignored): continue
+    feature = pred[len(directory)+1:pred.index(delim)] # Extract the feature name.
+    if feature not in file_groups:
+      file_groups[feature] = []
+    file_groups[feature].append(pred)
+
+  pred_groups = {}
+  for feature, filenames in file_groups.items():
+    pred_groups[feature] = []
+    for filename in filenames:
+      preds = load_trip_from_predictions(filename)
+      first_delim = filename.index(delim)+len(delim)
+      second_delim = filename.index(".predictions")
+      repair_level = float(filename[first_delim:second_delim])
+      pred_groups[feature].append( (repair_level, preds) )
+    pred_groups[feature].sort(key=lambda tup: tup[0]) # Sort by repair level.
+
+  features = []
+  y_axes = []
+  for feature, pred_tups in pred_groups.items():
+    if feature == race_feature:
+      for protected_group in protected_groups:
+        #TODO Figure out how to categorize feature values
+        x_axis = [rep_level for rep_level,_ in pred_tups]
+        #y_axis = [similarity_to_original_preds(orig, tups) for _, tups in pred_tups]
+        y_axis = [disparate_impact(triples[1:], unprotected_group, protected_group) for _,triples in pred_tups]    
+        #triples[0] = (Pre-Repaired Feature,Response,Prediction)
+        #triples[1] = (WHITE,1,1)
+        plt.plot(x_axis, y_axis, label=protected_group)
+        features.append(protected_group)
+        y_axes.append(y_axis)
+
+      # Format and save the graph to an image file.
+      #plt.title(custom_title + "Disparate Impact: Pr(Good Outcome given Race = X) / Pr(Good Outcome given Race = WHITE)")
+      plt.title(custom_title + "Disparate Impact")
+      plt.axis(axis3) # Make all the plots consistently sized.
+      plt.xlabel("Repair Level")
+      plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+      plt.savefig(output_image_file, bbox_inches='tight')
+      plt.clf() # Clear the entire figure so future plots are empty.
+
+      # Save the data used to generate that image file.
+      with open(output_image_file + ".csv", "w") as f:
+        writer = csv.writer(f)
+        headers = ["Repair Level"] + features
+        writer.writerow(headers)
+        for i, repair_level in enumerate(x_axis):
+          writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
+
+      # Save the data used to generate that image file.
+      with open(output_image_file + ".data", "w") as f:
+        writer = csv.writer(f)
+        headers = ["Repair Level"] + features
+        writer.writerow(headers)
+        for i, repair_level in enumerate(x_axis):
+          writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
+
 if __name__=="__main__":
-  for option in options:
-    [custom_title, source,output0 , output1, output2, output3,axis1,axis2, axis3 ,  protected_groups, unprotected_group,race_feature] = get_source(option)
-    graph_accuracy(source, output0)
-    graph_disparate_impact_accuracy(source, output1)
+  #for option in options:
+    #[custom_title, source,output0 , output1, output2, output3,axis1,axis2, axis3 ,  protected_groups, unprotected_group,race_feature] = get_source(option)
+    #graph_accuracy(source, output0)
+    #graph_disparate_impact_accuracy(source, output1)
     #graph_disparate_impact_similarity_predictions(source, output2)
+    #graph_repair_level_disparate_impact(source, output3)
+    #Georgia sor TRUERACE j48 28811.pts-19.cook
+    custom_title = "SOR with True Race, J48 "
+    source = "audits/1460441005.61"
+    output3="disparate_impact_graphs/7b_truerace_RepairLevel_DI"
+    axis3=[0,1.1,.8,1.2]
+    protected_groups = ["White","Black", "American Indian or Alaskan Native", "Asian or Pacific Islander", "Unknown"]
+    unprotected_group = "White"
+    race_feature = "race"
     graph_repair_level_disparate_impact(source, output3)
