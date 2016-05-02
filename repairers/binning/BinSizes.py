@@ -12,7 +12,7 @@ def FreedmanDiaconisBinSize(feature_values):
   q75, q25 = numpy.percentile(feature_values, [75, 25])
   IQR = q75 - q25
 
-  return int(2 * IQR * len(feature_values) ** (-1.0/3.0))
+  return 2.0 * IQR * len(feature_values) ** (-1.0/3.0)
 
 
 def test():

@@ -1,4 +1,6 @@
-from AbstractWekaModelFactory import AbstractWekaModelFactory, AbstractWekaModelVisitor
+from AbstractWekaModelFactory import AbstractWekaModelFactory, AbstractWekaModelVisitor, TMP_DIR
+
+import os
 
 class ModelFactory(AbstractWekaModelFactory):
 
@@ -15,6 +17,9 @@ class ModelFactory(AbstractWekaModelFactory):
 
     self.model_visitor_type = ModelVisitor
     self.verbose_factory_name = "Support_Vector_Machine"
+
+    self.work_dir = TMP_DIR + "{}_{}".format(self.verbose_factory_name, self.factory_name)
+    os.makedirs(self.work_dir)
 
     command = "weka.classifiers.functions.SMO"
 

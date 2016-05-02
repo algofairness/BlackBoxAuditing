@@ -1,4 +1,6 @@
-from AbstractWekaModelFactory import AbstractWekaModelFactory, AbstractWekaModelVisitor
+from AbstractWekaModelFactory import AbstractWekaModelFactory, AbstractWekaModelVisitor, TMP_DIR
+
+import os
 
 class ModelFactory(AbstractWekaModelFactory):
 
@@ -8,6 +10,9 @@ class ModelFactory(AbstractWekaModelFactory):
 
     self.verbose_factory_name = "J48_Decision_Tree"
     self.train_command = "weka.classifiers.trees.J48"
+
+    self.work_dir = TMP_DIR + "{}_{}/".format(self.verbose_factory_name, self.factory_name)
+    os.makedirs(self.work_dir)
 
 class ModelVisitor(AbstractWekaModelVisitor):
   def __init__(self, *args, **kwargs):

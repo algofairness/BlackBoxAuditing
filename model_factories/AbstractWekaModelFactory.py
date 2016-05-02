@@ -7,7 +7,6 @@ import subprocess
 import io
 import csv
 import os
-import time
 
 WEKA_PATH = "/usr/share/java/weka.jar"
 TMP_DIR = "tmp/"
@@ -32,7 +31,7 @@ class AbstractWekaModelFactory(AbstractModelFactory):
 
     # Prepare the ARFF file that will train the model.
     arff_types = get_arff_type_dict(self.headers, self.all_data)
-    model_file = TMP_DIR + "{}_{}_{}.model".format(self.verbose_factory_name, self.factory_name, time.time())
+    model_file = self.work_dir + "{}.model".format(self.verbose_factory_name)
     train_arff_file = model_file + ".train.arff"
 
     # Remove ignored features from the dataset.

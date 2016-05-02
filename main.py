@@ -6,7 +6,7 @@ from measurements import accuracy, BCR
 response_header = "Outcome"
 measurers = [accuracy, BCR]
 features_to_ignore = []
-model_options = {} # See your chosen ModelFactory for available options.
+model_options = {}
 
 verbose = True # Set to `True` to allow for more detailed status updates.
 REPAIR_STEPS = 10
