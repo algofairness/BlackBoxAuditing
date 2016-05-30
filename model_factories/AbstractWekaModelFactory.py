@@ -8,7 +8,7 @@ import io
 import csv
 import os
 
-WEKA_PATH = "/usr/share/java/weka.jar"
+WEKA_PATH = "/Users/sfriedle/Developer/weka-3-8-0/weka.jar"
 TMP_DIR = "tmp/"
 
 if not os.path.isfile(WEKA_PATH):

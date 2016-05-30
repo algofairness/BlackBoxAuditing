@@ -1,9 +1,9 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-import experiments.sample as experiment
+import experiments.diabetes as experiment
 from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy, BCR
-response_header = "Outcome"
+response_header = "Class"
 measurers = [accuracy, BCR]
 features_to_ignore = []
 model_options = {}
