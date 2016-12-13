@@ -3,7 +3,12 @@ import csv
 
 from repairers.GeneralRepairer import Repairer
 
-parser = argparse.ArgumentParser(description="Repair a CSV file.")
+parser = argparse.ArgumentParser(description="""Repair a CSV file.
+Example
+=======
+
+python repair.py test_data/adult.csv repaired_adult.csv 0.5 -r education -p sex -i age
+""")
 parser.add_argument("input_csv", type=str,
                    help="The file on which to perform the repair.")
 parser.add_argument("output_csv", type=str,
