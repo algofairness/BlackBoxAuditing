@@ -11,7 +11,6 @@ parser.add_argument("output_csv", type=str,
 parser.add_argument("repair_level", type=float,
                    help="The level at which the repair should be performed between 0.0 and 1.0.")
 
-parser.add_argument("-r", "--response", type=str, required=True)
 parser.add_argument("-p", "--protected", type=str, nargs="+", required=True)
 parser.add_argument("-i", "--ignored", type=str, nargs="+")
 
@@ -35,25 +34,26 @@ with open(args.input_csv) as f:
   data = [[col[j] for col in cols] for j in xrange(len(data))]
 
 # Calculte the indices to repair by and to ignore.
-try:
-  index_to_repair = headers.index(args.response)
-except ValueError as e:
-  raise Exception("Response header '{}' was not found in the following headers: {}".format(args.response, headers))
+for protected in args.protected:
+  try:
+    index_to_repair = headers.index(protected)
+  except ValueError as e:
+    raise Exception("Response header '{}' was not found in the following headers: {}".format(protected, headers))
 
-try:
-  ignored_features = [headers.index(feature) for feature in args.ignored] if args.ignored else []
-except ValueError as e:
-  raise Exception("One or more ignored-features were not found in the headers: {}".format(headers))
+  try:
+    ignored_features = [headers.index(feature) for feature in args.ignored] if args.ignored else []
+  except ValueError as e:
+    raise Exception("One or more ignored-features were not found in the headers: {}".format(headers))
 
-repairer = Repairer(data, index_to_repair,
-                    args.repair_level, features_to_ignore=ignored_features)
+  repairer = Repairer(data, index_to_repair,
+                      args.repair_level, features_to_ignore=ignored_features)
 
 
-# Repair the input data and write it to a CSV.
-repaired = repairer.repair(data)
+  # Repair the input data and write it to a CSV.
+  data = repairer.repair(data)
 
-with open(args.output_csv, "w") as f:
+with open(args.output_csv, "wb") as f:
   writer = csv.writer(f)
   writer.writerow(headers)
-  for row in repaired:
+  for row in data:
     writer.writerow(row)
