@@ -4,6 +4,8 @@ This repository contains a sample implementation of Gradient Feature Auditing (G
 
 To run GFA on a dataset, use the `main.py` file. The top few lines of that file dictate what machine-learning technique is to be used (the "model factory"), what dataset should be loaded (the "experiment"), and what the response-feature of the data-set is. You also may specify certain dataset features to ignore in the training/auditing process, as well as which "measurers" you would like to use for GFA.
 
+To repair data with respect to a single (e.g., protected) attribute, use the `repair.py` file.  Running `python repair.py` will tell you the arguments the script takes.
+
 # Creating a New "Experiment" / Using a New Dataset
 
 Each "Experiment" should reside in the `experiments` directory as a separate module; each such module should have a load_data method prescribed in the `__init__.py` file (refer to `experiments/sample/__init__.py` for an example). This `load_data` method should return a tuple containing (in order) the headers, training set, and test set for the experiment.
