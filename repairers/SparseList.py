@@ -67,10 +67,10 @@ def audit_test():
 
   l.sort()
 
-  for i in xrange(3*N):
+  for i in xrange(4*N):
     l[i] # Call the `getter`
 
-  print "Big SparseList size correct?", len(l) == 3*N
+  print "Big SparseList size correct?", len(l) == 4*N
 
 def test():
   l = SparseList(default=0)

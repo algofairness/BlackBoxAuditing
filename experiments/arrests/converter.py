@@ -1,7 +1,4 @@
 import time
-import get_data as gd
-
-
 
 def expand_to_one_hot(data,expand = True):
     new_data = []

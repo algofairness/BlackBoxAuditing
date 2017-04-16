@@ -359,7 +359,6 @@ def test_minimal():
   class_1 = [[float(i),"A"] for i in xrange(0, 100)]
   class_2 = [[float(i),"B"] for i in xrange(101, 200)] # Thus, "A" is mode class.
   data = class_1 + class_2
-  print "HERE"
 
   feature_to_repair = 1
   repairer = Repairer(data, feature_to_repair, 1)
