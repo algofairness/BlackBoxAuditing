@@ -312,6 +312,7 @@ def test():
   test_gen_desired_dist()
   test_assign_overflow()
   test_categorical()
+  test_numerical()
   test_repeated_values()
 
 def test_repeated_values():
@@ -550,6 +551,19 @@ def test_assign_overflow():
    [feature[group].data for group in all_stratified_groups] ==[['A', 'A', 'B', 'B', 'B', 'A'], ['B', 'B', 'A']]
   print "Test assign_overflow -- assigned overflow correctly?", assigned_overflow == {('y',): {0: 'B', 1: 'A'}, ('z',): {0: 'B', 1: 'A'}}
   print "Test assign_overflow -- distribution correct?", desired_dict_list == {('y',): [0.5, 0.5], ('z',): [0.5, 0.5]}
+
+def test_numerical():
+  all_data = [ ["x", 1], ["x", 1], ["x", 2], ["x", 2], ["x", 3], ["x", 3],
+               ["y", 1], ["y", 1], ["y", 2] ]
+  feature_to_repair = 0
+  repairer = Repairer(all_data, feature_to_repair, 1.0)
+  repaired_data = repairer.repair(all_data)
+
+  correct_repaired_data = [ ["x", 1], ["x", 1], ["x", 1], ["x", 1], ["x", 2], ["x", 2],
+                            ["x", 1], ["x", 1], ["x", 2] ]
+
+  print "Numerical minimal dataset -- full repaired_data correct?", repaired_data == correct_repaired_data
+
 
 def test_categorical():
   all_data = [
