@@ -47,8 +47,7 @@ def test_sample():
   repaired_data = repairer.repair(data)
   print "repaired_data altered?", repaired_data != data
 
-  median = get_median([row[feature_to_repair] for row in data])
-  print "median replaces column?", all(row[feature_to_repair] == median for row in repaired_data)
+  # TODO: add actual test
 
   repairer = Repairer(data, feature_to_repair, 0.0)
   repaired_data = repairer.repair(data)

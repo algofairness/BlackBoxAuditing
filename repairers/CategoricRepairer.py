@@ -245,7 +245,8 @@ def flow_on_group_features(all_stratified_groups, group_features, repair_generat
     feature = group_features[group]
     count_generator = lambda category : repair_generator(i, group, category)
 
-    # Create directed graph from nodes that supply the original countes to nodes that demand the desired counts, with a overflow node as total desired count is at most total original counts
+    # Create directed graph from nodes that supply the original counts to nodes that demand 
+    # the desired counts, with a overflow node as total desired count is at most total original counts
     DG=feature.create_graph(count_generator)
 
     # Run max-flow, and record overflow count (total and per-group)

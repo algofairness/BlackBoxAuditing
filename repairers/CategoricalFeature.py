@@ -92,8 +92,9 @@ class CategoricalFeature:
 def test():
   random.seed(10)
   test_feature = CategoricalFeature(["A","B","C","D","D","D","C","B","A","C","B","A"])
-  test_feature.desired_category_count = {"A": 1, "B": 2, "C": 2, "D": 3}
-  DG = test_feature.create_graph()
+  desired_count_dict = {"A": 1, "B": 2, "C": 2, "D": 3}
+  desired_category_count = lambda category : desired_count_dict[category]
+  DG = test_feature.create_graph(desired_category_count)
   [new_feature, overflow] = test_feature.repair(DG)
   edges = [
   (0, 8, {'weight': 2}), (0, 4, {'weight': 0}), (0, 5, {'weight': 1}), (0, 6, {'weight': 1}), (0, 7, {'weight': 1}),

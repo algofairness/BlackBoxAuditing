@@ -19,7 +19,8 @@ def test():
   values = range(0,100)
   bin_size = FreedmanDiaconisBinSize(values)
   correct_bin_size = 21
-  print "FreedmanDiaconisBinSize -- correct # of bins? ", bin_size == correct_bin_size
+  bin_size = round(bin_size)
+  print "FreedmanDiaconisBinSize -- correct size of bins? ", bin_size == correct_bin_size
 
 
 if __name__=="__main__":

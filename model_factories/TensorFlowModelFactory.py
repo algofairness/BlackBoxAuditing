@@ -108,7 +108,7 @@ class ModelFactory(AbstractModelFactory):
     # Create a local session to run this computation.
     with tf.Session() as tf_session:
       # For the test data, hold the entire dataset in one constant node.
-      tf.initialize_all_variables().run()
+      tf.global_variables_initializer().run()
 
       # Iterate and train.
       for step in xrange(self.num_epochs * train_size // self.batch_size):

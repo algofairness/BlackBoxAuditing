@@ -57,7 +57,6 @@ def disparate_impact(list_of_triples, nonprotected_group, protected_group):
 def disparate_impact2(feature_to_repair, response, groups, outcomes):
 	# Assert len(feature_to_repair) == len(response), and groups and outcomes are tuples
 	
-
 	total = len(feature_to_repair)
 	group_x = [0]*total
 	group_y = [0]*total
@@ -78,6 +77,7 @@ def disparate_impact2(feature_to_repair, response, groups, outcomes):
 	prob_y_and_a = sum(group_y_and_a) / float(total)
 	prob_a_given_x = prob_x_and_a / prob_x
 	prob_a_given_y = prob_y_and_a / prob_y
+	di = prob_a_given_y / prob_a_given_x
 	return prob_a_given_y/prob_a_given_x
 
 def test():
@@ -85,7 +85,8 @@ def test():
 	response = [0,1,1,0,1]
 	groups = ('W','B')
 	outcomes = (1,0)
-	di = disparate_impact(feature_to_repair, response, groups, outcomes)
+	di = disparate_impact2(feature_to_repair, response, groups, outcomes)
+	di = round(di, 2)
 	print "Disparate Impact correct?", di == 0.75 
 
 if __name__== "__main__":
