@@ -2,6 +2,7 @@ import Orange
 import csv
 
 def CN2_learner(datafile, output_dir, beam_width, min_covered_examples, max_rule_length, influence_scores):
+	print("Setting up CN2 Learner")
 	# format data for classification
 	data = Orange.data.Table.from_file(datafile)
 	# set the learner
@@ -15,9 +16,11 @@ def CN2_learner(datafile, output_dir, beam_width, min_covered_examples, max_rule
 	# set the maximum number of selectors (conditions) found rules may combine
 	learner.rule_finder.general_validator.max_rule_length = max_rule_length
 
+	print("Learning rule list for {}".format(datafile))
 	# learn a rule list for the data
 	classifier = learner(data)
 
+	print("Writing rules to file")
 	# write rules to file
 	rulesfile = "{}/rules.csv".format(output_dir)
 	with open(rulesfile, 'w') as csvfile:

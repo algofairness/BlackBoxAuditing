@@ -243,41 +243,37 @@ For each rule number, find the rule that is within epsilon quality of the origin
 	for that number and has the lowest influence score
 """
 
-def select_best_obscured_rules(original_rules, expanded_rules_dict):
+def select_best_obscured_rules(original_rules, expanded_rules_dict, by_original):
 	best_rules = []
 	for original_rule in original_rules:
 		ID = original_rule.ID
-		best_rule = None
-		best_influence_score = 0.0
-		best_quality = 0.0
-		# find rule with the highest quality
-		for rule in expanded_rules_dict[ID]:
-			best_influence_score = rule.influence_score if rule.quality > best_quality else best_influence_score
-			best_rule = rule if rule.quality > best_quality else best_rule
-			best_quality = rule.quality if rule.quality > best_quality else best_quality
-		for expanded_rule in expanded_rules_dict[ID]:
-			if (expanded_rule.quality + 0.05 >= best_quality and 
-				expanded_rule.influence_score < best_influence_score):
-				best_rule = expanded_rule
-				best_influence_score = expanded_rule.influence_score
-		best_rules.append(best_rule)
+		# find best rule with quality within epsilon of the original rule's quality
+		if by_original:
+			best_rule = original_rule
+			best_influence_score = original_rule.influence_score
+			for expanded_rule in expanded_rules_dict[ID]:
+				if (expanded_rule.quality + 0.05 >= original_rule.quality and
+					expanded_rule.influence_score < best_influence_score):
+					best_rule = expanded_rule
+					best_influence_score = expanded_rule.influence_score
+			best_rules.append(best_rule)
+		# find best rule with quality within epsilon of highest quality rule of bunch
+		else:
+			best_rule = None
+			best_influence_score = 0.0
+			best_quality = 0.0
+			# find rule with the highest quality
+			for rule in expanded_rules_dict[ID]:
+				best_influence_score = rule.influence_score if rule.quality > best_quality else best_influence_score
+				best_rule = rule if rule.quality > best_quality else best_rule
+				best_quality = rule.quality if rule.quality > best_quality else best_quality
+			for expanded_rule in expanded_rules_dict[ID]:
+				if (expanded_rule.quality + 0.05 >= best_quality and 
+					expanded_rule.influence_score < best_influence_score):
+					best_rule = expanded_rule
+					best_influence_score = expanded_rule.influence_score
+			best_rules.append(best_rule)
 	return best_rules
-
-"""
-def select_best_obscured_rules(original_rules, expanded_rules_dict):
-    best_rules = []
-    for original_rule in original_rules:
-        ID = original_rule.ID
-        best_rule = original_rule
-        best_influence_score = original_rule.influence_score
-        for expanded_rule in expanded_rules_dict[ID]:
-            if (expanded_rule.quality + 0.05 >= original_rule.quality and
-                expanded_rule.influence_score < best_influence_score):
-                best_rule = expanded_rule
-                best_influence_score = expanded_rule.influence_score
-        best_rules.append(best_rule)
-    return best_rules
-"""
 
 """
 Find contexts of influence
@@ -295,7 +291,7 @@ def find_contexts_of_influence(rules, obscured_tag):
 Expand rules and find all contexts of influence
 """
 def expand_and_find_contexts(original_csv, obscured_csv, merged_csv, rulesfile,
-					  influence_scores, obscured_tag, output_dir):
+					  influence_scores, obscured_tag, output_dir, by_original):
 	# Format data 
 	data = get_data(merged_csv)
 
@@ -304,12 +300,14 @@ def expand_and_find_contexts(original_csv, obscured_csv, merged_csv, rulesfile,
 	
 	# Get a mapping from the original data values to their obscured values
 	orig_to_obscured = get_orig_to_obscured_map(original_csv, obscured_csv)
-
+    
+	print("Expanding rule list")
 	# Expand each original rule and store them in a dictionary by the original rule's number
 	expanded_rules_dict = expand_rules(original_rules, orig_to_obscured, data, influence_scores, obscured_tag)
 	
+	print("Finding best expanded rules")
 	# Find the best expanded rule for each rule number
-	best_rules = select_best_obscured_rules(original_rules, expanded_rules_dict)
+	best_rules = select_best_obscured_rules(original_rules, expanded_rules_dict, by_original)
 
 	# Find the contexts of influence for the best expanded rules
 	contexts_of_influence = find_contexts_of_influence(best_rules, obscured_tag)
