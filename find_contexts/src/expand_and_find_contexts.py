@@ -247,15 +247,14 @@ def select_best_obscured_rules(original_rules, expanded_rules_dict):
 	best_rules = []
 	for original_rule in original_rules:
 		ID = original_rule.ID
-		best_influence_score = original_rule.influence_score
-		best_rule = original_rule
 		best_rule = None
 		best_influence_score = 0.0
 		best_quality = 0.0
-		for r in expanded_rules_dict[ID]:
-			best_influence_score = r.influence_score if r.quality > best_quality else best_influence_score
-			best_rule = r if r.quality > best_quality else best_rule
-			best_quality = r.quality if r.quality > best_quality else best_quality
+		# find rule with the highest quality
+		for rule in expanded_rules_dict[ID]:
+			best_influence_score = rule.influence_score if rule.quality > best_quality else best_influence_score
+			best_rule = rule if rule.quality > best_quality else best_rule
+			best_quality = rule.quality if rule.quality > best_quality else best_quality
 		for expanded_rule in expanded_rules_dict[ID]:
 			if (expanded_rule.quality + 0.05 >= best_quality and 
 				expanded_rule.influence_score < best_influence_score):
@@ -263,6 +262,22 @@ def select_best_obscured_rules(original_rules, expanded_rules_dict):
 				best_influence_score = expanded_rule.influence_score
 		best_rules.append(best_rule)
 	return best_rules
+
+"""
+def select_best_obscured_rules(original_rules, expanded_rules_dict):
+    best_rules = []
+    for original_rule in original_rules:
+        ID = original_rule.ID
+        best_rule = original_rule
+        best_influence_score = original_rule.influence_score
+        for expanded_rule in expanded_rules_dict[ID]:
+            if (expanded_rule.quality + 0.05 >= original_rule.quality and
+                expanded_rule.influence_score < best_influence_score):
+                best_rule = expanded_rule
+                best_influence_score = expanded_rule.influence_score
+        best_rules.append(best_rule)
+    return best_rules
+"""
 
 """
 Find contexts of influence
