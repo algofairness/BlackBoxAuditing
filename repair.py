@@ -13,6 +13,7 @@ parser.add_argument("repair_level", type=float,
 
 parser.add_argument("-p", "--protected", type=str, nargs="+", required=True)
 parser.add_argument("-i", "--ignored", type=str, nargs="+")
+parser.add_argument("-kdd", action='store_true', required=False)
 
 args = parser.parse_args()
 
@@ -46,7 +47,7 @@ for protected in args.protected:
     raise Exception("One or more ignored-features were not found in the headers: {}".format(headers))
 
   repairer = Repairer(data, index_to_repair,
-                      args.repair_level, features_to_ignore=ignored_features)
+                      args.repair_level, args.kdd, features_to_ignore=ignored_features)
 
 
   # Repair the input data and write it to a CSV.

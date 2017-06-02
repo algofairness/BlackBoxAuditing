@@ -23,7 +23,7 @@ class Repairer(AbstractRepairer):
       for j in index_bin:
         binned_data[j][self.feature_to_repair] = bin_name
       category_vals = [data_to_repair[j][self.feature_to_repair] for j in index_bin]
-      category_medians[bin_name] = get_median(category_vals)
+      category_medians[bin_name] = get_median(category_vals, self.kdd)
 
     repaired_data = self.categoric_repairer.repair(binned_data)
 
@@ -43,11 +43,11 @@ def test():
 def test_sample():
   data = [[float(i),float(i)*2, 1] for i in xrange(0, 150)]
   feature_to_repair = 0
-  repairer = Repairer(data, feature_to_repair, 0.5)
+  repairer = Repairer(data, feature_to_repair, 0.5, False)
   repaired_data = repairer.repair(data)
   print "repaired_data altered?", repaired_data != data
 
-  repairer = Repairer(data, feature_to_repair, 0.0)
+  repairer = Repairer(data, feature_to_repair, 0.0, False)
   repaired_data = repairer.repair(data)
   print "repaired_data unaltered for repair level=0?", repaired_data == data
 

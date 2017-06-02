@@ -30,7 +30,7 @@ def _audit_worker(params):
   index_to_repair = headers.index(feature_to_repair)
 
   repairer = Repairer(shared_all, index_to_repair,
-                      repair_level, features_to_ignore=ignored_features, kdd)
+                      repair_level, kdd, features_to_ignore=ignored_features)
 
   # Build a model on repaired training data if specified.
   if isinstance(model_or_factory, AbstractModelFactory):
@@ -82,8 +82,8 @@ def _audit_worker(params):
 
 
 class GradientFeatureAuditor(object):
-  def __init__(self, model_or_factory, headers, train_set, test_set, repair_steps=10,
-                features_to_ignore = [], kdd):
+  def __init__(self, model_or_factory, headers, train_set, test_set, kdd, repair_steps=10,
+                features_to_ignore = []):
     self.repair_steps = repair_steps
     self.model_or_factory = model_or_factory
     self.headers = headers
@@ -165,8 +165,8 @@ def test():
   test = train[:] # Copy the training data.
   model = MockModel(test)
   repair_steps = 5
-  gfa = GradientFeatureAuditor(model, headers, train, test,
-                               repair_steps=repair_steps, kdd)
+  gfa = GradientFeatureAuditor(model, headers, train, test, False,
+                               repair_steps=repair_steps)
   output_files = gfa.audit()
 
   print "correct # of audit files produced? --", len(output_files) == len(train[0]) # The number of features.

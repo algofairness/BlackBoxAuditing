@@ -5,8 +5,6 @@ from NumericRepairer import Repairer as NumericRepairer
 class Repairer(AbstractRepairer):
   def __init__(self, *args, **kwargs):
     super(Repairer, self).__init__(*args, **kwargs)
-    for arg in args:
-	print arg
     
     if self.kdd:
         self.repairer = CategoricRepairer(*args,**kwargs) 
