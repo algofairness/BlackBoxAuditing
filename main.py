@@ -12,6 +12,7 @@ verbose = True # Set to `True` to allow for more detailed status updates.
 REPAIR_STEPS = 10
 RETRAIN_MODEL_PER_REPAIR = False
 WRITE_ORIGINAL_PREDICTIONS = True
+KDD = True # Set to 'True' to compare to KDD results
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # NOTE: You should not need to change anything below this point.
@@ -79,7 +80,7 @@ def run():
   # Prepare the auditor.
   auditor = GradientFeatureAuditor(model_or_factory, headers, train_set, test_set,
                                    repair_steps=REPAIR_STEPS,
-                                   features_to_ignore=audit_indices_to_ignore)
+                                   features_to_ignore=audit_indices_to_ignore, kdd=KDD)
 
   vprint("Dumping original training data.", verbose)
   # Dump the train data to the log.

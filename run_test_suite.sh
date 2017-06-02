@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Run this file with bash to run all Python files in this directory and in sub-directories.
 # Note: excludes "__init__.py" files, "Abstract" files, and the "main.py" file.
 

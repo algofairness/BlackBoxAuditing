@@ -25,12 +25,12 @@ def _audit_worker(params):
   global shared_train
   global shared_test
 
-  model_or_factory, headers, ignored_features, feature_to_repair, repair_level, output_file = params
+  model_or_factory, headers, ignored_features, feature_to_repair, repair_level, output_file, kdd = params
 
   index_to_repair = headers.index(feature_to_repair)
 
   repairer = Repairer(shared_all, index_to_repair,
-                      repair_level, features_to_ignore=ignored_features)
+                      repair_level, features_to_ignore=ignored_features, kdd)
 
   # Build a model on repaired training data if specified.
   if isinstance(model_or_factory, AbstractModelFactory):
@@ -83,13 +83,14 @@ def _audit_worker(params):
 
 class GradientFeatureAuditor(object):
   def __init__(self, model_or_factory, headers, train_set, test_set, repair_steps=10,
-                features_to_ignore = []):
+                features_to_ignore = [], kdd):
     self.repair_steps = repair_steps
     self.model_or_factory = model_or_factory
     self.headers = headers
     self.features_to_ignore = features_to_ignore
     self.AUDIT_DIR = "audits"
     self.OUTPUT_DIR = "{}/{}".format(self.AUDIT_DIR, time.time())
+    self.kdd = kdd
 
     global shared_all
     global shared_train
@@ -114,7 +115,7 @@ class GradientFeatureAuditor(object):
     worker_params = []
     while repair_level <= 1.0:
 
-      call_params = (self.model_or_factory, self.headers, self.features_to_ignore, feature_to_repair, repair_level, output_file)
+      call_params = (self.model_or_factory, self.headers, self.features_to_ignore, feature_to_repair, repair_level, output_file, self.kdd)
       worker_params.append( call_params )
       repair_level += repair_increase_per_step
 
@@ -165,7 +166,7 @@ def test():
   model = MockModel(test)
   repair_steps = 5
   gfa = GradientFeatureAuditor(model, headers, train, test,
-                               repair_steps=repair_steps)
+                               repair_steps=repair_steps, kdd)
   output_files = gfa.audit()
 
   print "correct # of audit files produced? --", len(output_files) == len(train[0]) # The number of features.
