@@ -70,7 +70,7 @@ class Rule:
 			self.quality = quality
 
 	def __str__(self):
-		cond = " AND ".join([s.var + s.op + s.val for s in self.selectors])
+		cond = " AND ".join([str(s) for s in self.selectors])
 		outcome = "{}={}".format(self.outcome_var, self.outcome_val)
 		return "IF {} THEN {}".format(cond, outcome)
 		
@@ -124,9 +124,9 @@ def parse_rule(rule):
 			op = '=='
 		elif "!=" in selector:
 			op = '!='
-		elif ">=" in selectors:
+		elif ">=" in selector:
 			op = ">="
-		elif "<=" in selectors:
+		elif "<=" in selector:
 			op = "<="
 		elif "TRUE" in selector:
 			continue
@@ -140,17 +140,17 @@ def parse_rule(rule):
 	return Selectors, outcome_var, outcome_val
 		
 
-def get_rules_from_file(rulefile):
+def get_rules_from_file(rulefile, data):
 	reader = csv.DictReader(open(rulefile, "r"))
 	rules = []
 	for row in reader:
 		rule_num = int(row["Label"])
 		rule = row["Rules"]
 		selectors, outcome_var, outcome_val = parse_rule(rule)
-		quality = float(row["Quality"])
 		influence_score = float(row["Score"])
 		r = Rule(selectors=selectors, outcome_var=outcome_var, outcome_val=outcome_val, 
-				quality=quality, influence_score=influence_score, ID=rule_num)
+				 influence_score=influence_score, ID=rule_num)
+		r.calculate_quality(data)
 		rules.append(r)
 	return rules
 
@@ -243,7 +243,7 @@ For each rule number, find the rule that is within epsilon quality of the origin
 	for that number and has the lowest influence score
 """
 
-def select_best_obscured_rules(original_rules, expanded_rules_dict, by_original):
+def select_best_obscured_rules(original_rules, expanded_rules_dict, by_original, epsilon):
 	best_rules = []
 	for original_rule in original_rules:
 		ID = original_rule.ID
@@ -252,7 +252,7 @@ def select_best_obscured_rules(original_rules, expanded_rules_dict, by_original)
 			best_rule = original_rule
 			best_influence_score = original_rule.influence_score
 			for expanded_rule in expanded_rules_dict[ID]:
-				if (expanded_rule.quality + 0.05 >= original_rule.quality and
+				if (expanded_rule.quality + epsilon >= original_rule.quality and
 					expanded_rule.influence_score < best_influence_score):
 					best_rule = expanded_rule
 					best_influence_score = expanded_rule.influence_score
@@ -268,7 +268,7 @@ def select_best_obscured_rules(original_rules, expanded_rules_dict, by_original)
 				best_rule = rule if rule.quality > best_quality else best_rule
 				best_quality = rule.quality if rule.quality > best_quality else best_quality
 			for expanded_rule in expanded_rules_dict[ID]:
-				if (expanded_rule.quality + 0.05 >= best_quality and 
+				if (expanded_rule.quality + epsilon >= best_quality and 
 					expanded_rule.influence_score < best_influence_score):
 					best_rule = expanded_rule
 					best_influence_score = expanded_rule.influence_score
@@ -291,12 +291,12 @@ def find_contexts_of_influence(rules, obscured_tag):
 Expand rules and find all contexts of influence
 """
 def expand_and_find_contexts(original_csv, obscured_csv, merged_csv, rulesfile,
-					  influence_scores, obscured_tag, output_dir, by_original):
+					  influence_scores, obscured_tag, output_dir, by_original, epsilon):
 	# Format data 
 	data = get_data(merged_csv)
 
 	# Convert rules form rule list into Rule objects
-	original_rules = get_rules_from_file(rulesfile)
+	original_rules = get_rules_from_file(rulesfile, data)
 	
 	# Get a mapping from the original data values to their obscured values
 	orig_to_obscured = get_orig_to_obscured_map(original_csv, obscured_csv)
@@ -307,7 +307,7 @@ def expand_and_find_contexts(original_csv, obscured_csv, merged_csv, rulesfile,
 	
 	print("Finding best expanded rules")
 	# Find the best expanded rule for each rule number
-	best_rules = select_best_obscured_rules(original_rules, expanded_rules_dict, by_original)
+	best_rules = select_best_obscured_rules(original_rules, expanded_rules_dict, by_original, epsilon)
 
 	# Find the contexts of influence for the best expanded rules
 	contexts_of_influence = find_contexts_of_influence(best_rules, obscured_tag)
@@ -343,8 +343,82 @@ def expand_and_find_contexts(original_csv, obscured_csv, merged_csv, rulesfile,
 	contexts_file = open("{}/contexts_of_influence.txt".format(output_dir), 'w')
 	for outcome in contexts_of_influence:
 		list_of_contexts = contexts_of_influence[outcome]
-		contexts = " OR \n".join([", ".join(context) for context in list_of_contexts])
+		contexts = " OR \n".join([" AND ".join(context) for context in list_of_contexts])
 		contexts_file.write(outcome +': \n')
 		contexts_file.write(contexts + '\n\n')
 
-	return contexts_of_influence	
+	return contexts_of_influence
+
+import shutil, filecmp
+def test():
+	TMP_DIR = "tmp"
+	if not os.path.exists(TMP_DIR):
+		os.mkdir(TMP_DIR)
+	
+	test_orig_contents = [["Col1","Col2","Class"],
+                          ["A","X",1],
+                          ["A","X",1],
+                          ["A","Y",0],
+                          ["B","X",0],
+                          ["B","Y",0]]
+
+	test_obscured_contents = [["Col1", "Col2","Class"],
+                              ["a","x",1],
+                              ["a","x",1],
+                              ["a","y",0],
+                              ["b","x",0],
+                              ["b","y",0]]
+
+
+	test_merged_contents = [["Col1","Col1-tag","Col2","Col2-tag","Class"],
+                              ["A","a","X","x",1],
+                              ["A","a","X","x",1],
+                              ["A","a","Y","y",0],
+                              ["B","b","X","x",0],
+                              ["B","b","Y","y",0]] 
+
+	test_rulesfile = [["Label","Rule","Quality","Score"],
+                      [0,"IF Col1!=A THEN Class=0",0.75,0.15],
+                      [1,"IF Col2==X THEN Class=1",0.75,0.15],
+                      [2,"IF TRUE THEN Class=0",.67,0]]
+
+	test_full_expanded_rulelist = [[0,"IF Col1!=A THEN Class=0",0.25,0.15],
+                                   [0,"IF Col1!=A THEN Class=0",0.25,0.15],
+                                   [0,"IF Col1-notag!=a THEN Class=0",0.25,0.0],
+                                   [1,"IF Col2==X THEN Class=1",0.2,0.15],
+                                   [1,"IF Col2==X THEN Class=1",0.2,0.15],
+                                   [1,"IF Col2-notag==x THEN Class=1",0.2,0.0],
+                                   [2,"IF  THEN Class=0",0.14285714285714285,0.0],
+                                   [2,"IF  THEN Class=0",0.14285714285714285,0]]
+
+	test_best_expanded_rulelist = [[0,"IF Col1-notag!=a THEN Class=0",0.25,0.0],
+                                   [1,"IF Col2-notag==x THEN Class=1",0.2,0.0],
+                                   [2,"IF  THEN Class=0,0.14285714285714285",0.0]]
+
+	test_influence_scores = {"ColA":.15, "ColB":.15, "ColA-tag":0, "ColB-tag":0}
+	obscured_tag = "-tag"
+	outputdir = TMP_DIR
+	epsilon = .1
+
+	test_files = [(TMP_DIR + "/test_orig", test_orig_contents),
+                  (TMP_DIR + "/test_obscured", test_obscured_contents), 
+                  (TMP_DIR + "/test_merged", test_merged_contents), 
+                  (TMP_DIR + "/test_rulesfile", tests_rulesfile),
+                  (TMP_DIR + "/test_full_rules", test_full_expanded_rulelist), 
+                  (TMP_DIR + "/test_best_rules", test_best_expanded_rulelist)]
+
+	for test_file in test_files:
+		with open(test_file[0], 'w') as csvf:
+			f = csv.writer(csvf)
+			for row in test_file[1]:
+				f.writerow(row)
+
+	contexts_of_influence = expand_and_find_contexts(original_csv, obscured_csv, merged_csv, rulesfile, influence_scores, obscured_tag, output_dir, by_original, epsilon)
+	
+	res_files = [(TMP_DIR+"/full_expanded_rulelist.csv"),
+                 (TMP_DIR+"/best_expanded_rulelist.csv")]
+
+	assert(filecmp.cmp(res_files[0], test_file[4][0]))
+	assert(filecmp.cmp(res_files[1], test_file[5][0]))
+
+	shutil.rmtree(TMP_DIR)

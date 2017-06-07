@@ -53,3 +53,46 @@ def merge(orig_file, obscured_file, obscured_tag, output_dir):
 		merged_output.writerow(merged_row)
 
 	return merged_csv
+
+import os, shutil, filecmp
+def test():
+	TMP_DIR = "tmp"
+	if not os.path.exists(TMP_DIR):
+		os.mkdir(TMP_DIR)
+	
+	test_csv_contents = [[["ColA","ColB","ColC"],
+                          ["A","B","C"]],
+                         [["ColA","ColB","ColC"],
+                          ["A'","B'","C'"]],
+                         [["ColA","ColB","ColC"],
+                          ["d","d","d"],
+                          ["","","class"]],
+                         [["ColA","ColA-tag","ColB","ColB-tag","ColC","ColC-tag"],
+                          ["A","A'","B","B'","C","C'"]]]
+	test_csv_filenames = [TMP_DIR + "/test_file_original",
+                      TMP_DIR + "/test_file_obscured",
+                      TMP_DIR + "/test_file_feature_data",
+                      TMP_DIR + "/test_merged"]
+
+	test_tab_contents = "ColA\tColB\tColC\nd\td\td\n\t\tclass\nA\tB\tC\n"
+	test_tab_filename = TMP_DIR + "/test_converted"
+	
+	for i, filename in enumerate(test_csv_filenames):
+		with open(filename, 'w') as csvf:
+			f = csv.writer(csvf)
+			for row in test_csv_contents[i]:
+				f.writerow(row)
+
+	with open(test_tab_filename, 'w') as tabf:
+		tabf.write(test_tab_contents)
+
+	converted = convert_to_tab(test_csv_filenames[0], test_csv_filenames[2], TMP_DIR)
+	assert(filecmp.cmp(converted, test_tab_filename))
+
+	tag = "-tag"
+	merged = merge(test_csv_filenames[0],test_csv_filenames[1],tag, TMP_DIR)
+	assert(filecmp.cmp(merged, test_csv_filenames[3]))
+
+	shutil.rmtree(TMP_DIR)
+
+if __name__=="__main__": test()	
