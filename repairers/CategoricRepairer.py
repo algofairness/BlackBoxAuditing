@@ -27,8 +27,12 @@ class Repairer(AbstractRepairer):
     col_type_dict = {col_id: col_type for col_id, col_type in zip(col_ids, col_types)}
 
     not_I_col_ids = filter(lambda x: col_type_dict[x] != "I", col_ids)
-    cols_to_repair = filter(lambda x: col_type_dict[x] in "YX", col_ids)
-
+    
+    if self.kdd:
+      cols_to_repair = filter(lambda x: col_type_dict[x] == "Y", col_ids) 
+    else:
+      cols_to_repair = filter(lambda x: col_type_dict[x] in "YX", col_ids)
+    
     # To prevent potential perils with user-provided column names, map them to safe column names
     safe_stratify_cols = [self.feature_to_repair]
 

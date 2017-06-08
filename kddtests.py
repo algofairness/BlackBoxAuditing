@@ -52,7 +52,7 @@ def kddtest(kdd):
 	writer.writerow(row)
 
     if kdd:
-      with open('repair_tests/TrueKDDRepairWhite.csv') as f:
+      with open('repair_tests/TrueKDDRepair.csv') as f:
         correct_data = [line for line in csv.reader(f)]
     else:
       with open('repair_tests/FalseKDDRepair.csv') as f:
