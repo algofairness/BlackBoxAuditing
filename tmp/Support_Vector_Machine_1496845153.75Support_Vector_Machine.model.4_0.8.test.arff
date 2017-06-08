@@ -1,0 +1,68 @@
+@relation BlackBoxAuditing
+@attribute Position {Lieutenant,Captain}
+@attribute Oral numeric
+@attribute Written numeric
+@attribute Race {H,B,W}
+@attribute Combine numeric
+@attribute Class {1,0}
+
+@data
+Lieutenant,58.75,62,W,70.6,1
+Lieutenant,51.67,69,H,70.6,1
+Lieutenant,52.92,64,W,74.332,1
+Lieutenant,58.33,68,B,70.6,1
+Lieutenant,57.92,69,W,70.6,1
+Lieutenant,58.75,60,B,70.6,1
+Lieutenant,58.33,64,W,70.6,1
+Lieutenant,58.33,64,W,70.6,1
+Lieutenant,50.42,69,W,70.6,1
+Lieutenant,57.92,64,H,70.6,1
+Lieutenant,51.67,68,W,70.6,1
+Lieutenant,51.25,69,B,70.6,1
+Lieutenant,49.58,69,H,70.6,1
+Lieutenant,58.75,62,W,70.6,1
+Lieutenant,58.33,62,W,70.6,1
+Lieutenant,58.33,62,W,70.6,1
+Lieutenant,51.67,68,W,70.6,0
+Lieutenant,58.33,62,H,70.6,0
+Lieutenant,58.33,62,W,70.6,0
+Lieutenant,51.25,69,B,70.6,0
+Lieutenant,49.58,69,B,70.6,0
+Lieutenant,51.67,64,H,70.6,0
+Lieutenant,49.58,69,W,70.6,0
+Lieutenant,58.33,62,B,70.6,0
+Lieutenant,51.67,62,W,65.168,0
+Lieutenant,58.75,60,W,70.6,0
+Lieutenant,50.42,68,B,70.6,0
+Lieutenant,50.42,68,B,70.6,0
+Lieutenant,57.92,62,B,70.6,0
+Lieutenant,48.33,69,W,70.6,0
+Lieutenant,51.25,68,H,65.168,0
+Lieutenant,57.92,60,B,70.6,0
+Lieutenant,49.58,68,H,70.6,0
+Lieutenant,58.33,59,W,70.6,0
+Lieutenant,48.33,68,H,65.168,0
+Lieutenant,56.67,67,W,70.6,0
+Lieutenant,56.67,60,B,70.6,0
+Lieutenant,56.67,60,B,60.0,0
+Lieutenant,46.25,68,B,60.0,0
+Lieutenant,49.58,67,H,60.0,0
+Lieutenant,56.25,60,B,60.0,0
+Lieutenant,49.58,67,B,70.6,0
+Lieutenant,48.33,67,W,70.6,0
+Lieutenant,57.5,60,W,60.0,0
+Lieutenant,48.33,67,H,70.6,0
+Lieutenant,57.5,60,H,70.6,0
+Lieutenant,56.67,60,W,60.0,0
+Lieutenant,49.58,60,W,60.0,0
+Lieutenant,46.25,67,W,70.6,0
+Lieutenant,46.25,67,H,70.6,0
+Lieutenant,46.25,62,W,70.6,0
+Lieutenant,56.67,60,B,60.0,0
+Lieutenant,56.25,66,W,54.732,0
+Lieutenant,57.5,59,B,70.6,0
+Lieutenant,46.25,66,H,70.6,0
+Lieutenant,49.58,59,B,70.6,0
+Lieutenant,48.33,66,H,70.6,0
+Lieutenant,56.25,65,H,70.6,0
+Lieutenant,48.33,59,B,70.6,0

@@ -62,7 +62,7 @@ def _audit_worker(params):
       writer = csv.writer(f)
       for row in [headers]+rep_test:
         writer.writerow(row)
-
+    repaired = output_file+".test.repaired_{}.data".format(repair_level)
 
   # Save the prediction_tuples and the original values of the features to repair.
   if SAVE_PREDICTION_DETAILS:
@@ -78,7 +78,7 @@ def _audit_worker(params):
   del repairer
   gc.collect()
 
-  return (repair_level, conf_table)
+  return repaired,(repair_level, conf_table)
 
 
 class GradientFeatureAuditor(object):

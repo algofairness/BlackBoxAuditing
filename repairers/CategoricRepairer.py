@@ -15,7 +15,7 @@ class Repairer(AbstractRepairer):
   def repair(self, data_to_repair):
     num_cols = len(data_to_repair[0])
     col_ids = range(num_cols)
-
+    
     # Get column type information
     col_types = ["Y"]*len(col_ids)
     for i, col in enumerate(col_ids):
@@ -33,7 +33,7 @@ class Repairer(AbstractRepairer):
     safe_stratify_cols = [self.feature_to_repair]
 
     # Extract column values for each attribute in data
-    # Begin by initializing keys and values in dictionary
+    # Begin byled code will usually be created in the same directory as the .py file. initializing keys and values in dictionary
     data_dict = {col_id: [] for col_id in col_ids}
 
     # Populate each attribute with its column values
@@ -190,7 +190,6 @@ class Repairer(AbstractRepairer):
     for i, orig_row in enumerate(data_to_repair):
       new_row = [orig_row[j] if j not in cols_to_repair else data_dict[j][i] for j in col_ids]
       repaired_data.append(new_row)
-
     return repaired_data
 
 def get_group_data(all_stratified_groups,stratified_group_data, col_id):

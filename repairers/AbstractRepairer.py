@@ -24,8 +24,8 @@ class AbstractRepairer(object):
     self.all_data = all_data
     self.feature_to_repair = feature_to_repair
     self.repair_level = repair_level
-    self.features_to_ignore = features_to_ignore
     self.kdd = kdd
+    self.features_to_ignore = features_to_ignore
 
   @abstractmethod
   def repair(self, data_to_repair):

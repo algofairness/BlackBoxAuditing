@@ -131,7 +131,7 @@ def setup_and_call_repair(infile, outfile, identifier_col_names, protected_col_n
             repaired_row = [repaired_data[safe_col_names[col_name]][row_number] for col_name in repaired_col_names]
             writer.writerow(repaired_row)
 
-    print "Repair Process Complete. Repaired Data can be found at: ", outfile
+    print "KDD Repair Process Complete. Repaired Data can be found at: ", outfile
     return outfile
 
 def perform_repair(outfile, col_names, col_type_dict, safe_col_names, all_stratified_groups, 

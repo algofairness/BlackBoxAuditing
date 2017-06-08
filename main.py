@@ -1,6 +1,6 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
-import experiments.diabetes as experiment
+import experiments.ricci as experiment
 from model_factories.SVM_ModelFactory import ModelFactory
 from measurements import accuracy, BCR
 response_header = "Class"
@@ -79,8 +79,8 @@ def run():
 
   # Prepare the auditor.
   auditor = GradientFeatureAuditor(model_or_factory, headers, train_set, test_set,
-                                   repair_steps=REPAIR_STEPS,
-                                   features_to_ignore=audit_indices_to_ignore, kdd=KDD)
+                                   kdd=KDD, repair_steps=REPAIR_STEPS,
+                                   features_to_ignore=audit_indices_to_ignore)
 
   vprint("Dumping original training data.", verbose)
   # Dump the train data to the log.
@@ -164,7 +164,6 @@ def run():
       f.write("\tApprox. Trend Groups: {}\n".format(groups))
 
   vprint("Summary file written to: {}".format(summary_file), verbose)
-
 
 if __name__=="__main__":
   run()
