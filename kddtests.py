@@ -45,17 +45,17 @@ def kddtest(kdd):
     # Repair the input data and write it to a CSV.
     data = repairer.repair(data)
 
-    with open('repair_tests/output/repairtest.csv', 'wb') as f:
-      writer = csv.writer(f)
-      writer.writerow(headers)
-      for row in data:
-	writer.writerow(row)
+    #with open('repair_tests/output/repairtest.csv', 'wb') as f:
+    # writer = csv.writer(f)
+    # writer.writerow(headers)
+    # for row in data:
+    # writer.writerow(row)
 
     if kdd:
-      with open('repair_tests/TrueKDDRepair.csv') as f:
+      with open('repair_tests/RicciRepair1.0.KDDflag.csv') as f:
         correct_data = [line for line in csv.reader(f)]
     else:
-      with open('repair_tests/FalseKDDRepair.csv') as f:
+      with open('repair_tests/RicciRepair1.0.audits.csv') as f:
         correct_data = [line for line in csv.reader(f)]
 
     # This is gross and I'm so sorry, but I needed to compare strings to strings

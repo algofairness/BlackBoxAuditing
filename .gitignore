@@ -1,4 +1,5 @@
 audits/*
+repair_tests/output
 kdd/
 *.pyc
 *.swp
