@@ -1,4 +1,6 @@
 audits/*
+kdd/*
 *.pyc
+*.swp
 
 test_data/DRP*
