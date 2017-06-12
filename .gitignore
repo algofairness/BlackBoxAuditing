@@ -1,5 +1,5 @@
 audits/*
-kdd/*
+kdd/
 *.pyc
 *.swp
 
