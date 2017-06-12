@@ -42,7 +42,7 @@ def kddtest(kdd):
                         repair_level, kdd, features_to_ignore=ignored_features)
 
 
-    # Repair the input data and write it to a CSV.
+    # Repair the input data.
     data = repairer.repair(data)
 
     if kdd:
@@ -52,7 +52,7 @@ def kddtest(kdd):
       with open('repair_tests/RicciRepair1.0.audits.csv') as f:
         correct_data = [line for line in csv.reader(f)]
 
-    # This is gross and I'm so sorry, but I needed to compare strings to strings
+    # This is gross and I'm so sorry.
     strdata = []
     for line in data:
       for x in range(len(line)):
