@@ -2,3 +2,5 @@ audits/*
 *.pyc
 
 test_data/DRP*
+
+find_contexts/output
