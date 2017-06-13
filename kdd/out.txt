@@ -1,0 +1,961 @@
+------------------
+quantile unit: 0.333333333333
+{'group': 'X', 'class': 'C', 'val': 'Y'}
+{('y',): 3, ('x',): 6}
+---- quantile: 0
+group: ('x',)
+offset: 0
+number to get: 2
+group: ('y',)
+offset: 0
+number to get: 1
+[1.0, 1.0]
+1.0
+---- quantile: 1
+group: ('x',)
+offset: 2
+number to get: 2
+group: ('y',)
+offset: 1
+number to get: 1
+[2.0, 1.0]
+2.0
+---- quantile: 2
+group: ('x',)
+offset: 4
+number to get: 2
+group: ('y',)
+offset: 2
+number to get: 1
+[3.0, 2.0]
+3.0
+Done with small_test.csv 1.0
+Preparing data now...
+Repair Process Complete. Repaired Data can be found at:  small_test_out.csv
+Test Passed
+------------------
+quantile unit: 0.0434782608696
+{'Written': 'Y', 'Race': 'X', 'Combine': 'Y', 'Position': 'I', 'Oral': 'Y', 'Class': 'C'}
+{('B',): 27, ('W',): 68, ('H',): 23}
+---- quantile: 0
+group: ('B',)
+offset: 0
+number to get: 1
+group: ('H',)
+offset: 0
+number to get: 1
+group: ('W',)
+offset: 0
+number to get: 3
+[45.83, 40.83, 45.42]
+45.42
+---- quantile: 1
+group: ('B',)
+offset: 1
+number to get: 1
+group: ('H',)
+offset: 1
+number to get: 1
+group: ('W',)
+offset: 3
+number to get: 3
+[51.25, 42.5, 50.42]
+50.42
+---- quantile: 2
+group: ('B',)
+offset: 2
+number to get: 2
+group: ('H',)
+offset: 2
+number to get: 1
+group: ('W',)
+offset: 6
+number to get: 3
+[52.38, 42.86, 51.67]
+51.67
+---- quantile: 3
+group: ('B',)
+offset: 4
+number to get: 1
+group: ('H',)
+offset: 3
+number to get: 1
+group: ('W',)
+offset: 9
+number to get: 3
+[52.92, 44.17, 55.0]
+52.92
+---- quantile: 4
+group: ('B',)
+offset: 5
+number to get: 1
+group: ('H',)
+offset: 4
+number to get: 1
+group: ('W',)
+offset: 12
+number to get: 3
+[54.76, 46.25, 56.67]
+54.76
+---- quantile: 5
+group: ('B',)
+offset: 6
+number to get: 1
+group: ('H',)
+offset: 5
+number to get: 1
+group: ('W',)
+offset: 15
+number to get: 3
+[55.0, 48.33, 58.33]
+55.0
+---- quantile: 6
+group: ('B',)
+offset: 7
+number to get: 1
+group: ('H',)
+offset: 6
+number to get: 1
+group: ('W',)
+offset: 18
+number to get: 3
+[55.83, 50.42, 59.05]
+55.83
+---- quantile: 7
+group: ('B',)
+offset: 8
+number to get: 1
+group: ('H',)
+offset: 7
+number to get: 1
+group: ('W',)
+offset: 21
+number to get: 3
+[56.25, 51.25, 63.33]
+56.25
+---- quantile: 8
+group: ('B',)
+offset: 9
+number to get: 2
+group: ('H',)
+offset: 8
+number to get: 1
+group: ('W',)
+offset: 24
+number to get: 3
+[58.75, 51.67, 64.58]
+58.75
+---- quantile: 9
+group: ('B',)
+offset: 11
+number to get: 1
+group: ('H',)
+offset: 9
+number to get: 1
+group: ('W',)
+offset: 27
+number to get: 3
+[60.0, 53.75, 68.33]
+60.0
+---- quantile: 10
+group: ('B',)
+offset: 12
+number to get: 1
+group: ('H',)
+offset: 10
+number to get: 1
+group: ('W',)
+offset: 30
+number to get: 3
+[60.83, 55.0, 71.43]
+60.83
+---- quantile: 11
+group: ('B',)
+offset: 13
+number to get: 1
+group: ('H',)
+offset: 11
+number to get: 1
+group: ('W',)
+offset: 33
+number to get: 2
+[61.25, 56.25, 71.67]
+61.25
+---- quantile: 12
+group: ('B',)
+offset: 14
+number to get: 1
+group: ('H',)
+offset: 12
+number to get: 1
+group: ('W',)
+offset: 35
+number to get: 3
+[65.83, 57.14, 73.33]
+65.83
+---- quantile: 13
+group: ('B',)
+offset: 15
+number to get: 1
+group: ('H',)
+offset: 13
+number to get: 1
+group: ('W',)
+offset: 38
+number to get: 3
+[66.25, 57.5, 73.75]
+66.25
+---- quantile: 14
+group: ('B',)
+offset: 16
+number to get: 2
+group: ('H',)
+offset: 14
+number to get: 1
+group: ('W',)
+offset: 41
+number to get: 3
+[68.57, 58.57, 73.75]
+68.57
+---- quantile: 15
+group: ('B',)
+offset: 18
+number to get: 1
+group: ('H',)
+offset: 15
+number to get: 1
+group: ('W',)
+offset: 44
+number to get: 3
+[69.17, 60.48, 74.17]
+69.17
+---- quantile: 16
+group: ('B',)
+offset: 19
+number to get: 1
+group: ('H',)
+offset: 16
+number to get: 1
+group: ('W',)
+offset: 47
+number to get: 3
+[70.48, 62.5, 76.67]
+70.48
+---- quantile: 17
+group: ('B',)
+offset: 20
+number to get: 1
+group: ('H',)
+offset: 17
+number to get: 1
+group: ('W',)
+offset: 50
+number to get: 3
+[70.83, 67.14, 78.33]
+70.83
+---- quantile: 18
+group: ('B',)
+offset: 21
+number to get: 1
+group: ('H',)
+offset: 18
+number to get: 1
+group: ('W',)
+offset: 53
+number to get: 3
+[70.83, 69.17, 80.0]
+70.83
+---- quantile: 19
+group: ('B',)
+offset: 22
+number to get: 1
+group: ('H',)
+offset: 19
+number to get: 1
+group: ('W',)
+offset: 56
+number to get: 3
+[70.95, 70.0, 80.83]
+70.95
+---- quantile: 20
+group: ('B',)
+offset: 23
+number to get: 2
+group: ('H',)
+offset: 20
+number to get: 1
+group: ('W',)
+offset: 59
+number to get: 3
+[80.42, 70.83, 84.29]
+80.42
+---- quantile: 21
+group: ('B',)
+offset: 25
+number to get: 1
+group: ('H',)
+offset: 21
+number to get: 1
+group: ('W',)
+offset: 62
+number to get: 3
+[82.38, 76.19, 87.5]
+82.38
+---- quantile: 22
+group: ('B',)
+offset: 26
+number to get: 1
+group: ('H',)
+offset: 22
+number to get: 1
+group: ('W',)
+offset: 65
+number to get: 3
+[92.08, 79.05, 88.75]
+88.75
+---- quantile: 0
+group: ('B',)
+offset: 0
+number to get: 1
+group: ('H',)
+offset: 0
+number to get: 1
+group: ('W',)
+offset: 0
+number to get: 3
+[46.0, 58.0, 58.0]
+58.0
+---- quantile: 1
+group: ('B',)
+offset: 1
+number to get: 1
+group: ('H',)
+offset: 1
+number to get: 1
+group: ('W',)
+offset: 3
+number to get: 3
+[49.0, 61.0, 59.0]
+59.0
+---- quantile: 2
+group: ('B',)
+offset: 2
+number to get: 2
+group: ('H',)
+offset: 2
+number to get: 1
+group: ('W',)
+offset: 6
+number to get: 3
+[50.0, 64.0, 64.0]
+64.0
+---- quantile: 3
+group: ('B',)
+offset: 4
+number to get: 1
+group: ('H',)
+offset: 3
+number to get: 1
+group: ('W',)
+offset: 9
+number to get: 3
+[53.0, 65.0, 66.0]
+65.0
+---- quantile: 4
+group: ('B',)
+offset: 5
+number to get: 1
+group: ('H',)
+offset: 4
+number to get: 1
+group: ('W',)
+offset: 12
+number to get: 3
+[55.0, 65.0, 66.0]
+65.0
+---- quantile: 5
+group: ('B',)
+offset: 6
+number to get: 1
+group: ('H',)
+offset: 5
+number to get: 1
+group: ('W',)
+offset: 15
+number to get: 3
+[56.0, 66.0, 68.0]
+66.0
+---- quantile: 6
+group: ('B',)
+offset: 7
+number to get: 1
+group: ('H',)
+offset: 6
+number to get: 1
+group: ('W',)
+offset: 18
+number to get: 3
+[56.0, 67.0, 68.0]
+67.0
+---- quantile: 7
+group: ('B',)
+offset: 8
+number to get: 1
+group: ('H',)
+offset: 7
+number to get: 1
+group: ('W',)
+offset: 21
+number to get: 3
+[58.0, 67.0, 69.0]
+67.0
+---- quantile: 8
+group: ('B',)
+offset: 9
+number to get: 2
+group: ('H',)
+offset: 8
+number to get: 1
+group: ('W',)
+offset: 24
+number to get: 3
+[59.0, 68.0, 71.0]
+68.0
+---- quantile: 9
+group: ('B',)
+offset: 11
+number to get: 1
+group: ('H',)
+offset: 9
+number to get: 1
+group: ('W',)
+offset: 27
+number to get: 3
+[60.0, 68.0, 73.0]
+68.0
+---- quantile: 10
+group: ('B',)
+offset: 12
+number to get: 1
+group: ('H',)
+offset: 10
+number to get: 1
+group: ('W',)
+offset: 30
+number to get: 3
+[64.0, 70.0, 74.0]
+70.0
+---- quantile: 11
+group: ('B',)
+offset: 13
+number to get: 1
+group: ('H',)
+offset: 11
+number to get: 1
+group: ('W',)
+offset: 33
+number to get: 2
+[64.0, 71.0, 75.0]
+71.0
+---- quantile: 12
+group: ('B',)
+offset: 14
+number to get: 1
+group: ('H',)
+offset: 12
+number to get: 1
+group: ('W',)
+offset: 35
+number to get: 3
+[64.0, 71.0, 75.0]
+71.0
+---- quantile: 13
+group: ('B',)
+offset: 15
+number to get: 1
+group: ('H',)
+offset: 13
+number to get: 1
+group: ('W',)
+offset: 38
+number to get: 3
+[65.0, 72.0, 76.0]
+72.0
+---- quantile: 14
+group: ('B',)
+offset: 16
+number to get: 2
+group: ('H',)
+offset: 14
+number to get: 1
+group: ('W',)
+offset: 41
+number to get: 3
+[66.0, 72.0, 77.0]
+72.0
+---- quantile: 15
+group: ('B',)
+offset: 18
+number to get: 1
+group: ('H',)
+offset: 15
+number to get: 1
+group: ('W',)
+offset: 44
+number to get: 3
+[70.0, 73.0, 79.0]
+73.0
+---- quantile: 16
+group: ('B',)
+offset: 19
+number to get: 1
+group: ('H',)
+offset: 16
+number to get: 1
+group: ('W',)
+offset: 47
+number to get: 3
+[70.0, 73.0, 81.0]
+73.0
+---- quantile: 17
+group: ('B',)
+offset: 20
+number to get: 1
+group: ('H',)
+offset: 17
+number to get: 1
+group: ('W',)
+offset: 50
+number to get: 3
+[73.0, 74.0, 83.0]
+74.0
+---- quantile: 18
+group: ('B',)
+offset: 21
+number to get: 1
+group: ('H',)
+offset: 18
+number to get: 1
+group: ('W',)
+offset: 53
+number to get: 3
+[74.0, 75.0, 84.0]
+75.0
+---- quantile: 19
+group: ('B',)
+offset: 22
+number to get: 1
+group: ('H',)
+offset: 19
+number to get: 1
+group: ('W',)
+offset: 56
+number to get: 3
+[74.0, 82.0, 87.0]
+82.0
+---- quantile: 20
+group: ('B',)
+offset: 23
+number to get: 2
+group: ('H',)
+offset: 20
+number to get: 1
+group: ('W',)
+offset: 59
+number to get: 3
+[77.0, 82.0, 89.0]
+82.0
+---- quantile: 21
+group: ('B',)
+offset: 25
+number to get: 1
+group: ('H',)
+offset: 21
+number to get: 1
+group: ('W',)
+offset: 62
+number to get: 3
+[80.0, 82.0, 91.0]
+82.0
+---- quantile: 22
+group: ('B',)
+offset: 26
+number to get: 1
+group: ('H',)
+offset: 22
+number to get: 1
+group: ('W',)
+offset: 65
+number to get: 3
+[86.0, 84.0, 95.0]
+86.0
+---- quantile: 0
+group: ('B',)
+offset: 0
+number to get: 1
+group: ('H',)
+offset: 0
+number to get: 1
+group: ('W',)
+offset: 0
+number to get: 3
+[45.932, 54.132, 56.632]
+54.132
+---- quantile: 1
+group: ('B',)
+offset: 1
+number to get: 1
+group: ('H',)
+offset: 1
+number to get: 1
+group: ('W',)
+offset: 3
+number to get: 3
+[50.568, 54.732, 57.7]
+54.732
+---- quantile: 2
+group: ('B',)
+offset: 2
+number to get: 2
+group: ('H',)
+offset: 2
+number to get: 1
+group: ('W',)
+offset: 6
+number to get: 3
+[54.432, 57.268, 60.032]
+57.268
+---- quantile: 3
+group: ('B',)
+offset: 4
+number to get: 1
+group: ('H',)
+offset: 3
+number to get: 1
+group: ('W',)
+offset: 9
+number to get: 3
+[55.8, 57.344, 62.868]
+57.344
+---- quantile: 4
+group: ('B',)
+offset: 5
+number to get: 1
+group: ('H',)
+offset: 4
+number to get: 1
+group: ('W',)
+offset: 12
+number to get: 3
+[56.5, 59.3, 65.8]
+59.3
+---- quantile: 5
+group: ('B',)
+offset: 6
+number to get: 1
+group: ('H',)
+offset: 5
+number to get: 1
+group: ('W',)
+offset: 15
+number to get: 3
+[57.132, 59.456, 67.856]
+59.456
+---- quantile: 6
+group: ('B',)
+offset: 7
+number to get: 1
+group: ('H',)
+offset: 6
+number to get: 1
+group: ('W',)
+offset: 18
+number to get: 3
+[58.192, 60.7, 69.1]
+60.7
+---- quantile: 7
+group: ('B',)
+offset: 8
+number to get: 1
+group: ('H',)
+offset: 7
+number to get: 1
+group: ('W',)
+offset: 21
+number to get: 3
+[59.132, 60.8, 69.372]
+60.8
+---- quantile: 8
+group: ('B',)
+offset: 9
+number to get: 2
+group: ('H',)
+offset: 8
+number to get: 1
+group: ('W',)
+offset: 24
+number to get: 3
+[60.4, 62.428, 69.828]
+62.428
+---- quantile: 9
+group: ('B',)
+offset: 11
+number to get: 1
+group: ('H',)
+offset: 9
+number to get: 1
+group: ('W',)
+offset: 27
+number to get: 3
+[60.648, 62.768, 70.3]
+62.768
+---- quantile: 10
+group: ('B',)
+offset: 12
+number to get: 1
+group: ('H',)
+offset: 10
+number to get: 1
+group: ('W',)
+offset: 30
+number to get: 3
+[60.9, 63.268, 70.732]
+63.268
+---- quantile: 11
+group: ('B',)
+offset: 13
+number to get: 1
+group: ('H',)
+offset: 11
+number to get: 1
+group: ('W',)
+offset: 33
+number to get: 2
+[61.068, 65.0, 71.932]
+65.0
+---- quantile: 12
+group: ('B',)
+offset: 14
+number to get: 1
+group: ('H',)
+offset: 12
+number to get: 1
+group: ('W',)
+offset: 35
+number to get: 3
+[63.668, 65.856, 72.268]
+65.856
+---- quantile: 13
+group: ('B',)
+offset: 15
+number to get: 1
+group: ('H',)
+offset: 13
+number to get: 1
+group: ('W',)
+offset: 38
+number to get: 3
+[65.5, 66.3, 73.732]
+66.3
+---- quantile: 14
+group: ('B',)
+offset: 16
+number to get: 2
+group: ('H',)
+offset: 14
+number to get: 1
+group: ('W',)
+offset: 41
+number to get: 3
+[67.332, 68.2, 75.132]
+68.2
+---- quantile: 15
+group: ('B',)
+offset: 18
+number to get: 1
+group: ('H',)
+offset: 15
+number to get: 1
+group: ('W',)
+offset: 44
+number to get: 3
+[70.38, 69.132, 76.4]
+70.38
+---- quantile: 16
+group: ('B',)
+offset: 19
+number to get: 1
+group: ('H',)
+offset: 16
+number to get: 1
+group: ('W',)
+offset: 47
+number to get: 3
+[71.828, 69.192, 76.916]
+71.828
+---- quantile: 17
+group: ('B',)
+offset: 20
+number to get: 1
+group: ('H',)
+offset: 17
+number to get: 1
+group: ('W',)
+offset: 50
+number to get: 3
+[72.232, 70.7, 79.432]
+72.232
+---- quantile: 18
+group: ('B',)
+offset: 21
+number to get: 1
+group: ('H',)
+offset: 18
+number to get: 1
+group: ('W',)
+offset: 53
+number to get: 3
+[72.732, 70.868, 81.028]
+72.732
+---- quantile: 19
+group: ('B',)
+offset: 22
+number to get: 1
+group: ('H',)
+offset: 19
+number to get: 1
+group: ('W',)
+offset: 56
+number to get: 3
+[74.332, 71.2, 82.732]
+74.332
+---- quantile: 20
+group: ('B',)
+offset: 23
+number to get: 2
+group: ('H',)
+offset: 20
+number to get: 1
+group: ('W',)
+offset: 59
+number to get: 3
+[75.968, 76.02, 84.2]
+76.02
+---- quantile: 21
+group: ('B',)
+offset: 25
+number to get: 1
+group: ('H',)
+offset: 21
+number to get: 1
+group: ('W',)
+offset: 62
+number to get: 3
+[76.1, 78.4, 85.6]
+78.4
+---- quantile: 22
+group: ('B',)
+offset: 26
+number to get: 1
+group: ('H',)
+offset: 22
+number to get: 1
+group: ('W',)
+offset: 65
+number to get: 3
+[76.6, 79.676, 90.1]
+79.676
+Done with RicciDataMod.csv 1.0
+Preparing data now...
+Repair Process Complete. Repaired Data can be found at:  RicciResults.current.csv
+Oops Repair Script Incorrect! 2
+Got:       [70.95, 82.0, 78.4, 1.0]
+Expected:  [80.42, 82.0, 78.4, 1.0]
+Oops Repair Script Incorrect! 3
+Got:       [88.75, 71.0, 72.732, 1.0]
+Expected:  [88.75, 72.0, 72.732, 1.0]
+Oops Repair Script Incorrect! 4
+Got:       [69.17, 74.0, 72.732, 1.0]
+Expected:  [70.48, 75.0, 72.732, 1.0]
+Oops Repair Script Incorrect! 6
+Got:       [70.48, 74.0, 72.232, 1.0]
+Expected:  [69.17, 74.0, 72.232, 1.0]
+Oops Repair Script Incorrect! 8
+Got:       [68.57, 73.0, 72.232, 1.0]
+Expected:  [69.17, 73.0, 72.232, 1.0]
+Oops Repair Script Incorrect! 13
+Got:       [69.17, 72.0, 68.2, 1.0]
+Expected:  [68.57, 72.0, 68.2, 1.0]
+Oops Repair Script Incorrect! 16
+Got:       [65.83, 70.0, 66.3, 1.0]
+Expected:  [65.83, 71.0, 66.3, 1.0]
+Oops Repair Script Incorrect! 17
+Got:       [60.83, 72.0, 66.3, 1.0]
+Expected:  [60.83, 71.0, 66.3, 1.0]
+Oops Repair Script Incorrect! 18
+Got:       [68.57, 75.0, 71.828, 1.0]
+Expected:  [68.57, 82.0, 71.828, 1.0]
+Oops Repair Script Incorrect! 19
+Got:       [80.42, 64.0, 65.0, 1.0]
+Expected:  [70.95, 64.0, 65.0, 1.0]
+Oops Repair Script Incorrect! 25
+Got:       [60.83, 66.0, 60.8, 0.0]
+Expected:  [60.83, 67.0, 60.8, 0.0]
+Oops Repair Script Incorrect! 38
+Got:       [51.67, 58.0, 54.132, 0.0]
+Expected:  [51.67, 59.0, 54.132, 0.0]
+Oops Repair Script Incorrect! 40
+Got:       [54.76, 59.0, 57.268, 0.0]
+Expected:  [54.76, 64.0, 57.268, 0.0]
+Oops Repair Script Incorrect! 43
+Got:       [70.48, 82.0, 78.4, 1.0]
+Expected:  [70.83, 82.0, 78.4, 1.0]
+Oops Repair Script Incorrect! 44
+Got:       [80.42, 75.0, 76.02, 1.0]
+Expected:  [80.42, 74.0, 76.02, 1.0]
+Oops Repair Script Incorrect! 46
+Got:       [66.25, 82.0, 76.02, 1.0]
+Expected:  [68.57, 82.0, 76.02, 1.0]
+Oops Repair Script Incorrect! 52
+Got:       [66.25, 73.0, 71.828, 1.0]
+Expected:  [68.57, 73.0, 71.828, 1.0]
+Oops Repair Script Incorrect! 53
+Got:       [55.0, 82.0, 71.828, 1.0]
+Expected:  [55.83, 82.0, 71.828, 1.0]
+Oops Repair Script Incorrect! 62
+Got:       [70.83, 82.0, 72.732, 1.0]
+Expected:  [70.83, 75.0, 72.732, 1.0]
+Oops Repair Script Incorrect! 69
+Got:       [58.75, 71.0, 63.268, 1.0]
+Expected:  [58.75, 70.0, 63.268, 1.0]
+Oops Repair Script Incorrect! 72
+Got:       [70.83, 65.0, 62.768, 1.0]
+Expected:  [70.48, 65.0, 62.768, 1.0]
+Oops Repair Script Incorrect! 73
+Got:       [68.57, 67.0, 62.768, 1.0]
+Expected:  [66.25, 66.0, 62.768, 1.0]
+Oops Repair Script Incorrect! 77
+Got:       [68.57, 65.0, 60.7, 0.0]
+Expected:  [66.25, 65.0, 60.7, 0.0]
+Oops Repair Script Incorrect! 78
+Got:       [55.83, 72.0, 60.7, 0.0]
+Expected:  [55.0, 72.0, 60.7, 0.0]
+Oops Repair Script Incorrect! 95
+Got:       [58.75, 70.0, 65.0, 0.0]
+Expected:  [58.75, 71.0, 65.0, 0.0]
+Oops Repair Script Incorrect! 99
+Got:       [55.0, 71.0, 62.428, 0.0]
+Expected:  [55.0, 70.0, 62.428, 0.0]
+Oops Repair Script Incorrect! 104
+Got:       [60.83, 67.0, 60.8, 0.0]
+Expected:  [60.83, 68.0, 60.8, 0.0]
+Oops Repair Script Incorrect! 110
+Got:       [55.83, 68.0, 59.456, 0.0]
+Expected:  [55.83, 67.0, 59.456, 0.0]
+Oops Repair Script Incorrect! 111
+Got:       [52.92, 59.0, 54.132, 0.0]
+Expected:  [52.92, 58.0, 54.132, 0.0]
+Oops Repair Script Incorrect! 116
+Got:       [52.92, 64.0, 54.732, 0.0]
+Expected:  [52.92, 59.0, 54.732, 0.0]
+------------------

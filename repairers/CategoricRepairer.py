@@ -136,10 +136,10 @@ class Repairer(AbstractRepairer):
               values = sorted([float(val) for _, val in offset_data])
 
               # Find this group's median value at this quantile
-              median_at_quantiles.append( get_median(values) )
+              median_at_quantiles.append( get_median(values, self.kdd) )
 
           # Find the median value of all groups at this quantile (chosen from each group's medians)
-          median = get_median(median_at_quantiles)
+          median = get_median(median_at_quantiles, self.kdd)
           median_val_pos = index_lookup[col_id][median]
 
           # Update values to repair the dataset.
@@ -220,7 +220,7 @@ def get_categories_count_norm(categories, all_stratified_groups, count_dict, gro
 
 # Find the median normalized count for each category
 def get_median_per_category(categories, categories_count_norm):
-  return {cat: get_median(categories_count_norm[cat]) for cat in categories}
+  return {cat: get_median(categories_count_norm[cat], False) for cat in categories}
 
 # Generate the desired distribution and desired "count" for a given group-category-feature combination.
 def gen_desired_dist(group_index, cat, col_id, median, repair_level, norm_counts, feature_to_remove, mode):
@@ -325,7 +325,7 @@ def test_repeated_values():
 
   repair_level=.5
   feature_to_repair = 0
-  repairer = Repairer(all_data, feature_to_repair, repair_level)
+  repairer = Repairer(all_data, feature_to_repair, repair_level, False)
   repaired_data=repairer.repair(all_data)
 
   correct_repaired_data = [
@@ -345,7 +345,7 @@ def test_repeated_values():
 
   repair_level=.5
   feature_to_repair = 0
-  repairer = Repairer(all_data, feature_to_repair, repair_level)
+  repairer = Repairer(all_data, feature_to_repair, repair_level, False)
   repaired_data=repairer.repair(all_data)
 
   correct_repaired_data = [
@@ -363,7 +363,7 @@ def test_minimal():
   data = class_1 + class_2
 
   feature_to_repair = 1
-  repairer = Repairer(data, feature_to_repair, 1)
+  repairer = Repairer(data, feature_to_repair, 1, False)
   repaired_data = repairer.repair(data)
   print "Minimal Dataset -- repaired_data altered?", repaired_data != data
 
@@ -556,7 +556,7 @@ def test_numerical():
   all_data = [ ["x", 1], ["x", 1], ["x", 2], ["x", 2], ["x", 3], ["x", 3],
                ["y", 1], ["y", 1], ["y", 2] ]
   feature_to_repair = 0
-  repairer = Repairer(all_data, feature_to_repair, 1.0)
+  repairer = Repairer(all_data, feature_to_repair, 1.0, False)
   repaired_data = repairer.repair(all_data)
 
   correct_repaired_data = [ ["x", 1], ["x", 1], ["x", 1], ["x", 1], ["x", 2], ["x", 2],
@@ -575,7 +575,7 @@ def test_categorical():
 
   repair_level=1
   feature_to_repair = 0
-  repairer = Repairer(all_data, feature_to_repair, repair_level)
+  repairer = Repairer(all_data, feature_to_repair, repair_level, False)
   repaired_data=repairer.repair(all_data)
 
   correct_repaired_data = [
@@ -588,7 +588,7 @@ def test_categorical():
 
   repair_level=0.5
   feature_to_repair = 0
-  repairer = Repairer(all_data, feature_to_repair, repair_level)
+  repairer = Repairer(all_data, feature_to_repair, repair_level, False)
   part_repaired_data=repairer.repair(all_data)
 
   correct_part_repaired_data = [
@@ -601,7 +601,7 @@ def test_categorical():
 
   repair_level=0.2
   feature_to_repair = 0
-  repairer = Repairer(all_data, feature_to_repair, repair_level)
+  repairer = Repairer(all_data, feature_to_repair, repair_level, False)
   part_repaired_data=repairer.repair(all_data)
 
   correct_part2_repaired_data =  [

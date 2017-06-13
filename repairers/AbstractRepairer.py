@@ -8,7 +8,7 @@ class AbstractRepairer(object):
 
   __metaclass__ = ABCMeta
 
-  def __init__(self, all_data, feature_to_repair, repair_level, features_to_ignore=[]):
+  def __init__(self, all_data, feature_to_repair, repair_level, kdd, features_to_ignore=[]):
     """
     all_data should be a list of rows (ie, a list of lists) composing the entire
     test and training dataset. Headers should not be included in data sets.
@@ -25,6 +25,7 @@ class AbstractRepairer(object):
     self.feature_to_repair = feature_to_repair
     self.repair_level = repair_level
     self.features_to_ignore = features_to_ignore
+    self.kdd = kdd
 
   @abstractmethod
   def repair(self, data_to_repair):
