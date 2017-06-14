@@ -10,12 +10,25 @@ parser.add_argument("output_csv", type=str,
                    help="The name to be used for the repaired CSV file.")
 parser.add_argument("repair_level", type=float,
                    help="The level at which the repair should be performed between 0.0 and 1.0.")
+parser.add_argument("kdd",type=str, 
+		   help="Whether to repair with KDD.")
 
 parser.add_argument("-p", "--protected", type=str, nargs="+", required=True)
 parser.add_argument("-i", "--ignored", type=str, nargs="+")
-parser.add_argument("-kdd", action='store_true', required=False)
 
 args = parser.parse_args()
+
+print args.input_csv
+print args.output_csv
+print args.repair_level
+print args.kdd
+print args.protected
+print args.ignored
+
+if args.kdd == "True":
+  args.kdd = True
+else:
+  args.kdd = False
 
 with open(args.input_csv) as f:
   data = [line for line in csv.reader(f)]
@@ -33,6 +46,7 @@ with open(args.input_csv) as f:
         pass
 
   data = [[col[j] for col in cols] for j in xrange(len(data))]
+  firstdata = data
 
 # Calculte the indices to repair by and to ignore.
 for protected in args.protected:

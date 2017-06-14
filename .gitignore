@@ -1,5 +1,8 @@
 audits/*
+repair_tests/output
+kdd/
 *.pyc
+*.swp
 
 test_data/DRP*
 
