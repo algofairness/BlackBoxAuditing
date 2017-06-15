@@ -14,16 +14,16 @@ if not os.path.exists(TMP_DIR):
 
 class ModelFactory(AbstractModelFactory):
   def __init__(self, *args, **kwargs):
-    self.num_epochs = 1000               # number of learning steps
-    self.batch_size = 5                 # number of points trained on per step
-    self.learning_rate = .013            # learning rate for optimizer
-    self.beta1_decay = 0.9              # see Tensorflow's documentation for tf.train.AdamOptimizer
+    self.num_epochs = 500           # number of learning steps
+    self.batch_size = 400            # number of points trained on per step
+    self.learning_rate = .1            # learning rate for optimizer
+    self.beta1_decay = 0.90              # see Tensorflow's documentation for tf.train.AdamOptimizer
     self.beta2_decay = 0.999                # for information on beta decay
     self.epsilon = 1e-8                 # small number for stability of optimizer
-    self.init_shuffle = False           # shuffle data before training starts
-    self.iter_shuffle = False           # shuffle batch for each step
+    self.init_shuffle = True           # shuffle data before training starts
+    self.iter_shuffle = True           # shuffle batch for each step
     self.feats_to_ignore = []           # features to ignore during training
-    self.hidden_layer_sizes = [2,2]        # if empty, no hidden layers are used
+    self.hidden_layer_sizes = [8,5,3]        # if empty, no hidden layers are used
 
     # Set manual settings.
     if 'options' in kwargs:
@@ -99,6 +99,8 @@ class ModelFactory(AbstractModelFactory):
     expanded_and_stdized_train_set, self.expanded_headers = expand_and_standardize_dataset(self.response_index, train_set, self.col_vals, self.headers, self.standardizers, self.feats_to_ignore, self.columns_to_expand, self.outcome_trans_dict)
     train_matrix, train_outcomes = list_to_tf_input(expanded_and_stdized_train_set, self.adjusted_response_index, self.num_outcomes)
     train_size, num_features = train_matrix.shape
+
+    tf.reset_default_graph()
     
     # input and output nodes
     with tf.name_scope('input'):
@@ -165,8 +167,6 @@ class ModelFactory(AbstractModelFactory):
         writer.add_summary(summary, global_step=step+1)
         # Save checkpoints every 1000 steps
         if step % 50 == 0:
-          curr_accuracy = accuracy.eval(feed_dict={x:train_matrix, y_:train_outcomes})
-          print 'step: {}, accuracy: {}'.format(step, curr_accuracy)
           model_name="{}/{}_{}_{}.model".format(TMP_DIR, self.verbose_factory_name, self.factory_name, time.time())
           checkpoint = saver.save(sess, model_name, global_step=step+1)
 
@@ -216,7 +216,7 @@ class ModelVisitor(AbstractModelVisitor):
 
     predictions_dict = {i:key for key,i in self.outcome_trans_dict.items()}
     predictions = [predictions_dict[pred] for pred in predictions]
-    tf.reset_default_graph()
+
     return zip([row[self.response_index] for row in test_set], predictions)
 
 def list_to_tf_input(data, response_index, num_outcomes):
@@ -323,6 +323,7 @@ def test_categorical_response():
   headers = ["predictor 1", "predictor 2", "response"]
   response = "response"
   train_set = [[i,0,"A"] for i in range(1,50)] + [[0,i,"B"] for i in range(1,50)]
+  train_set_copy = copy.copy(train_set)
   test_set = [[i,0,"A"] for i in range(1,50)] + [[0,i,"C"] for i in range(1,50)]
   all_data = train_set + test_set
 
@@ -332,7 +333,7 @@ def test_categorical_response():
 
   predictions = model.test(test_set)
   resp_index = headers.index(response)
-  intended_predictions = [(test_row[resp_index], train_row[resp_index]) for train_row, test_row in zip(train_set,test_set)]
+  intended_predictions = [(test_row[resp_index], train_row[resp_index]) for train_row, test_row in zip(train_set_copy,test_set)]
   print "predicting string-categories correctly? -- ", predictions == intended_predictions
 
   if predictions != intended_predictions:
