@@ -2,8 +2,11 @@ audits/*
 repair_tests/output
 kdd/
 *.pyc
+<<<<<<< HEAD
 *.swp
 
 test_data/DRP*
 
 find_contexts/output
+=======
+>>>>>>> 8fcef0ac061da2a16a7ac38497b6ac0a2ddcc17e
