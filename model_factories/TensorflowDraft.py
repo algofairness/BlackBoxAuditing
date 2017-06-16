@@ -1,3 +1,14 @@
+"""
+To reproduce results from the "Auditing Black-box Models for Indirect Influence" 
+paper (11/30/2016), set model_options in main.py to {'reproduce':True} 
+"""
+
+
+
+
+
+
+
 from AbstractModelFactory import AbstractModelFactory
 from AbstractModelVisitor import AbstractModelVisitor
 
@@ -8,22 +19,26 @@ import tensorflow as tf
 import copy
 import time
 
-TMP_DIR = 'tmp'
-if not os.path.exists(TMP_DIR):
-  os.makedirs(TMP_DIR)
+TMP_DIR_HOST = 'tmp'
+
+date_stamp = time.strftime('%a.%d.%b_%S.%M.%H', time.localtime())
+log_dir = '{}/{}__{}'.format(TMP_DIR_HOST, date_stamp, rand.randint(1,1000000))
+os.makedirs(log_dir)  
+
 
 class ModelFactory(AbstractModelFactory):
   def __init__(self, *args, **kwargs):
-    self.num_epochs = 500           # number of learning steps
-    self.batch_size = 400            # number of points trained on per step
-    self.learning_rate = .1            # learning rate for optimizer
-    self.beta1_decay = 0.90              # see Tensorflow's documentation for tf.train.AdamOptimizer
-    self.beta2_decay = 0.999                # for information on beta decay
+    self.num_epochs = 100          # number of learning steps
+    self.batch_size = 100            # number of points trained on per step
+    self.learning_rate = .01            # learning rate for optimizer
+    self.beta1_decay = 0.95              # see Tensorflow's documentation for tf.train.AdamOptimizer
+    self.beta2_decay = 0.99                # for information on beta decay
     self.epsilon = 1e-8                 # small number for stability of optimizer
     self.init_shuffle = True           # shuffle data before training starts
     self.iter_shuffle = True           # shuffle batch for each step
     self.feats_to_ignore = []           # features to ignore during training
-    self.hidden_layer_sizes = [8,5,3]        # if empty, no hidden layers are used
+    self.hidden_layer_sizes = [8]        # if empty, no hidden layers are used
+    self.constant_descent = False       # flag to implement tf.GradientDescentOptimizer
 
     # Set manual settings.
     if 'options' in kwargs:
@@ -46,8 +61,19 @@ class ModelFactory(AbstractModelFactory):
         self.iter_shuffle = options.pop('iter_shuffle')
       if 'feats_to_ignore' in options:
         self.feats_to_ignore = options.pop('feats_to_ignore')
-      if 'self.hidden_layer_sizes' in options:
+      if 'hidden_layer_sizes' in options:
         self.hidden_layer_sizes = options.pop('hidden_layer_sizes')
+      if 'reproduce' in options:
+        reproduce = options.pop('reproduce')
+        if reproduce:
+          self.num_epochs = 100
+          self.batch_size = 100
+          self.learning_rate = 0.01
+          self.hidden_layer_sizes = []
+          self.init_shuffle = False
+          self.iter_shuffle = False
+          self.constant_descent = True
+
     
 
     # Initiate inheritance
@@ -64,7 +90,7 @@ class ModelFactory(AbstractModelFactory):
     # Categorical features are transfered into -1, 1 binary columns for each possible value.
     self.columns_to_expand = []
     for i, header in enumerate(self.headers):
-      categorical = all(type(val)==str for val in self.col_vals[header])
+      categorical = any(type(val)==str for val in self.col_vals[header])
       if i == self.response_index or categorical:
         self.columns_to_expand.append(header)
     
@@ -91,15 +117,15 @@ class ModelFactory(AbstractModelFactory):
     self.outcome_trans_dict = {val:i for i, val in enumerate(self.col_vals[self.response_header])}
 
   def build(self, train_set):
-    model_name="{}/{}_{}_{}.model".format(TMP_DIR, self.verbose_factory_name, self.factory_name, time.time())
+    model_name="{}/{}_{}_{}.model".format(log_dir, self.verbose_factory_name, self.factory_name, time.time())
     # prepare train data for learning
     if self.init_shuffle == True:
-      np.random.seed(123)
       np.random.shuffle(train_set)
-    expanded_and_stdized_train_set, self.expanded_headers = expand_and_standardize_dataset(self.response_index, train_set, self.col_vals, self.headers, self.standardizers, self.feats_to_ignore, self.columns_to_expand, self.outcome_trans_dict)
+    expanded_and_stdized_train_set, self.expanded_headers = expand_and_standardize_dataset(self.response_index, self.response_header, train_set, self.col_vals, self.headers, self.standardizers, self.feats_to_ignore, self.columns_to_expand, self.outcome_trans_dict)
     train_matrix, train_outcomes = list_to_tf_input(expanded_and_stdized_train_set, self.adjusted_response_index, self.num_outcomes)
     train_size, num_features = train_matrix.shape
-
+    
+    # Ensure there are no pre-existing nodes in the tensorflow graph.
     tf.reset_default_graph()
     
     # input and output nodes
@@ -134,10 +160,13 @@ class ModelFactory(AbstractModelFactory):
       correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
       accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))  
     with tf.name_scope('cross_entropy'):
-      cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y, y_))
+      cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y, labels=y_))
     with tf.name_scope('train_step'):
-      train_step = tf.train.AdamOptimizer(learning_rate=self.learning_rate, beta1=self.beta1_decay, beta2=self.beta2_decay, epsilon=self.epsilon, name='Adam_Optimizer').minimize(cross_entropy)
-
+      if self.constant_descent:
+        train_step = tf.train.GradientDescentOptimizer(learning_rate = self.learning_rate).minimize(cross_entropy)
+      else:
+        train_step = tf.train.AdamOptimizer(learning_rate=self.learning_rate, beta1=self.beta1_decay, beta2=self.beta2_decay, epsilon=self.epsilon, name='Adam_Optimizer').minimize(cross_entropy)
+      
 
     # Summaries
     tf.summary.scalar('accuracy', accuracy)
@@ -148,9 +177,10 @@ class ModelFactory(AbstractModelFactory):
     
     with tf.Session() as sess:
 
-      writer = tf.summary.FileWriter(TMP_DIR, graph=sess.graph)
+      writer = tf.summary.FileWriter(log_dir, graph=sess.graph)
       tf.global_variables_initializer().run()
-      for step in xrange(self.num_epochs):
+      num_steps = self.num_epochs * train_size // self.batch_size
+      for step in xrange(num_steps):
         # get batch
         offset = (step * self.batch_size) % train_size
         batch_data = train_matrix[offset:(offset + self.batch_size), :]
@@ -167,15 +197,14 @@ class ModelFactory(AbstractModelFactory):
         writer.add_summary(summary, global_step=step+1)
         # Save checkpoints every 1000 steps
         if step % 50 == 0:
-          model_name="{}/{}_{}_{}.model".format(TMP_DIR, self.verbose_factory_name, self.factory_name, time.time())
+          model_name="{}/{}_{}_{}.model".format(log_dir, self.verbose_factory_name, self.factory_name, time.time())
           checkpoint = saver.save(sess, model_name, global_step=step+1)
 
       # Save checkpoint upon completion of training
-      model_name="{}/{}_{}_{}.model".format(TMP_DIR, self.verbose_factory_name, self.factory_name, time.time())
-      checkpoint = saver.save(sess, model_name, global_step=self.num_epochs)
+      model_name="{}/{}_{}_{}.model".format(log_dir, self.verbose_factory_name, self.factory_name, time.time())
+      checkpoint = saver.save(sess, model_name, global_step=num_steps)
 
-      print 'Train Accuracy:', accuracy.eval(feed_dict={x:train_matrix, y_:train_outcomes})
-      print 'Done.'
+      # print 'Train Accuracy:', accuracy.eval(feed_dict={x:train_matrix, y_:train_outcomes})
 
     return ModelVisitor(model_name, checkpoint, saver, self.response_header, self.response_index, self.adjusted_response_index, self.num_outcomes, x, y_, y, self.outcome_trans_dict, self.headers, self.expanded_headers, self.standardizers, self.col_vals, self.feats_to_ignore, self.columns_to_expand)
 
@@ -203,7 +232,7 @@ class ModelVisitor(AbstractModelVisitor):
     self.columns_to_expand = columns_to_expand
 
   def test(self, test_set, test_name=""):
-    expanded_and_stdized_test_set, self.test_expanded_headers = expand_and_standardize_dataset(self.response_index, test_set, self.train_col_vals, self.headers, self.standardizers, self.feats_to_ignore, self.columns_to_expand, self.outcome_trans_dict)
+    expanded_and_stdized_test_set, self.test_expanded_headers = expand_and_standardize_dataset(self.response_index, self.response_header, test_set, self.train_col_vals, self.headers, self.standardizers, self.feats_to_ignore, self.columns_to_expand, self.outcome_trans_dict)
     if self.test_expanded_headers != self.train_expanded_headers:
       raise ValueError('Feature dimensions do not align! Likely due to value appearance/disappearance between training and testing.')
     else:
@@ -229,7 +258,7 @@ def list_to_tf_input(data, response_index, num_outcomes):
 
   return matrix, outcomes_onehot
 
-def expand_and_standardize_dataset(response_index, data_set, col_vals, headers, standardizers, feats_to_ignore, columns_to_expand, outcome_trans_dict):
+def expand_and_standardize_dataset(response_index, response_header, data_set, col_vals, headers, standardizers, feats_to_ignore, columns_to_expand, outcome_trans_dict):
   """
   Standardizes continuous features and expands categorical features.
   """
@@ -270,7 +299,7 @@ def expand_and_standardize_dataset(response_index, data_set, col_vals, headers, 
   for header in headers:
     if header in feats_to_ignore:
       pass
-    elif header in columns_to_expand:
+    elif (header in columns_to_expand) and (header is not response_header):
       for poss_val in col_vals[header]:
         new_header = '{}_{}'.format(header,poss_val)
         expanded_headers.append(new_header)
@@ -280,13 +309,60 @@ def expand_and_standardize_dataset(response_index, data_set, col_vals, headers, 
   return modified_set, expanded_headers
 
 def test():
-  
+  test_expand_and_standardize_dataset()
+  test_unseen_categorical_feature()
   test_categorical_model()
   test_categorical_response()
   test_list_to_tf_input()
   test_basic_model()
 
-  
+
+def test_expand_and_standardize_dataset():
+  """
+  Tests if the function correctly converts categorical
+  features into onehot features, correctly standardizes 
+  continuous features, and correctly converts the response
+  feature to indexes.
+  """
+  headers = ['cont_feature', 'cat_feature', 'ignored', 'response']
+  data = [[100., 'A', 'ingore1', 'X'], [50., 'B', 'ignore2', 'Y'], [75., 'C', 'ignore3', 'Z'], [25., 'A', 'ignore1', 'Y']]
+  resp_index = 3
+  resp_header = 'response'
+  feats_to_ignore = 'ignored'
+  col_vals = {'cont_feature':[100., 50., 75., 25.], 'cat_feature':['A','B','C'], 'ignored':['ignore1', 'ignore2', 'ignore3'], 'response':['X', 'Y', 'Z']}
+  columns_to_expand = ['cat_feature', 'ignored', 'response']
+  outcome_trans_dict = {'X':0, 'Y':1, 'Z':2}
+  standardizers = {'cont_feature':{'mean':62.5, 'std_dev':32.27486121}}
+  new_data, new_headers = expand_and_standardize_dataset(resp_index, resp_header, data, col_vals, headers, standardizers, feats_to_ignore, columns_to_expand, outcome_trans_dict)
+  correct_data = [[1.1618950041644502, 1.0, -1.0, -1.0, 0], [-0.3872983347214834, -1.0, 1.0, -1.0, 1], [0.3872983347214834, -1.0, -1.0, 1.0, 2], [-1.1618950041644502, 1.0, -1.0, -1.0, 1]]
+  correct_headers = ['cont_feature', 'cat_feature_A', 'cat_feature_B', 'cat_feature_C', 'response']
+  print 'expanding and standardizing data correctly? --', new_data==correct_data
+  print 'expanding headers correctly? --', new_headers==correct_headers
+
+def test_unseen_categorical_feature():
+  """
+  Tests if the model can correctly handle unfamiliar values
+  for categorical features. The model should not create new 
+  columns for values in the test set and should instead treat
+  these values as 'not any known value for that column'. 
+  """
+  headers = ["predictor 1", "predictor 2", "predictor3", "response"]
+  response = "response"
+  random_features = ['H', 5.5, 'I']
+  train_set = [[random_features[i%3],'B',1,'C'] for i in range(1,50)] + [['A','A',-1,'D'] for i in range(1,50)]
+  train_set_copy = copy.copy(train_set)
+  new_features = ['J','K',9]
+  test_set = [[new_features[i%3],'B',1,'C'] for i in range(1,49)] + [['A','A',-1,'D'] for i in range(1,50)]
+  all_data = train_set + test_set
+
+  factory = ModelFactory(all_data, headers, response, name_prefix="test")
+  model = factory.build(train_set)
+  print "factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor)
+
+  predictions = model.test(test_set)
+  print "handling unseen categorical values correctly? -- ", all([pred[0] == pred[1] for pred in predictions])
+
+
 def test_list_to_tf_input():
   data = [[0,0],[0,1],[0,2]]
   tf_matrix, tf_onehot = list_to_tf_input(data, 1, 3)
@@ -312,13 +388,6 @@ def test_basic_model():
   intended_predictions = [(row[resp_index], row[resp_index]) for row in test_set]
   print "predicting numeric categories correctly? -- ", predictions == intended_predictions
 
-  if predictions != intended_predictions:
-    incorrect = 0
-    for i, pred in enumerate(predictions):
-      if pred != intended_predictions[i]:
-        incorrect += 1
-    print 'Misclassifications: {}'.format(incorrect)
-
 def test_categorical_response():
   headers = ["predictor 1", "predictor 2", "response"]
   response = "response"
@@ -336,13 +405,6 @@ def test_categorical_response():
   intended_predictions = [(test_row[resp_index], train_row[resp_index]) for train_row, test_row in zip(train_set_copy,test_set)]
   print "predicting string-categories correctly? -- ", predictions == intended_predictions
 
-  if predictions != intended_predictions:
-    incorrect = 0
-    for i, pred in enumerate(predictions):
-      if pred != intended_predictions[i]:
-        incorrect += 1
-    print 'Misclassifications: {}'.format(incorrect)
-
 def test_categorical_model():
   headers = ["predictor", "response"]
   response = "response"
@@ -359,16 +421,6 @@ def test_categorical_model():
   resp_index = headers.index(response)
   intended_predictions = [(test_row[resp_index], train_row[resp_index]) for train_row, test_row in zip(train_set_copy,test_set)]
   print "predicting string-categories correctly? -- ", predictions == intended_predictions
-
-  if predictions != intended_predictions:
-    print predictions
-    print '--------------'
-    print intended_predictions
-    incorrect = 0
-    for i, pred in enumerate(predictions):
-      if pred != intended_predictions[i]:
-        incorrect += 1
-    print 'Misclassifications: {}'.format(incorrect)
 
 if __name__=='__main__':
   test()
