@@ -6,7 +6,7 @@ train_percentage = 2.0/3.0
 filename = "test_data/german_categorical.csv"
 max_entries = None
 correct_types = [str, int, str, str, int, str,str,
-                 int,str,str,int, str, int, str, str, int,
+                 int,str,str,int, str, int, str, str, str, int,
                  str, int, str, str, str]
 
 AGE_COL = 12
@@ -23,10 +23,6 @@ def load_data():
     for i, row in enumerate(data):
       for j, correct_type in enumerate(correct_types):
         data[i][j] = correct_type(row[j])
-
-      # Replace the numeric age with "young" and "old" categories.
-      # Threshold based on: F. Kamiran and T. Calders. Classifying without discriminating.
-      data[i][AGE_COL] = "old" if row[AGE_COL] > 25 else "young"
 
     train, test = split_by_percent(data, train_percentage)
 

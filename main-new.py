@@ -18,6 +18,7 @@ class BlackBoxAuditor():
     self.RETRAIN_MODEL_PER_REPAIR = False
     self.WRITE_ORIGINAL_PREDICTIONS = True  
     self.ModelFactory = Weka_SVM
+    self.kdd = False
 
   def __call__(self):
     start_time = datetime.now()
@@ -71,7 +72,7 @@ class BlackBoxAuditor():
   
     # Prepare the auditor.
     auditor = GradientFeatureAuditor(model_or_factory, headers, train_set, test_set,
-                                     repair_steps=self.REPAIR_STEPS,
+                                     repair_steps=self.REPAIR_STEPS, kdd=self.kdd,
                                      features_to_ignore=audit_indices_to_ignore)
   
     vprint("Dumping original training data.", self.verbose)
