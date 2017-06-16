@@ -11,7 +11,7 @@ import os
 import json
 import gc
 
-ENABLE_MULTIPROCESSING = True
+ENABLE_MULTIPROCESSING = False
 SAVE_REPAIRED_DATA = True
 SAVE_PREDICTION_DETAILS = True
 
