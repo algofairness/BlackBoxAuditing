@@ -2,8 +2,6 @@ from splitters import split_by_percent
 import csv
 
 train_percentage = 2.0/3.0
-#train_percentage = 0.8
-print train_percentage
 
 def load_data():
   filename = ""  # file not publicly available

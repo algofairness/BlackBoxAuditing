@@ -18,7 +18,6 @@ def load_data():
 def test():
   headers, train, test = load_data()
   print "load_data -- unpacks correctly? -- ", (headers != None and train != None and test != None)
-  print "Needs better test", False
 
 if __name__=="__main__":
   test()
