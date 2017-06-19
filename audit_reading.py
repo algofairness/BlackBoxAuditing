@@ -29,8 +29,9 @@ def load_audit_confusion_matrices(filename):
       separator = ":"
       separator_index = line.index(separator)
 
-      repair_level = float(line[:separator_index])
-      raw_confusion_matrix = line[separator_index + len(separator):-1]
+      comma_index = line.index(',')
+      repair_level = float(line[separator_index+2:comma_index])
+      raw_confusion_matrix = line[comma_index+2:-2]
       confusion_matrix = json.loads( raw_confusion_matrix.replace("'","\"") )
       confusion_matrices.append( (repair_level, confusion_matrix) )
 
