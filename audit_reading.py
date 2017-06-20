@@ -188,7 +188,7 @@ def test():
   if not os.path.exists(TMP_DIR):
     os.makedirs(TMP_DIR)
 
-  test_contents = "GFA Audit for: Test Feature\n0.0:{'A': {'B': 100}, 'B': {'B': 199}}\n0.1:{'A': {'B': 100}, 'B': {'B': 199}}\n0.5:{'A': {'B': 100}, 'B': {'B': 199}}\n1.0:{'A': {'B': 100}, 'B': {'B': 199}}\n"
+  test_contents = "GFA Audit for: Test Feature\nskdjsoalkdjfosalsjf.lskajfowg:[0.0, {'A': {'B': 100}, 'B': {'B': 199}}]\nskdjsoalkdjfosalsjf.lskajfowg:[0.1, {'A': {'B': 100}, 'B': {'B': 199}}]\nskdjsoalkdjfosalsjf.lskajfowg:[0.5, {'A': {'B': 100}, 'B': {'B': 199}}]\nskdjsoalkdjfosalsjf.lskajfowg:[1.0, {'A': {'B': 100}, 'B': {'B': 199}}]\n"
   test_filenames = [TMP_DIR + "/test_audit_1.audit",
                     TMP_DIR + "/test_audit_2.audit"]
 

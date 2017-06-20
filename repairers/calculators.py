@@ -30,9 +30,11 @@ def test():
 def test_median():
   feature_values = [4,1,3,2]
   correct_median = 2
-  # assumes not KDD
-  print "median value is correct?", get_median(feature_values, False) == correct_median
-
+  # not KDD repair
+  print "Regular median value is correct?", get_median(feature_values, False) == correct_median
+  # KDD repair
+  correct_median = 3
+  print "KDD median value is correct?", get_median(feature_values, True) == correct_median
 
 if __name__=="__main__":
   test()

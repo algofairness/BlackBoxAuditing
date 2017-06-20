@@ -25,11 +25,15 @@ find . -type f -iname "*.py" -print0 | while IFS= read -r -d $'\0' line; do
       if [[ ! $line =~ ./BlackBoxAuditor.py ]]; then
         if [[ ! $line =~ ./histogram_maker.py ]]; then
           if [[ ! $line =~ ./make_graphs.py ]]; then
-            if [[ ! $line =~ ./find_cn2_rules.py ]]; then
+            if [[ ! $line =~ ./find_contexts/* ]]; then
               if [[ ! $line =~ ./repair.py ]]; then
-                echo "________________________________"
-                echo "Running tests for: $line"
-                python "$line" | grep --color -E '^|False$' # Highlight "False" tests.
+                if [[ ! $line =~ ./setup.py ]]; then
+                  if [[ ! $line =~ ./MANIFEST.in ]]; then
+                    echo "________________________________"
+                    echo "Running tests for: $line"
+                    python "$line" | grep --color -E '^|False$' # Highlight "False" tests.
+                  fi
+                fi
               fi
             fi
           fi
