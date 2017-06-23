@@ -1,0 +1,12 @@
+include BlackBoxAuditing/run_test_suite.sh
+include BlackBoxAuditing/test_data *.csv *.arff
+recursive-include BlackBoxAuditing/MATLAB_code *.m *.data *.mat *.csv *.txt
+include BlackBoxAuditing/r_plotting *.Rmd
+include BlackBoxAuditing/repair_tests *.csv
+include BlackBoxAuditing/model_factories/weka.path
+
+
+include README.md
+include requirements.txt
+include setup.py
+include setup.cfg

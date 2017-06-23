@@ -1,9 +1,14 @@
-audits/*
-repair_tests/output
-kdd/
+BlackBoxAuditing/audits/*
+BlackBoxAuditing/repair_tests/output
+BlackBoxAuditing/kdd/
+BlackBoxAuditing/find_contexts/output/*
+BlackBoxAuditing/tmp/*
+
+
+build
+dist
+*.egg-info
 *.pyc
 *.swp
 
-test_data/DRP*
 
-find_contexts/output
