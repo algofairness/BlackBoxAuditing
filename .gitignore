@@ -6,8 +6,9 @@ BlackBoxAuditing/tmp/*
 
 
 build
-dist
+/dist/
 *.egg-info
+*.egg
 *.pyc
 *.swp
 

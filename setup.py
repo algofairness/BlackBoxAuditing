@@ -43,7 +43,7 @@ class PostInstallCommand(install):
 
     install.run(self)
 
-with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
+with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
   long_description = f.read()
 
 NAME ='BlackBoxAuditing'
@@ -53,8 +53,8 @@ DESCRIPTION = 'Sample Implementation of Gradient Feature Auditing (GFA)'
 LONG_DESCRIPTION = long_description
 
 URL = 'https://github.com/algofairness/BlackBoxAuditing'
-AUTHOR ='___'
-AUTHOR_EMAIL='___'
+AUTHOR ='Philip Adler, Casey Falk, Sorelle A. Friedler, Gabriel Rybeck, Carlos Scheidegger, Brandon Smith, Suresh Venkatasubramanian, Michael Feldman, John Moeller, Derek Roth, Charlie Marx'
+AUTHOR_EMAIL='fairness@haverford.edu'
 LICENSE='Apache 2.0'
 
 CLASSIFIERS = [
@@ -63,22 +63,20 @@ CLASSIFIERS = [
   'Topic :: Scientific/Engineeing',
   'License :: OSI Approved :: Apache 2.0',
   'Programming Language :: Python :: 2.7',
-  'Programming Language :: Python :: 3',
-  'Programming Language :: Python :: 3.3',
-  'Programming Language :: Python :: 3.4',
-  'Programming Language :: Python :: 3.5',
 ]
 KEYWORDS = 'algorithmic fairness'
 
 PACKAGES = find_packages()
 PACKAGE_DATA = {
-  'BlackBoxAuditing': ['*.sh','r_plotting/*.Rmd', 'repair_tests/*.csv'],
+  'BlackBoxAuditing': ['*.sh','r_plotting/*.Rmd', 'repair_tests/*.csv', 'MATLAB_code/*'],
   'BlackBoxAuditing.test_data': ['*.csv', '*.arff'],
-  'BlackBoxAuditing.model_factories': ['weka.path']
+  'BlackBoxAuditing.model_factories': ['weka.path'],
 }
 INCLUDE_PACKAGE_DATA = True
 
-INSTALL_REQUIRES = ['tensorflow']
+INSTALL_REQUIRES = [
+  'tensorflow',
+  'weka']
 
 CMDCLASS = {
   'develop': PostDevelopCommand,
@@ -88,6 +86,7 @@ CMDCLASS = {
 ENTRY_POINTS = {
   'console_scripts': [
     'BlackBoxAuditing-test = BlackBoxAuditing.test:test',
+    'BlackBoxAuditing-repair = BlackBoxAuditing.repair:main',
   ],
 }
 

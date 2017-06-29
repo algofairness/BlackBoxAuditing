@@ -9,8 +9,7 @@ from data import load_data, load_from_file
 import csv
 
 class Auditor():
-  def __init__(self, data):
-    self.data = data
+  def __init__(self):
     self.measurers = [accuracy, BCR]
     self.model_options = {}
     self.verbose = True
@@ -20,10 +19,10 @@ class Auditor():
     self.ModelFactory = Weka_SVM
     self.kdd = False
 
-  def __call__(self):
+  def __call__(self, data):
     start_time = datetime.now()
   
-    headers, train_set, test_set, response_header, features_to_ignore = self.data
+    headers, train_set, test_set, response_header, features_to_ignore = data
   
     """
      ModelFactories require a `build` method that accepts some training data
