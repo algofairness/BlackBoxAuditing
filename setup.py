@@ -60,8 +60,8 @@ LICENSE='Apache 2.0'
 CLASSIFIERS = [
   'Development Status :: 4 - Beta',
   'Intended Audience :: Developers',
-  'Topic :: Scientific/Engineeing',
-  'License :: OSI Approved :: Apache 2.0',
+  'Topic :: Software Development',
+  'License :: OSI Approved :: Apache Software License',
   'Programming Language :: Python :: 2.7',
 ]
 KEYWORDS = 'algorithmic fairness'
