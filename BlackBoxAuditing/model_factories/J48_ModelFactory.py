@@ -32,11 +32,11 @@ def test():
 
   factory = ModelFactory(all_data, headers, "response", name_prefix="test")
   model = factory.build(train_set)
-  print "factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor)
+  print("factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor))
 
   predictions = model.test(test_set)
   intended_predictions = [("A", "A")]*len(A_set) + [("C", "B")]*len(C_set)
-  print "predicting correctly? -- ", predictions == intended_predictions
+  print("predicting correctly? -- ", predictions == intended_predictions)
 
 if __name__=="__main__":
   test()

@@ -21,9 +21,7 @@ TMP_DIR = "tmp/"
 if not os.path.exists(TMP_DIR):
   os.makedirs(TMP_DIR)
 
-class AbstractWekaModelFactory(AbstractModelFactory):
-  __metaclass__ = ABCMeta
-
+class AbstractWekaModelFactory(AbstractModelFactory, metaclass=ABCMeta):
   @abstractmethod
   def __init__(self, *args, **kwargs):
     super(AbstractWekaModelFactory, self).__init__(*args,**kwargs)
@@ -84,7 +82,7 @@ class AbstractWekaModelVisitor(AbstractModelVisitor):
       raw_predictions = [line.split()[prediction_index] for line in raw_lines]
       predictions = [prediction.split(":")[1] for prediction in raw_predictions]
 
-    return zip([row[self.response_index] for row in test_set], predictions)
+    return list(zip([row[self.response_index] for row in test_set], predictions))
 
 
 def run_weka_command(command):
@@ -96,11 +94,11 @@ def get_arff_type_dict(headers, data):
   values = {header:[row[i] for row in data] for i, header in enumerate(headers)}
   arff_type = OrderedDict()
   for header in headers:
-    if all( map(lambda x: isinstance(x, float), values[header]) ):
+    if all( [isinstance(x, float) for x in values[header]] ):
       arff_type[header] = "numeric"
-    elif all( map(lambda x: isinstance(x, bool), values[header]) ):
+    elif all( [isinstance(x, bool) for x in values[header]] ):
       arff_type[header] = [True,False]
-    elif all( map(lambda x: isinstance(x, int), values[header]) ):
+    elif all( [isinstance(x, int) for x in values[header]] ):
       arff_type[header] = "numeric"
     else:
       arff_type[header] = sorted(set(values[header])) # Categorical

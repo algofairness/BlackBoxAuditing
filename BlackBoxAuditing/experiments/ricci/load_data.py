@@ -21,7 +21,7 @@ def load_data():
 
 def test():
   headers, train, test = load_data()
-  print "load_data unpacks correctly? -- ", (headers != None and train != None and test != None)
+  print("load_data unpacks correctly? -- ", (headers != None and train != None and test != None))
 
   correct_types = [str, float, int, str, float, str]
   gathered_types = []
@@ -33,7 +33,7 @@ def test():
     elif all( isinstance(row[i],str) for row in train + test ):
       gathered_types.append(str)
 
-  print "load_data types are correct? -- ", gathered_types == correct_types
+  print("load_data types are correct? -- ", gathered_types == correct_types)
 
 
 if __name__=="__main__":

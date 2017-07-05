@@ -3,7 +3,7 @@
 def disparate_impact(list_of_triples, nonprotected_group, protected_group):
 	# Assert len(feature_to_repair) == len(response), and groups and outcomes are tuples
 	#SPECIFIC TO RECITIVISM DATA!!
-	print "Calculating DI for: ", protected_group
+	print("Calculating DI for: ", protected_group)
 	feature_to_repair = []
 	groups = {}
 	response = []
@@ -50,7 +50,7 @@ def disparate_impact(list_of_triples, nonprotected_group, protected_group):
 		di= 1
 	else:
 		di = prob_a_given_y/prob_a_given_x
-	print "Stats:", prob_x, prob_y, prob_x_and_a, prob_y_and_a, prob_a_given_x,prob_a_given_y,   di
+	print("Stats:", prob_x, prob_y, prob_x_and_a, prob_y_and_a, prob_a_given_x,prob_a_given_y,   di)
 	return di
 
 
@@ -87,7 +87,7 @@ def test():
 	outcomes = (1,0)
 	di = disparate_impact2(feature_to_repair, response, groups, outcomes)
 	di = round(di, 2)
-	print "Disparate Impact correct?", di == 0.75 
+	print("Disparate Impact correct?", di == 0.75) 
 
 if __name__== "__main__":
   test()

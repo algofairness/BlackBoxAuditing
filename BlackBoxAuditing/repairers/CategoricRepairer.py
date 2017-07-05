@@ -14,7 +14,7 @@ from copy import deepcopy
 class Repairer(AbstractRepairer):
   def repair(self, data_to_repair):
     num_cols = len(data_to_repair[0])
-    col_ids = range(num_cols)
+    col_ids = list(range(num_cols))
     
     # Get column type information
     col_types = ["Y"]*len(col_ids)
@@ -26,12 +26,12 @@ class Repairer(AbstractRepairer):
 
     col_type_dict = {col_id: col_type for col_id, col_type in zip(col_ids, col_types)}
 
-    not_I_col_ids = filter(lambda x: col_type_dict[x] != "I", col_ids)
+    not_I_col_ids = [x for x in col_ids if col_type_dict[x] != "I"]
     
     if self.kdd:
-      cols_to_repair = filter(lambda x: col_type_dict[x] == "Y", col_ids) 
+      cols_to_repair = [x for x in col_ids if col_type_dict[x] == "Y"] 
     else:
-      cols_to_repair = filter(lambda x: col_type_dict[x] in "YX", col_ids)
+      cols_to_repair = [x for x in col_ids if col_type_dict[x] in "YX"]
     
     # To prevent potential perils with user-provided column names, map them to safe column names
     safe_stratify_cols = [self.feature_to_repair]
@@ -47,7 +47,7 @@ class Repairer(AbstractRepairer):
 
 
     repair_types = {}
-    for col_id, values in data_dict.items():
+    for col_id, values in list(data_dict.items()):
       if all(isinstance(value, float) for value in values):
         repair_types[col_id] = float
       elif all(isinstance(value, int) for value in values):
@@ -96,7 +96,7 @@ class Repairer(AbstractRepairer):
     """
     stratified_group_data = {group: {} for group in all_stratified_groups}
     for group in all_stratified_groups:
-      for col_id, col_dict in data_dict.items():
+      for col_id, col_dict in list(data_dict.items()):
         # Get the indices at which each value occurs.
         indices = {}
         for i in stratified_group_indices[group]:
@@ -105,7 +105,7 @@ class Repairer(AbstractRepairer):
             indices[value] = []
           indices[value].append(i)
 
-        stratified_col_values = [(occurs, val) for val, occurs in indices.items()]
+        stratified_col_values = [(occurs, val) for val, occurs in list(indices.items())]
         stratified_col_values.sort(key=lambda tup: tup[1])
         stratified_group_data[group][col_id] = stratified_col_values
 
@@ -163,7 +163,7 @@ class Repairer(AbstractRepairer):
       #Categorical Repair is done below
       elif repair_types[col_id] in {str}:
         feature = CategoricalFeature(col)
-        categories = feature.bin_index_dict.keys()
+        categories = list(feature.bin_index_dict.keys())
 
         group_features = get_group_data(all_stratified_groups, stratified_group_data, col_id)
 
@@ -269,7 +269,7 @@ def assign_overflow(all_stratified_groups, categories, overflow, group_features,
   for group_index, group in enumerate(all_stratified_groups):
     # Calculate the category proportions.
     dist_generator = lambda cat: repair_generator(group_index, cat)
-    cat_props = map(dist_generator,categories)
+    cat_props = list(map(dist_generator,categories))
 
     if all(elem==0 for elem in cat_props): #TODO: Check that this is correct!
       cat_props = [1.0/len(cat_props)] * len(cat_props)
@@ -301,7 +301,7 @@ def get_mode(values):
   counts = {}
   for value in values:
     counts[value] = 1 if value not in counts else counts[value]+1
-  mode_tuple = max(counts.items(), key=lambda tup: tup[1])
+  mode_tuple = max(list(counts.items()), key=lambda tup: tup[1])
   return mode_tuple[0]
 
 
@@ -336,8 +336,8 @@ def test_repeated_values():
   ['y', 'I'], ['y', 'I'], ['y', 'G'], ['z', 'H'], 
   ['z', 'N'], ['z', 'N'], ['z', 'L'], ['z', 'K'], ['z', 'K'], ['z', 'K']]
 
-  print "Test unique values -- .5 repaired_data altered?", repaired_data != all_data
-  print "Test unique values -- .5 repaired_data correct?", repaired_data == correct_repaired_data
+  print("Test unique values -- .5 repaired_data altered?", repaired_data != all_data)
+  print("Test unique values -- .5 repaired_data correct?", repaired_data == correct_repaired_data)
 
   all_data = [
   ["x","A"], ["x","A"], ["x","A"], ["x","A"], ["x","A"],
@@ -357,22 +357,22 @@ def test_repeated_values():
   ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A']]
 
 
-  print "Test repeated values -- .5 repaired_data altered?", repaired_data != all_data
-  print "Test repeated values -- .5 repaired_data correct?", repaired_data == correct_repaired_data
+  print("Test repeated values -- .5 repaired_data altered?", repaired_data != all_data)
+  print("Test repeated values -- .5 repaired_data correct?", repaired_data == correct_repaired_data)
 
 def test_minimal():
-  class_1 = [[float(i),"A"] for i in xrange(0, 100)]
-  class_2 = [[float(i),"B"] for i in xrange(101, 200)] # Thus, "A" is mode class.
+  class_1 = [[float(i),"A"] for i in range(0, 100)]
+  class_2 = [[float(i),"B"] for i in range(101, 200)] # Thus, "A" is mode class.
   data = class_1 + class_2
 
   feature_to_repair = 1
   repairer = Repairer(data, feature_to_repair, 1, False)
   repaired_data = repairer.repair(data)
-  print "Minimal Dataset -- repaired_data altered?", repaired_data != data
+  print("Minimal Dataset -- repaired_data altered?", repaired_data != data)
 
   mode = get_mode([row[feature_to_repair] for row in data])
-  print "Minimal Dataset -- mode is true mode?", mode=="A"
-  print "Minimal Dataset -- mode value as feature_to_repair?", all(row[feature_to_repair] == mode for row in repaired_data)
+  print("Minimal Dataset -- mode is true mode?", mode=="A")
+  print("Minimal Dataset -- mode value as feature_to_repair?", all(row[feature_to_repair] == mode for row in repaired_data))
 
 def test_get_group_data():
   group_features = {}
@@ -383,8 +383,8 @@ def test_get_group_data():
                            ('z',): {1: [([9, 1, 10], 'A'), ([], 'B'), ([11], 'C')]}}
   group_features[col_id] = get_group_data(all_stratified_groups, stratified_group_data, col_id)
 
-  print "Test get_group_data -- group features correct?", \
-    [group_features[col_id][group].data for group in all_stratified_groups] == [['B','B','A','A','B','A'],['A', 'A', 'A', 'C']]
+  print("Test get_group_data -- group features correct?", \
+    [group_features[col_id][group].data for group in all_stratified_groups] == [['B','B','A','A','B','A'],['A', 'A', 'A', 'C']])
   #print "Test get_group_data -- group sizes correct?", group_size[col_id] == {('y',): 6, ('z',):4}
 
 def test_get_categories_count():
@@ -397,9 +397,9 @@ def test_get_categories_count():
 
   categories_count[col_id] = get_categories_count(categories[col_id], all_stratified_groups, group_features[col_id])
   #SparseList makes us test for correctness strangely
-  print "Test get_categories_count -- category counts correct?",\
+  print("Test get_categories_count -- category counts correct?",\
    categories_count[col_id]['A'][0] ==2 and categories_count[col_id]['C'][0] ==3 and categories_count[col_id]['B'][0] ==1\
-   and categories_count[col_id]['B'][1] ==2 and categories_count[col_id]['D'][1] ==2
+   and categories_count[col_id]['B'][1] ==2 and categories_count[col_id]['D'][1] ==2)
 
 def test_get_categories_count_norm():
   categories_count_norm = {}
@@ -413,15 +413,15 @@ def test_get_categories_count_norm():
                         ('z',): CategoricalFeature([])}}
   categories_count_norm[col_id] = get_categories_count_norm(categories[col_id], all_stratified_groups, categories_count[col_id], group_features[col_id])
   #SparseList makes us test for correctness strangely
-  print "Test get_categories_count_norm -- normalized category counts correct?",\
-    categories_count_norm[col_id]['A'][0] == 0.2 and  categories_count_norm[col_id]['B'][0] == 0.8
+  print("Test get_categories_count_norm -- normalized category counts correct?",\
+    categories_count_norm[col_id]['A'][0] == 0.2 and  categories_count_norm[col_id]['B'][0] == 0.8)
 
 def test_get_median_per_category():
   categories = {1:['A','B','C','D']}
   col_id =1
   categories_count_norm = {1:{'A':[0.25,0.0],'C':[0.3,0.0],'B':[0.4,0.0],  'D':[0.6,0.4]}}
   median = get_median_per_category(categories[col_id], categories_count_norm[col_id])
-  print "Test get_median_per_category -- medians are correct?", median == {'A':0.0,'C':0.0,'B':0.0,  'D':0.4}
+  print("Test get_median_per_category -- medians are correct?", median == {'A':0.0,'C':0.0,'B':0.0,  'D':0.4})
 
 def test_gen_desired_count():
   #Case 1: feature with category with no values
@@ -436,7 +436,7 @@ def test_gen_desired_count():
   des_countB = gen_desired_count(group_index, group, category, median, group_features, repair_level, categories_count)
   category = 'A'
   des_countA = gen_desired_count(group_index, group, category, median, group_features, repair_level, categories_count)
-  print "Test gen_desired_count -- desired count correct for feature with category with no values?", des_countB==12 and des_countA==3
+  print("Test gen_desired_count -- desired count correct for feature with category with no values?", des_countB==12 and des_countA==3)
 
   #Case 2: feature with regular categories
   group_index = 0
@@ -450,7 +450,7 @@ def test_gen_desired_count():
   des_countB = gen_desired_count(group_index, group, category, median, group_features, repair_level, categories_count)
   category = 'A'
   des_countA = gen_desired_count(group_index, group, category, median, group_features, repair_level, categories_count)
-  print "Test gen_desired_count -- desired count correct for standard feature?", des_countB==15 and des_countA==4 
+  print("Test gen_desired_count -- desired count correct for standard feature?", des_countB==15 and des_countA==4) 
 
   #Case 3: Repair feature after having repaired the other features on such feature 
   col_id = 0
@@ -468,7 +468,7 @@ def test_gen_desired_count():
   group = ('z',)
   category = 'Z'
   des_countZ = gen_desired_count(group_index, group, category, median, group_features, repair_level, categories_count)
-  print "Test gen_desired_count -- desired count correct for mode category when repairing feature to remove?", des_countY==2 and des_countZ==1
+  print("Test gen_desired_count -- desired count correct for mode category when repairing feature to remove?", des_countY==2 and des_countZ==1)
   # If you are confused why desired count for Z is 2, it is beacuse our group_index is for group y 
   
 def test_gen_desired_dist():
@@ -488,7 +488,7 @@ def test_gen_desired_dist():
   des_distB = gen_desired_dist(group_index, category, col_id, median, repair_level, categories_count_norm, feature_to_remove, mode_feature)
   category = 'A'
   des_distA = gen_desired_dist(group_index, category, col_id, median, repair_level, categories_count_norm, feature_to_remove, mode_feature)
-  print "Test gen_desired_dist -- desired distribution correct for feature with category with no values?", des_distB == .4 and des_distA == .1
+  print("Test gen_desired_dist -- desired distribution correct for feature with category with no values?", des_distB == .4 and des_distA == .1)
   
   #Case 2: feature with regular categories
   group_index = 0
@@ -504,7 +504,7 @@ def test_gen_desired_dist():
   des_distB = gen_desired_dist(group_index, category, col_id, median, repair_level, categories_count_norm, feature_to_remove, mode_feature)
   category = 'A'
   des_distA = gen_desired_dist(group_index, category, col_id, median, repair_level, categories_count_norm, feature_to_remove, mode_feature)
-  print "Test gen_desired_dist -- desired distribution correct for standard feature?", des_distB == .75 and des_distA == .24995 
+  print("Test gen_desired_dist -- desired distribution correct for standard feature?", des_distB == .75 and des_distA == .24995) 
 
   #Case 3: Repair feature after having repaired the other features on such feature 
   col_id = 0
@@ -522,7 +522,7 @@ def test_gen_desired_dist():
   group_index = 1
   category = 'Z'
   des_distZ = gen_desired_dist(group_index, category, col_id, median, repair_level, categories_count_norm, feature_to_remove, mode_feature)
-  print "Test gen_desired_dist -- desired distribution correct for mode category when repairing feature to remove?", des_distY==1 and des_distZ==.5
+  print("Test gen_desired_dist -- desired distribution correct for mode category when repairing feature to remove?", des_distY==1 and des_distZ==.5)
 
 def test_assign_overflow():
   group_index = 0
@@ -550,10 +550,10 @@ def test_assign_overflow():
   group_features = {('y',):CategoricalFeature(['A','A','B','B',0,0]), ('z',): CategoricalFeature(['B',0,0])}
 
   feature, assigned_overflow, desired_dict_list = assign_overflow(all_stratified_groups, categories, overflow, group_features, dist_generator)
-  print "Test assign_overflow -- updated group features correct?", \
-   [feature[group].data for group in all_stratified_groups] ==[['A', 'A', 'B', 'B', 'B', 'A'], ['B', 'B', 'A']]
-  print "Test assign_overflow -- assigned overflow correctly?", assigned_overflow == {('y',): {0: 'B', 1: 'A'}, ('z',): {0: 'B', 1: 'A'}}
-  print "Test assign_overflow -- distribution correct?", desired_dict_list == {('y',): [0.5, 0.5], ('z',): [0.5, 0.5]}
+  print("Test assign_overflow -- updated group features correct?", \
+   [feature[group].data for group in all_stratified_groups] ==[['A', 'A', 'B', 'B', 'B', 'A'], ['B', 'B', 'A']])
+  print("Test assign_overflow -- assigned overflow correctly?", assigned_overflow == {('y',): {0: 'B', 1: 'A'}, ('z',): {0: 'B', 1: 'A'}})
+  print("Test assign_overflow -- distribution correct?", desired_dict_list == {('y',): [0.5, 0.5], ('z',): [0.5, 0.5]})
 
 def test_numerical():
   all_data = [ ["x", 1], ["x", 1], ["x", 2], ["x", 2], ["x", 3], ["x", 3],
@@ -565,7 +565,7 @@ def test_numerical():
   correct_repaired_data = [ ["x", 1], ["x", 1], ["x", 1], ["x", 1], ["x", 2], ["x", 2],
                             ["x", 1], ["x", 1], ["x", 2] ]
 
-  print "Numerical minimal dataset -- full repaired_data correct?", repaired_data == correct_repaired_data
+  print("Numerical minimal dataset -- full repaired_data correct?", repaired_data == correct_repaired_data)
 
 
 def test_categorical():
@@ -586,8 +586,8 @@ def test_categorical():
   ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'B'], 
   ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'B']]
 
-  print "Categorical Minimal Dataset -- full repaired_data altered?", repaired_data != all_data
-  print "Categorical Minimal Dataset -- full repaired_data correct?", repaired_data == correct_repaired_data
+  print("Categorical Minimal Dataset -- full repaired_data altered?", repaired_data != all_data)
+  print("Categorical Minimal Dataset -- full repaired_data correct?", repaired_data == correct_repaired_data)
 
   repair_level=0.5
   feature_to_repair = 0
@@ -599,8 +599,8 @@ def test_categorical():
   ['y', 'A'], ['y', 'A'], ['y', 'A'], ['y', 'B'], 
   ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'B']]
 
-  print "Categorical Minimal Dataset -- partial (.5) repaired_data altered?", part_repaired_data != all_data
-  print "Categorical Minimal Dataset -- partial (.5) repaired_data correct?", part_repaired_data == correct_part_repaired_data
+  print("Categorical Minimal Dataset -- partial (.5) repaired_data altered?", part_repaired_data != all_data)
+  print("Categorical Minimal Dataset -- partial (.5) repaired_data correct?", part_repaired_data == correct_part_repaired_data)
 
   repair_level=0.2
   feature_to_repair = 0
@@ -612,8 +612,8 @@ def test_categorical():
   ['y', 'A'], ['y', 'A'], ['y', 'A'], ['y', 'B'], 
   ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'B']]
 
-  print "Categorical Minimal Dataset -- partial (.2) repaired_data altered?", part_repaired_data != all_data
-  print "Categorical Minimal Dataset -- partial (.2) repaired_data correct?", part_repaired_data == correct_part2_repaired_data
+  print("Categorical Minimal Dataset -- partial (.2) repaired_data altered?", part_repaired_data != all_data)
+  print("Categorical Minimal Dataset -- partial (.2) repaired_data correct?", part_repaired_data == correct_part2_repaired_data)
 
 
 if __name__== "__main__":

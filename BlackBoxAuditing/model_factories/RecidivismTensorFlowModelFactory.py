@@ -48,7 +48,7 @@ class ModelFactory(AbstractModelFactory):
     layer_sizes = [num_features] + self.hidden_layer_sizes + [self.num_labels]
     # Generate a layer for the input and for each additional hidden layer.
     layers = [x] # Count the input as the first layer.
-    for i in xrange(len(layer_sizes)-1):
+    for i in range(len(layer_sizes)-1):
       layer_size = layer_sizes[i]
       layer_type = self.layer_types[i]
 
@@ -76,7 +76,7 @@ class ModelFactory(AbstractModelFactory):
       tf.initialize_all_variables().run()
 
       # Iterate and train.
-      for step in xrange(self.num_epochs * train_size // self.batch_size):
+      for step in range(self.num_epochs * train_size // self.batch_size):
 
         offset = (step * self.batch_size) % train_size
         batch_data = train_matrix[offset:(offset + self.batch_size), :]
@@ -111,10 +111,10 @@ class ModelVisitor(AbstractModelVisitor):
       self.model_saver.restore(tf_session, ckpt.model_checkpoint_path)
       predictions = tf.argmax(self.y, 1).eval(feed_dict={self.x: test_matrix, self.y_:test_labels}, session=tf_session)
 
-    predictions_dict = {i:key for key,i in self.response_dict.items()}
+    predictions_dict = {i:key for key,i in list(self.response_dict.items())}
     predictions = [predictions_dict[pred] for pred in predictions]
 
-    return zip([row[self.response_index] for row in test_set], predictions)
+    return list(zip([row[self.response_index] for row in test_set], predictions))
 
 def list_to_tf_input(data, response_index, num_labels):
   data = expand_to_one_hot(data)
@@ -242,7 +242,7 @@ def expand_to_one_hot(data,expand = True,use_alternative=False):
 
 
     # convert from dictionary to list of lists
-    fin = [[int(entry[key]) for key in entry.keys()] for entry in new_data]
+    fin = [[int(entry[key]) for key in list(entry.keys())] for entry in new_data]
     """
     with open("brandon_testing/test_"+str(time.clock())+".csv","w") as f:
 	writer = csv.writer(f,delimiter=",")
@@ -268,8 +268,8 @@ def test_list_to_tf_input():
   tf_matrix, tf_onehot = list_to_tf_input(data, 1, 3)
   correct_matrix = [[0],[0],[0]]
   correct_onehot = [[1,0,0], [0,1,0], [0,0,1]]
-  print "list_to_tf_input matrix correct? --",np.array_equal(tf_matrix, correct_matrix)
-  print "list_to_tf_input onehot correct? --",np.array_equal(tf_onehot, correct_onehot)
+  print("list_to_tf_input matrix correct? --",np.array_equal(tf_matrix, correct_matrix))
+  print("list_to_tf_input onehot correct? --",np.array_equal(tf_onehot, correct_onehot))
 
 def test_basic_model():
   headers = ["predictor 1", "predictor 2", "response"]
@@ -279,15 +279,15 @@ def test_basic_model():
   all_data = train_set + test_set
 
   factory = ModelFactory(all_data, headers, response, name_prefix="test")
-  print "factory settings valid? -- ",len(factory.hidden_layer_sizes)+1 == len(factory.layer_types)
+  print("factory settings valid? -- ",len(factory.hidden_layer_sizes)+1 == len(factory.layer_types))
 
   model = factory.build(train_set)
-  print "factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor)
+  print("factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor))
 
   predictions = model.test(test_set)
   resp_index = headers.index(response)
   intended_predictions = [(row[resp_index], row[resp_index]) for row in test_set]
-  print "predicting numeric categories correctly? -- ", predictions == intended_predictions
+  print("predicting numeric categories correctly? -- ", predictions == intended_predictions)
 
 def test_categorical_model():
   headers = ["predictor 1", "predictor 2", "response"]
@@ -297,15 +297,15 @@ def test_categorical_model():
   all_data = train_set + test_set
 
   factory = ModelFactory(all_data, headers, response, name_prefix="test")
-  print "factory settings valid? -- ",len(factory.hidden_layer_sizes)+1 == len(factory.layer_types)
+  print("factory settings valid? -- ",len(factory.hidden_layer_sizes)+1 == len(factory.layer_types))
 
   model = factory.build(train_set)
-  print "factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor)
+  print("factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor))
 
   predictions = model.test(test_set)
   resp_index = headers.index(response)
   intended_predictions = [(test_row[resp_index], train_row[resp_index]) for train_row, test_row in zip(train_set,test_set)]
-  print "predicting string-categories correctly? -- ", predictions == intended_predictions
+  print("predicting string-categories correctly? -- ", predictions == intended_predictions)
 
 if __name__=="__main__":
   test()

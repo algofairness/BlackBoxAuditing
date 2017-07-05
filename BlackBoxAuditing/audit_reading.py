@@ -21,7 +21,7 @@ def load_audit_confusion_matrices(filename):
   """
 
   with open(filename) as audit_file:
-    audit_file.next() # Skip the first line.
+    next(audit_file) # Skip the first line.
 
     # Extract the confusion matrices and repair levels from the audit file.
     confusion_matrices = []
@@ -207,18 +207,18 @@ def test():
   graph_audit(test_filenames[0], measurers, output_image) # Only need to test 1.
 
   file_not_empty = os.path.getsize(output_image) > 0
-  print "image file generated? --", file_not_empty
+  print("image file generated? --", file_not_empty)
 
   file_not_empty = os.path.getsize(output_image + ".data") > 0
-  print "data file generated? --", file_not_empty
+  print("data file generated? --", file_not_empty)
 
   ranked_features = rank_audit_files(test_filenames, mock_measurer)
-  print "ranked features sorted? --", ranked_features[0] > ranked_features[1]
+  print("ranked features sorted? --", ranked_features[0] > ranked_features[1])
 
   output_image = TMP_DIR + "/test_image2.png"
   graph_audits(test_filenames, mock_measurer, output_image)
   file_not_empty = os.path.getsize(output_image) > 0
-  print "ranked image file generated? --", file_not_empty
+  print("ranked image file generated? --", file_not_empty)
 
   shutil.rmtree(TMP_DIR)
 

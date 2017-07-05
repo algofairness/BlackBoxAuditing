@@ -32,7 +32,7 @@ find . -type f -iname "*.py" -print0 | while IFS= read -r -d $'\0' line; do
                     if [[ ! $line =~ ./MANIFEST.in ]]; then
                       echo "________________________________"
                       echo "Running tests for: $line"
-                      python "$line" | grep --color -E '^|False$' # Highlight "False" tests.
+                      python3 "$line" | grep --color -E '^|False$' # Highlight "False" tests.
                     fi
                   fi
                 fi

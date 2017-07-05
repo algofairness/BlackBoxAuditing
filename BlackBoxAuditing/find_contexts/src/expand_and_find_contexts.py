@@ -131,7 +131,7 @@ def parse_rule(rule):
     elif "TRUE" in selector:
       continue
     else:
-      print("Warning: unrecognized operation for " + selector)
+      print(("Warning: unrecognized operation for " + selector))
 
     s_var, s_val = selector.split(op)
     s_val = convert_ifnum(s_val)
@@ -186,7 +186,7 @@ def get_orig_to_obscured_map(original_csv, obscured_csv):
       attr_val = convert_ifnum(rowdict[attr])
 
       if attr not in orig_to_obscured:
-        print("Warning: can't find original attribute to match this obscured attribte:" + attr)
+        print(("Warning: can't find original attribute to match this obscured attribte:" + attr))
       orig_val = rownum_to_origval[i][attr]
 
       if attr_val not in orig_to_obscured[attr][orig_val]:

@@ -16,11 +16,11 @@ def FreedmanDiaconisBinSize(feature_values):
 
 
 def test():
-  values = range(0,100)
+  values = list(range(0,100))
   bin_size = FreedmanDiaconisBinSize(values)
   correct_bin_size = 21
   bin_size = round(bin_size)
-  print "FreedmanDiaconisBinSize -- correct size of bins? ", bin_size == correct_bin_size
+  print("FreedmanDiaconisBinSize -- correct size of bins? ", bin_size == correct_bin_size)
 
 
 if __name__=="__main__":

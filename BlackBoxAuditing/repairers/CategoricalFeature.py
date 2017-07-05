@@ -28,7 +28,7 @@ class CategoricalFeature:
 
     self.bin_data = d1
     self.category_count = d5
-    self.num_bins = len(d1.items())
+    self.num_bins = len(list(d1.items()))
     self.bin_fulldata = d3
     self.bin_index_dict = d2
     self.bin_index_dict_reverse = d4
@@ -36,7 +36,7 @@ class CategoricalFeature:
 
   def create_graph(self, count_generator): #creates graph given a CategoricalFeature object
     DG=nx.DiGraph() #using networkx package
-    bin_list = self.bin_data.items()
+    bin_list = list(self.bin_data.items())
     bin_index_dict_reverse = self.bin_index_dict_reverse
     k = self.num_bins
     DG.add_node('s')
@@ -107,9 +107,9 @@ def test():
   ('s', 0, {'capacity': 3, 'weight': 0}), ('s', 1, {'capacity': 3, 'weight': 0}),
   ('s', 2, {'capacity': 3, 'weight': 0}), ('s', 3, {'capacity': 3, 'weight': 0})]
   new_data = [0, 0, 'C', 'D', 'D', 'D', 'C', 'B', 'A', 0, 'B', 0]
-  print "CategoricalFeature has correct number of categories?", 4 == test_feature.num_bins
-  print "Directed Graph has correct edges and edge weights?", DG.edges(data=True) == edges
-  print "mincostFlow has correct overflow?", overflow == 4
-  print "mincostFlow has correct output data?", new_feature.data == new_data
+  print("CategoricalFeature has correct number of categories?", 4 == test_feature.num_bins)
+  print("Directed Graph has correct edges and edge weights?", DG.edges(data=True) == edges)
+  print("mincostFlow has correct overflow?", overflow == 4)
+  print("mincostFlow has correct output data?", new_feature.data == new_data)
 
 if __name__=="__main__": test()

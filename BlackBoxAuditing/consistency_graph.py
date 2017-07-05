@@ -25,7 +25,7 @@ def graph_prediction_consistency(directory, output_image_file):
     file_groups[feature].append(pred)
 
   pred_groups = {}
-  for feature, filenames in file_groups.items():
+  for feature, filenames in list(file_groups.items()):
     pred_groups[feature] = []
     for filename in filenames:
       preds = load_pred_tups_from_predictions(filename)
@@ -37,7 +37,7 @@ def graph_prediction_consistency(directory, output_image_file):
 
   features = []
   y_axes = []
-  for feature, pred_tups in pred_groups.items():
+  for feature, pred_tups in list(pred_groups.items()):
     orig = pred_tups[0][1]
     x_axis = [rep_level for rep_level, _ in pred_tups]
     y_axis = [similarity_to_original_preds(orig, tups) for _, tups in pred_tups]
@@ -66,7 +66,7 @@ def graph_prediction_consistency(directory, output_image_file):
 def load_pred_tups_from_predictions(filename):
   with open(filename) as f:
     reader = csv.reader(f)
-    reader.next # Skip the headers.
+    reader.__next__ # Skip the headers.
     return [(r,p) for _,r,p in reader]
 
 def similarity_to_original_preds(orig_pred_tups, new_pred_tups):
@@ -87,4 +87,4 @@ if __name__=="__main__":
     directory = sys.argv[1]
     output_image = directory + "/similarity_to_original_predictions.png"
     graph_prediction_consistency(directory, output_image)
-    print "Written to: {}".format(output_image)
+    print("Written to: {}".format(output_image))

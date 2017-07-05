@@ -2,8 +2,8 @@
 Development script for converting audit files into graphs.
 """
 
-from audit_reading import graph_audits, graph_audit, rank_audit_files
-from measurements import BCR, accuracy
+from .audit_reading import graph_audits, graph_audit, rank_audit_files
+from .measurements import BCR, accuracy
 
 from os import listdir
 from os.path import isfile, join
@@ -24,7 +24,7 @@ def audit_directory(directory):
     ranked_graph_filename = "{}/{}.png".format(directory, measurer.__name__)
     graph_audits(audits, measurer, ranked_graph_filename)
     ranks = rank_audit_files(audits, measurer)
-    print measurer.__name__, ranks
+    print(measurer.__name__, ranks)
 
 
 if __name__=="__main__":
@@ -32,5 +32,5 @@ if __name__=="__main__":
     directory = sys.argv[1]
     audit_directory(directory)
   except:
-    print "proper usage: make_graphs.py <directory/with/audits>"
+    print("proper usage: make_graphs.py <directory/with/audits>")
 

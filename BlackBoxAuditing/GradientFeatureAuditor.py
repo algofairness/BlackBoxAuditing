@@ -151,7 +151,7 @@ class GradientFeatureAuditor(object):
 
       self.audit_feature(feature, full_filepath)
 
-    print "Audit files dumped to: {}".format(self.OUTPUT_DIR)
+    print("Audit files dumped to: {}".format(self.OUTPUT_DIR))
     return output_files
 
 
@@ -161,7 +161,7 @@ class MockModel(AbstractModelVisitor):
 
 def test():
   headers = ["response", "duplicate", "constant"]
-  train = [[i,i,1] for i in xrange(100)]
+  train = [[i,i,1] for i in range(100)]
   test = train[:] # Copy the training data.
   model = MockModel(test)
   repair_steps = 5
@@ -169,13 +169,13 @@ def test():
                                repair_steps=repair_steps)
   output_files = gfa.audit()
 
-  print "correct # of audit files produced? --", len(output_files) == len(train[0]) # The number of features.
+  print("correct # of audit files produced? --", len(output_files) == len(train[0])) # The number of features.
 
   with open(output_files[0]) as f:
-    print "correct # of lines per file? --", len(f.readlines()) == repair_steps+2 # +1 for the header-line and +1 for the level=0 step.
+    print("correct # of lines per file? --", len(f.readlines()) == repair_steps+2) # +1 for the header-line and +1 for the level=0 step.
 
   files_not_empty = all(os.stat(f).st_size!=0 for f in output_files)
-  print "all audit files not empty? --", files_not_empty
+  print("all audit files not empty? --", files_not_empty)
 
   #TODO: Test the optional predictions and repaired output files.
 

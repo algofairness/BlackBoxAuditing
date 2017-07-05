@@ -1,6 +1,6 @@
-from splitters import split_by_percent
+from .splitters import split_by_percent
 import csv
-from test_data import preloaded
+from .test_data import preloaded
 
 def is_int(string):
   try:
@@ -92,7 +92,7 @@ def load_DRP(data):
         row = [header_types[h](v) for h,v in zip(header_types, row)]
         data.append(row)
 
-  headers = header_types.keys()
+  headers = list(header_types.keys())
 
   train, test = split_by_percent(data, train_percentage)
 

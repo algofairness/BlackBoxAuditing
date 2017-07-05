@@ -28,7 +28,7 @@ class Repairer(AbstractRepairer):
     repaired_data = self.categoric_repairer.repair(binned_data)
 
     # Replace the "feature_to_repair" column with the median numeric value.
-    for i in xrange(len(repaired_data)):
+    for i in range(len(repaired_data)):
       if self.repair_level > 0:
         rep_category = repaired_data[i][self.feature_to_repair]
         repaired_data[i][self.feature_to_repair] = category_medians[rep_category]
@@ -41,15 +41,15 @@ def test():
   test_sample()
 
 def test_sample():
-  data = [[float(i),float(i)*2, 1] for i in xrange(0, 150)]
+  data = [[float(i),float(i)*2, 1] for i in range(0, 150)]
   feature_to_repair = 0
   repairer = Repairer(data, feature_to_repair, 0.5, False)
   repaired_data = repairer.repair(data)
-  print "repaired_data altered?", repaired_data != data
+  print("repaired_data altered?", repaired_data != data)
 
   repairer = Repairer(data, feature_to_repair, 0.0, False)
   repaired_data = repairer.repair(data)
-  print "repaired_data unaltered for repair level=0?", repaired_data == data
+  print("repaired_data unaltered for repair level=0?", repaired_data == data)
 
 
 if __name__=="__main__":
