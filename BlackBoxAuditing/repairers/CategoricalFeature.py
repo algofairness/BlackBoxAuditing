@@ -96,20 +96,26 @@ def test():
   desired_category_count = lambda category : desired_count_dict[category]
   DG = test_feature.create_graph(desired_category_count)
   [new_feature, overflow] = test_feature.repair(DG)
-  edges = [
-  (0, 8, {'weight': 2}), (0, 4, {'weight': 0}), (0, 5, {'weight': 1}), (0, 6, {'weight': 1}), (0, 7, {'weight': 1}),
-  (1, 8, {'weight': 2}), (1, 4, {'weight': 1}), (1, 5, {'weight': 0}), (1, 6, {'weight': 1}), (1, 7, {'weight': 1}),
-  (2, 8, {'weight': 2}), (2, 4, {'weight': 1}), (2, 5, {'weight': 1}), (2, 6, {'weight': 0}), (2, 7, {'weight': 1}),
-  (3, 8, {'weight': 2}), (3, 4, {'weight': 1}), (3, 5, {'weight': 1}), (3, 6, {'weight': 1}), (3, 7, {'weight': 0}),
-  (4, 't', {'capacity': 1, 'weight': 0}), (5, 't', {'capacity': 2, 'weight': 0}), (6, 't', {'capacity': 2, 'weight': 0}),
-  (7, 't', {'capacity': 3, 'weight': 0}),
-  (8, 't', {'weight': 0}),
-  ('s', 0, {'capacity': 3, 'weight': 0}), ('s', 1, {'capacity': 3, 'weight': 0}),
-  ('s', 2, {'capacity': 3, 'weight': 0}), ('s', 3, {'capacity': 3, 'weight': 0})]
-  new_data = [0, 0, 'C', 'D', 'D', 'D', 'C', 'B', 'A', 0, 'B', 0]
+  edges = [(0, 8, {'weight': 2}), (0, 4, {'weight': 0}), (0, 5, {'weight': 1}), (0, 6, {'weight': 1}), (0, 7, {'weight': 1}), (1, 8, {'weight': 2}), (1, 4, {'weight': 1}), (1, 5, {'weight': 0}), (1, 6, {'weight': 1}), (1, 7, {'weight': 1}), (2, 8, {'weight': 2}), (2, 4, {'weight': 1}), (2, 5, {'weight': 1}), (2, 6, {'weight': 0}), (2, 7, {'weight': 1}), (3, 8, {'weight': 2}), (3, 4, {'weight': 1}), (3, 5, {'weight': 1}), (3, 6, {'weight': 1}), (3, 7, {'weight': 0}), (4, 't', {'capacity': 1, 'weight': 0}), (5, 't', {'capacity': 2, 'weight': 0}), (6, 't', {'capacity': 2, 'weight': 0}), (7, 't', {'capacity': 3, 'weight': 0}), (8, 't', {'weight': 0}), ('s', 0, {'capacity': 3, 'weight': 0}), ('s', 1, {'capacity': 3, 'weight': 0}), ('s', 2, {'capacity': 3, 'weight': 0}), ('s', 3, {'capacity': 3, 'weight': 0})]
+  
+  new_data = [0, 'B', 'C', 'D', 'D', 'D', 'C', 'B', 0, 0, 0, 'A'] 
   print("CategoricalFeature has correct number of categories?", 4 == test_feature.num_bins)
-  print("Directed Graph has correct edges and edge weights?", DG.edges(data=True) == edges)
+  print("Directed Graph has correct edges and edge weights?", equal_ignore_order(DG.edges(data=True), edges))
   print("mincostFlow has correct overflow?", overflow == 4)
   print("mincostFlow has correct output data?", new_feature.data == new_data)
+
+def equal_ignore_order(a, b):
+  """
+  Used to check whether the two edge lists have the same edges 
+  when elements are neither hashable nor sortable.
+  """
+  unmatched = list(b)
+  for element in a:
+    try:
+      unmatched.remove(element)
+    except ValueError:
+      return False
+  return not unmatched
+
 
 if __name__=="__main__": test()

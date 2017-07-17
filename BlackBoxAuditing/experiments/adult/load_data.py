@@ -1,8 +1,8 @@
 import csv
 import random
 
-train_filename = "test_data/adult.csv"
-test_filename = "test_data/adult.test.csv"
+train_filename = "BlackBoxAuditing/test_data/adult.csv"
+test_filename = "BlackBoxAuditing/test_data/adult.test.csv"
 max_entries = None
 correct_types = [int, str, int, str, int, str, str, str,
                  str,str, int, int, int, str, str]

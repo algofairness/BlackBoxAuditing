@@ -1,4 +1,4 @@
-from splitters import split_by_percent
+from BlackBoxAuditing.splitters import split_by_percent
 import random
 
 train_percentage = 2.0/3.0
@@ -8,8 +8,8 @@ def load_data():
   headers = ["Feature A (i)", "Feature B (2i)", "Feature C (-i)",
              "Constant Feature", "Random Feature", "Outcome"]
 
-  data = [[i, 2*i, -i, 1, random.random(), "A"] for i in range(0,N/2)] + \
-          [[i, 2*i, -i, 1, random.random(), "B"] for i in range(N/2,N)]
+  data = [[i, 2*i, -i, 1, random.random(), "A"] for i in range(0,N//2)] + \
+          [[i, 2*i, -i, 1, random.random(), "B"] for i in range(N//2,N)]
 
   train, test = split_by_percent(data, train_percentage)
 

@@ -1,7 +1,7 @@
 import csv
 
 def load_data():
-  filename = "test_data/RicciDataMod.csv"
+  filename = "BlackBoxAuditing/test_data/RicciDataMod.csv"
   with open(filename) as f:
     reader = csv.reader(f)
     data = [row for row in reader]
@@ -13,8 +13,8 @@ def load_data():
       for j, correct_type in enumerate(correct_types):
         data[i][j] = correct_type(row[j])
 
-    train = data[:len(data)/2]
-    test = data[len(data)/2:]
+    train = data[:len(data)//2]
+    test = data[len(data)//2:]
 
   return headers, train, test
 

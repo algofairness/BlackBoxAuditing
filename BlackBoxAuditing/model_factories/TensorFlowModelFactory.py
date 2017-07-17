@@ -9,8 +9,8 @@ paper (11/30/2016), set model_options in main.py to {'reproduce':True}
 
 
 
-from AbstractModelFactory import AbstractModelFactory
-from AbstractModelVisitor import AbstractModelVisitor
+from BlackBoxAuditing.model_factories.AbstractModelFactory import AbstractModelFactory
+from BlackBoxAuditing.model_factories.AbstractModelVisitor import AbstractModelVisitor
 
 import os
 import numpy as np

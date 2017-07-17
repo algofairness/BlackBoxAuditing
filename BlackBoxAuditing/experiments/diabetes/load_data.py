@@ -1,11 +1,11 @@
-from splitters import split_by_percent
+from BlackBoxAuditing.splitters import split_by_percent
 import csv
 import random
 
 # data from: http://archive.ics.uci.edu/ml/datasets/Pima+Indians+Diabetes
 
 train_percentage = 1.0/2.0
-filename = "test_data/pima-indians-diabetes.csv"
+filename = "BlackBoxAuditing/test_data/pima-indians-diabetes.csv"
 max_entries = None
 correct_types = [int, float, float, float, float, float, float, int, str]
 

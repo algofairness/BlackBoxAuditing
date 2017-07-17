@@ -16,7 +16,7 @@ def get_median(values, kdd):
   sorted_values.sort() # Not calling `sorted` b/c `sorted_values` may not be list.
 
   if kdd:
-    return sorted_values[len(values)/2]
+    return sorted_values[len(values)//2]
   else:
     if len(values) % 2 == 0:
       return sorted_values[len(values)//2-1]

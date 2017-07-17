@@ -1,9 +1,9 @@
-from splitters import split_by_percent
+from BlackBoxAuditing.splitters import split_by_percent
 import csv
 import random
 
 train_percentage = 2.0/3.0
-filename = "test_data/german_categorical.csv"
+filename = "BlackBoxAuditing/test_data/german_categorical.csv"
 max_entries = None
 correct_types = [str, int, str, str, int, str,str,
                  int,str,str,int, str, int, str, str, str, int,

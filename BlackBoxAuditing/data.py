@@ -1,6 +1,6 @@
-from .splitters import split_by_percent
+from BlackBoxAuditing.splitters import split_by_percent
 import csv
-from .test_data import preloaded
+from BlackBoxAuditing.test_data import preloaded
 
 def is_int(string):
   try:
@@ -114,7 +114,7 @@ def load_from_file(datafile, testdata=None, correct_types=None, train_percentage
       features_to_ignore = []
 
     if correct_types is None:
-	correct_types = get_types(data, [None]*len(headers), missing_data_symbol)
+      correct_types = get_types(data, [None]*len(headers), missing_data_symbol)
     
     for i, row in enumerate(data):
       for j, correct_type in enumerate(correct_types):

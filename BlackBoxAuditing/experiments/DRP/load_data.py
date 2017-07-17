@@ -1,8 +1,8 @@
-from splitters import split_by_percent
+from BlackBoxAuditing.splitters import split_by_percent
 from collections import OrderedDict
 
-train_filename = "test_data/DRP_nature_train.arff"
-test_filename = "test_data/DRP_nature_test.arff"
+train_filename = "BlackBoxAuditing/test_data/DRP_nature_train.arff"
+test_filename = "BlackBoxAuditing/test_data/DRP_nature_test.arff"
 response = "outcome"
 train_percentage = 2.0/3.0
 

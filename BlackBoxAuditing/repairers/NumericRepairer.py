@@ -1,8 +1,8 @@
-from AbstractRepairer import AbstractRepairer
-import CategoricRepairer
-from binning.Binner import make_histogram_bins
-from binning.BinSizes import FreedmanDiaconisBinSize as bin_calculator
-from calculators import get_median
+from BlackBoxAuditing.repairers.AbstractRepairer import AbstractRepairer
+import BlackBoxAuditing.repairers.CategoricRepairer as CategoricRepairer
+from BlackBoxAuditing.repairers.binning.Binner import make_histogram_bins
+from BlackBoxAuditing.repairers.binning.BinSizes import FreedmanDiaconisBinSize as bin_calculator
+from BlackBoxAuditing.repairers.calculators import get_median
 
 
 class Repairer(AbstractRepairer):

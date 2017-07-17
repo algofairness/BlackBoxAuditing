@@ -1,4 +1,4 @@
-from splitters import split_by_percent
+from BlackBoxAuditing.splitters import split_by_percent
 import csv
 import random
 
@@ -6,7 +6,7 @@ import random
 # id feature should be ignored
 
 train_percentage = 1.0/2.0
-filename = "test_data/glass.csv"
+filename = "BlackBoxAuditing/test_data/glass.csv"
 max_entries = None
 correct_types = [int, float, float, float, float, float,float,
                  float,float,float,str]

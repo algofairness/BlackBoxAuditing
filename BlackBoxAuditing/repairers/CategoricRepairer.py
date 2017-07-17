@@ -1,10 +1,10 @@
 from itertools import product
 from collections import defaultdict
 
-from AbstractRepairer import AbstractRepairer
-from CategoricalFeature import CategoricalFeature
-from calculators import get_median
-from SparseList import SparseList
+from BlackBoxAuditing.repairers.AbstractRepairer import AbstractRepairer
+from BlackBoxAuditing.repairers.CategoricalFeature import CategoricalFeature
+from BlackBoxAuditing.repairers.calculators import get_median
+from BlackBoxAuditing.repairers.SparseList import SparseList
 
 import random
 import math
