@@ -1,6 +1,6 @@
-from BlackBoxAuditing.splitters import split_by_percent
+from splitters import split_by_percent
 import csv
-from BlackBoxAuditing.test_data import preloaded
+from test_data import preloaded
 
 def is_int(string):
   try:

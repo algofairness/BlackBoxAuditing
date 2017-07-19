@@ -12,7 +12,8 @@
 
 # Add the current directory to the PYTHONPATH so imports start at the project root.
 export PYTHONPATH="${PYTHONPATH}:`pwd`"
-
+# specify the hash seed for reproducibility (only necessary for python3)
+export PYTHONHASHSEED=1
 echo "#########################################################################"
 echo "### Running all *.py files now. #########################################"
 echo "### No tests should be False nor should there be Traceback exceptions. ##"

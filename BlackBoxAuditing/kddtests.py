@@ -1,9 +1,9 @@
 import csv
 
-from BlackBoxAuditing.repairers.GeneralRepairer import Repairer
+from repairers.GeneralRepairer import Repairer
 
 def kddtest(kdd):
-  input_csv = 'BlackBoxAuditing/test_data/RicciDataMod.csv'
+  input_csv = 'test_data/RicciDataMod.csv'
   repair_level = 1.0
   protected_cols = ['Race']
   ignored = ['Position']
@@ -46,10 +46,10 @@ def kddtest(kdd):
     data = repairer.repair(data)
 
     if not kdd:
-      with open('BlackBoxAuditing/repair_tests/RicciRepair1.0.KDDflag.csv') as f:
+      with open('repair_tests/RicciRepair1.0.KDDflag.csv') as f:
         correct_data = [line for line in csv.reader(f)]
     else:
-      with open('BlackBoxAuditing/repair_tests/RicciRepair1.0.noKDDflag.csv') as f:
+      with open('repair_tests/RicciRepair1.0.noKDDflag.csv') as f:
         correct_data = [line for line in csv.reader(f)]
 
     # This is gross and I'm so sorry.

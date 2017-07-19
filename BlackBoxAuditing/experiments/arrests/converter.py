@@ -84,7 +84,7 @@ def expand_to_one_hot(data,expand = True):
 	    temp['Classproperty'] = entry['Classproperty']
 	    temp['Classsexual_violence'] = entry['Classsexual_violence']
 	    temp['Classdrug'] = entry['Classdrug']
-	else:
+    else:
 	    temp['SEX1'] = entry['SEX1']
 	    temp['RELTYP'] = entry['RELTYP']
 	    temp['PRIRCAT'] = entry['PRIRCAT']
@@ -101,7 +101,7 @@ def expand_to_one_hot(data,expand = True):
 	    except:
 		    temp['age_1st_arrest'] = 0
     
-	new_data.append(temp)
+    new_data.append(temp)
 
 
     return new_data

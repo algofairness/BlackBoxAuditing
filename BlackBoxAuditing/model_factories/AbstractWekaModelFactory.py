@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
-from BlackBoxAuditing.model_factories.AbstractModelFactory import AbstractModelFactory
-from BlackBoxAuditing.model_factories.AbstractModelVisitor import AbstractModelVisitor
+from model_factories.AbstractModelFactory import AbstractModelFactory
+from model_factories.AbstractModelVisitor import AbstractModelVisitor
 
 from collections import OrderedDict
 import subprocess
@@ -117,7 +117,9 @@ def list_to_arff_file(headers, arff_type_dict, data, arff_file_output):
   for header in headers:
     types = arff_type_dict[header]
     if type(types) == list:
-      formatter = io.BytesIO()
+      # changed io.BytesIO() to io.StringIO() when moving to python 3.
+      # see https://stackoverflow.com/questions/37866883/unable-to-write-byte-like-string-using-csv-writer-in-python3
+      formatter = io.StringIO()
       writer = csv.writer(formatter)
       unique_values = list(set(types))
       unique_values = [arff_format(val) for val in unique_values]
@@ -131,7 +133,8 @@ def list_to_arff_file(headers, arff_type_dict, data, arff_file_output):
   arff_header += "\n@data\n"
 
   # Write the data in a CSV-like format to avoid weird escaping issues.
-  data_output = io.BytesIO()
+# changed from io.BytesIO() to io.StringIO() here as well.
+  data_output = io.StringIO()
   csv_writer = csv.writer(data_output)
   for row in data:
     row = [arff_format(val) for h, val in zip(headers,row) if h in arff_type_dict]

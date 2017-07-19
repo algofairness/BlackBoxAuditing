@@ -1,4 +1,4 @@
-from BlackBoxAuditing.splitters import split_by_percent
+from splitters import split_by_percent
 import csv
 
 train_percentage = 2.0/3.0

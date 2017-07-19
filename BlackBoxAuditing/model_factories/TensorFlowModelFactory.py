@@ -3,14 +3,8 @@ To reproduce results from the "Auditing Black-box Models for Indirect Influence"
 paper (11/30/2016), set model_options in main.py to {'reproduce':True} 
 """
 
-
-
-
-
-
-
-from BlackBoxAuditing.model_factories.AbstractModelFactory import AbstractModelFactory
-from BlackBoxAuditing.model_factories.AbstractModelVisitor import AbstractModelVisitor
+from model_factories.AbstractModelFactory import AbstractModelFactory
+from model_factories.AbstractModelVisitor import AbstractModelVisitor
 
 import os
 import numpy as np

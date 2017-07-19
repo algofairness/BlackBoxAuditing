@@ -1,4 +1,4 @@
-from BlackBoxAuditing.repairers.binning.BinSizes import FreedmanDiaconisBinSize as bsc
+from repairers.binning.BinSizes import FreedmanDiaconisBinSize as bsc
 
 def make_histogram_bins(bin_size_calculator, data, col_id):
   feature_vals = [row[col_id] for row in data]

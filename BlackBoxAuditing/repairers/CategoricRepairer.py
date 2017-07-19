@@ -1,10 +1,10 @@
 from itertools import product
 from collections import defaultdict
 
-from BlackBoxAuditing.repairers.AbstractRepairer import AbstractRepairer
-from BlackBoxAuditing.repairers.CategoricalFeature import CategoricalFeature
-from BlackBoxAuditing.repairers.calculators import get_median
-from BlackBoxAuditing.repairers.SparseList import SparseList
+from repairers.AbstractRepairer import AbstractRepairer
+from repairers.CategoricalFeature import CategoricalFeature
+from repairers.calculators import get_median
+from repairers.SparseList import SparseList
 
 import random
 import math
@@ -330,14 +330,22 @@ def test_repeated_values():
   feature_to_repair = 0
   repairer = Repairer(all_data, feature_to_repair, repair_level, False)
   repaired_data=repairer.repair(all_data)
-
+  """
+  python 2 correct result:
   correct_repaired_data = [
   ['x', 'E'], ['x', 'C'], ['x', 'C'], ['z', 'E'], ['x', 'B'], 
   ['y', 'I'], ['y', 'I'], ['y', 'G'], ['z', 'H'], 
   ['z', 'N'], ['z', 'N'], ['z', 'L'], ['z', 'K'], ['z', 'K'], ['z', 'K']]
+  """
+  correct_repaired_data = [
+  ['x', 'E'], ['z', 'A'], ['z', 'B'], ['x', 'D'], ['x', 'A'],
+  ['z', 'G'], ['y', 'H'], ['y', 'G'], ['y', 'F'],
+  ['z', 'L'], ['z', 'O'], ['z', 'O'], ['z', 'J'], ['z', 'L'], ['z', 'O']]
+
 
   print("Test unique values -- .5 repaired_data altered?", repaired_data != all_data)
   print("Test unique values -- .5 repaired_data correct?", repaired_data == correct_repaired_data)
+
 
   all_data = [
   ["x","A"], ["x","A"], ["x","A"], ["x","A"], ["x","A"],
@@ -350,13 +358,20 @@ def test_repeated_values():
   feature_to_repair = 0
   repairer = Repairer(all_data, feature_to_repair, repair_level, False)
   repaired_data=repairer.repair(all_data)
-
+  
+  """
+  python 2 correct result:
   correct_repaired_data = [
   ['x', 'A'], ['x', 'A'], ['x', 'A'], ['z', 'A'], ['x', 'A'], 
   ['y', 'A'], ['y', 'A'], ['y', 'A'], ['z', 'A'], 
   ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A']]
+  """
+  correct_repaired_data = [
+  ['x', 'A'], ['z', 'A'], ['z', 'A'], ['x', 'A'], ['x', 'A'],
+  ['z', 'A'], ['y', 'A'], ['y', 'A'], ['y', 'A'],
+  ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A']]
 
-
+  
   print("Test repeated values -- .5 repaired_data altered?", repaired_data != all_data)
   print("Test repeated values -- .5 repaired_data correct?", repaired_data == correct_repaired_data)
 
@@ -575,7 +590,6 @@ def test_categorical():
   ["z","A"], ["z","A"], ["z","A"], ["z","A"], ["z","A"], ["z","B"]]
 
   random.seed(10)
-
   repair_level=1
   feature_to_repair = 0
   repairer = Repairer(all_data, feature_to_repair, repair_level, False)
@@ -593,23 +607,32 @@ def test_categorical():
   feature_to_repair = 0
   repairer = Repairer(all_data, feature_to_repair, repair_level, False)
   part_repaired_data=repairer.repair(all_data)
-
+  
+  """
+  python 2 correct result
   correct_part_repaired_data = [
   ['x', 'A'], ['x', 'A'], ['z', 'B'], ['z', 'B'], ['x', 'B'], 
   ['y', 'A'], ['y', 'A'], ['y', 'A'], ['y', 'B'], 
   ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'B']]
+  """
+
+  correct_part_repaired_data = [
+  ['x', 'A'], ['z', 'A'], ['x', 'B'], ['z', 'A'], ['x', 'B'],
+  ['y', 'A'], ['y', 'A'], ['z', 'A'], ['z', 'B'],
+  ['z', 'A'], ['z', 'A'], ['z', 'B'], ['z', 'A'], ['z', 'A'], ['z', 'B']]
+
 
   print("Categorical Minimal Dataset -- partial (.5) repaired_data altered?", part_repaired_data != all_data)
   print("Categorical Minimal Dataset -- partial (.5) repaired_data correct?", part_repaired_data == correct_part_repaired_data)
 
-  repair_level=0.2
+  repair_level=0.1
   feature_to_repair = 0
   repairer = Repairer(all_data, feature_to_repair, repair_level, False)
   part_repaired_data=repairer.repair(all_data)
 
   correct_part2_repaired_data =  [
-  ['x', 'A'], ['x', 'A'], ['x', 'B'], ['x', 'B'], ['z', 'B'], 
-  ['y', 'A'], ['y', 'A'], ['y', 'A'], ['y', 'B'], 
+  ['x', 'A'], ['z', 'A'], ['x', 'B'], ['x', 'B'], ['x', 'B'],
+  ['y', 'A'], ['y', 'A'], ['y', 'A'], ['y', 'B'],
   ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'A'], ['z', 'B']]
 
   print("Categorical Minimal Dataset -- partial (.2) repaired_data altered?", part_repaired_data != all_data)

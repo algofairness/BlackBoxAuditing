@@ -1,7 +1,7 @@
 import csv
 
 def load_data():
-  filename = "BlackBoxAuditing/test_data/RicciDataMod.csv"
+  filename = "test_data/RicciDataMod.csv"
   with open(filename) as f:
     reader = csv.reader(f)
     data = [row for row in reader]
