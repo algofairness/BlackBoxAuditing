@@ -1,0 +1,3 @@
+0,IF Col1-notag!=a THEN Class=0,0.25,0.0
+1,IF Col2-notag==x THEN Class=1,0.2,0.0
+2,IF  THEN Class=0,0.14285714285714285,0.0

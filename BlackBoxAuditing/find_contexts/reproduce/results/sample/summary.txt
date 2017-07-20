@@ -1,0 +1,15 @@
+CN2 Settings Used:
+rules found for ../input/sample/original.csv
+beam_width: 500
+min_covered_examples: 61
+max_rule_length: 3
+
+CN2 Model Evaluation:
+Model tested on ../input/sample/original.csv
+Accuracy: [ 1.]
+AUC: [ 1.]
+
+Contexts of influence found:
+Outcome=B: 
+Feature_A_(i)>=3000.0
+

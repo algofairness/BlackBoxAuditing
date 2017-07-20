@@ -1,0 +1,21 @@
+CN2 Settings Used:
+rules found for ../input/XRF/original_train.csv
+beam_width: 20
+min_covered_examples: 1
+max_rule_length: 5
+
+CN2 Model Evaluation:
+Model tested on ../input/XRF/original_test.csv
+Accuracy: [ 1.]
+AUC: [ 1.]
+
+Contexts of influence found:
+Outcome=peat: 
+Hg>=0.0019
+
+Outcome=DWH: 
+Hg<=0.0013
+
+Outcome=oil: 
+V>=0.0015
+

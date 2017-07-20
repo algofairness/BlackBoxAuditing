@@ -1,0 +1,4 @@
+Label,Rules,Quality,Score
+0,IF Col1!=A THEN Class=0,0.75,0.15
+1,IF Col2==X THEN Class=1,0.75,0.15
+2,IF TRUE THEN Class=0,0.666666666667,0

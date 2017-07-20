@@ -1,0 +1,3 @@
+Label,Rules,Quality,Score
+0,IF Feature_A_(i)>=3000.0 THEN Outcome=B,0.999666888741,0.49750000000000005
+1,IF TRUE THEN Outcome=A,0.999666888741,0

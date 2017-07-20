@@ -1,0 +1,26 @@
+CN2 Settings Used:
+rules found for ../input/bonus_indirect_race/original.csv
+beam_width: 200
+min_covered_examples: 20
+max_rule_length: 3
+
+CN2 Model Evaluation:
+Model tested on ../input/bonus_indirect_race/original.csv
+Accuracy: [ 0.673]
+AUC: [ 0.66995716]
+
+Contexts of influence found:
+Bonus=no: 
+Warnings==medium OR 
+Race!=B, Education==Highschool OR 
+Race==B, Gender!=F OR 
+Education==Highschool OR 
+Race==B
+
+Bonus=yes: 
+Education!=Highschool OR 
+Race!=B, Education==Masters OR 
+Race!=B OR 
+Education==Masters OR 
+Gender==F
+

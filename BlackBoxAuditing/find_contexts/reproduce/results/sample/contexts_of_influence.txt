@@ -1,0 +1,3 @@
+Outcome=B: 
+Feature_A_(i)>=3000.0
+

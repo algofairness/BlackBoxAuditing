@@ -1,0 +1,41 @@
+score_text=High: 
+race!=Hispanic AND priors_count>=7.0 AND juv_other_count>=1.0 OR 
+priors_count>=3.0 OR 
+priors_count>=7.0 AND race==African-American OR 
+juv_fel_count>=2.0 AND race!=Caucasian OR 
+juv_misd_count>=1.0 OR 
+race!=African-American AND priors_count>=7.0 OR 
+race!=Other AND priors_count>=6.0 OR 
+priors_count>=6.0 OR 
+age<=35.0 AND priors_count>=12.0 OR 
+race!=Caucasian AND priors_count>=4.0 AND age<=28.0
+
+score_text=Low: 
+race!=African-American AND priors_count<=3.0 AND race!=Caucasian OR 
+race!=African-American AND race!=Other AND race!=Caucasian OR 
+priors_count<=3.0 AND race==Other OR 
+sex!=Female AND c_charge_degree!=F AND priors_count<=3.0 AND race==Caucasian OR 
+age>=26.0 AND priors_count<=3.0 OR 
+race!=African-American OR 
+age>=35.0 AND priors_count<=4.0 OR 
+priors_count<=4.0 AND race!=Caucasian OR 
+priors_count<=2.0 OR 
+priors_count<=4.0 AND age>=32.0 OR 
+priors_count<=1.0 OR 
+race!=African-American AND age>=32.0 OR 
+race==Caucasian OR 
+priors_count<=3.0 OR 
+race!=Caucasian OR 
+c_charge_desc==Driving Under The Influence OR 
+age_cat==Greater than 45 OR 
+c_charge_desc==Battery AND race!=Caucasian OR 
+age>=35.0 OR 
+age>=31.0 AND race==Other
+
+score_text=Medium: 
+age<=20.0 OR 
+priors_count<=7.0 AND juv_fel_count>=1.0 OR 
+priors_count>=8.0 OR 
+race!=African-American AND race!=Other AND race!=Hispanic AND age_cat!=25 - 45 OR 
+priors_count<=11.0 AND priors_count>=10.0
+

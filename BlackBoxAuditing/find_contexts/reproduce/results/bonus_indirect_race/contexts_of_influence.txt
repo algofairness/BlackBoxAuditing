@@ -1,0 +1,14 @@
+Bonus=no: 
+Warnings==medium OR 
+Race!=B, Education==Highschool OR 
+Race==B, Gender!=F OR 
+Education==Highschool OR 
+Race==B
+
+Bonus=yes: 
+Education!=Highschool OR 
+Race!=B, Education==Masters OR 
+Race!=B OR 
+Education==Masters OR 
+Gender==F
+

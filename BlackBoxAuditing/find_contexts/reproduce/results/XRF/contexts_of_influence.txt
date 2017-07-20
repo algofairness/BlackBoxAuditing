@@ -1,0 +1,9 @@
+Outcome=peat: 
+Hg>=0.0019
+
+Outcome=DWH: 
+Hg<=0.0013
+
+Outcome=oil: 
+V>=0.0015
+

@@ -1,1 +1,0 @@
-Ranked Features by accuracy: [('Col1', 0.15), ('Col2', 0.15)]

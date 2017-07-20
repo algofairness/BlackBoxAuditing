@@ -1,0 +1,70 @@
+0,IF priors_count-norace<=5 AND age-norace>=47 AND race!=African-American AND c_charge_desc-norace!=Grand Theft in the 3rd Degree AND c_charge_desc-norace!=Felony Battery (Dom Strang) THEN score_text=Low,0.896551724137931,0.23906705539358597
+1,IF race==Other AND age>=31.0 AND priors_count-norace<=5 AND c_charge_desc-norace!=Grand Theft in the 3rd Degree THEN score_text=Low,0.9074074074074074,0.6107871720116618
+2,IF priors_count<=2.0 AND age_cat-norace==Greater than 45 AND age-norace>=47 THEN score_text=Low,0.9502762430939227,0.06025267249757049
+3,IF c_charge_desc==Driving Under The Influence AND sex-norace!=Female THEN score_text=Low,0.9210526315789473,0.06025267249757049
+4,IF priors_count<=2.0 AND age_cat-norace==Greater than 45 AND priors_count-norace<=5 AND age-norace>=47 AND c_charge_desc-norace!=arrest case no charge THEN score_text=Low,0.9370629370629371,0.06025267249757049
+5,IF race-norace==African-American AND priors_count<=4.0 AND age>=32.0 AND c_charge_degree-norace==M THEN score_text=Low,0.8602150537634409,0.4319727891156463
+6,IF age>=35.0 AND race-norace==African-American AND c_charge_degree-norace!=F AND priors_count<=4.0 AND sex-norace!=Female THEN score_text=Low,0.8597785977859779,0.4319727891156463
+7,IF c_charge_desc==Battery AND sex-norace==Female AND race!=Caucasian AND age_cat-norace==25 - 45 THEN score_text=Low,0.8928571428571429,0.29931972789115646
+8,IF juv_fel_count-norace>=0 AND juv_fel_count>=2.0 AND priors_count-norace>=5 AND age_cat-norace!=Greater than 45 AND race!=Caucasian THEN score_text=High,0.8214285714285714,0.6904761904761905
+9,"IF priors_count<=3.0 AND race==Other AND c_charge_degree-norace==F AND c_charge_desc-norace!=Driving While License Revoked AND c_charge_desc-norace!=Poss3,4 Methylenedioxymethcath THEN score_text=Low",0.9318181818181818,0.29931972789115646
+10,IF age>=35.0 AND race-norace==African-American AND priors_count<=4.0 AND age-norace<=47 AND priors_count-norace<=5 THEN score_text=Low,0.8543689320388349,0.4319727891156463
+11,IF c_charge_desc-norace==Battery AND race!=African-American AND age>=32.0 AND sex-norace!=Male THEN score_text=Low,0.8648648648648649,0.6107871720116618
+12,IF priors_count-norace<=5 AND age_cat==Greater than 45 AND c_charge_degree-norace!=F AND c_charge_desc-norace!=Felony Battery (Dom Strang) AND c_charge_desc-norace!=arrest case no charge THEN score_text=Low,0.8579881656804734,0.012147716229348848
+13,IF age>=35.0 AND c_charge_desc-norace==Battery AND c_charge_degree-norace==M AND priors_count-norace<=5 AND sex-norace!=Male THEN score_text=Low,0.8333333333333334,0.3717201166180758
+14,IF priors_count<=3.0 AND race==Caucasian AND age-norace>=29 AND c_charge_degree!=F AND sex!=Female THEN score_text=Low,0.8539325842696629,0.3211856171039844
+15,IF age<=35.0 AND priors_count-norace>=5 AND priors_count>=12.0 AND c_charge_desc-norace!=arrest case no charge AND priors_count-norace>=5 THEN score_text=High,0.7924528301886793,0.4319727891156463
+16,IF priors_count-norace<=5 AND age-norace>=29 AND age_cat-norace==Greater than 45 AND age-norace>=29 AND c_charge_degree-norace==M THEN score_text=Low,0.7941176470588235,0.0
+17,IF race-norace==African-American AND c_charge_degree-norace!=F AND priors_count<=1.0 AND c_charge_desc-norace!=Driving While License Revoked AND c_charge_desc-norace!=Driving While License Revoked THEN score_text=Low,0.7709163346613546,0.06025267249757049
+18,IF priors_count-norace<=5 AND age_cat-norace==Greater than 45 AND c_charge_degree-norace!=F AND c_charge_desc-norace!=arrest case no charge AND priors_count-norace<=5 THEN score_text=Low,0.8055555555555556,0.0
+19,IF age_cat-norace==25 - 45 AND priors_count-norace<=5 AND c_charge_degree-norace==F AND age-norace>=47 AND c_charge_desc-norace!=Battery THEN score_text=Low,0.8387096774193549,0.0
+20,IF juv_misd_count>=1.0 AND age_cat-norace!=25 - 45 AND c_charge_degree-norace==F AND c_charge_desc-norace!=Grand Theft in the 3rd Degree AND c_charge_desc-norace!=Grand Theft in the 3rd Degree THEN score_text=High,0.6521739130434783,0.45140913508260444
+21,IF c_charge_degree-norace!=F AND age-norace>=29 AND c_charge_desc-norace!=arrest case no charge AND age-norace<=47 AND c_charge_desc-norace!=Driving While License Revoked THEN score_text=Medium,0.23163841807909605,0.0
+22,IF priors_count<=3.0 AND age>=26.0 AND race-norace==African-American AND c_charge_desc-norace==Battery AND age-norace<=29 THEN score_text=Low,0.7759197324414716,0.4319727891156463
+23,IF priors_count<=3.0 AND race!=African-American AND age-norace>=29 AND race!=Caucasian AND c_charge_desc-norace!=Felony Battery (Dom Strang) THEN score_text=Low,0.8133333333333334,0.5383867832847424
+24,IF priors_count-norace<=5 AND age-norace>=29 AND race==Caucasian AND age-norace<=29 AND c_charge_degree-norace==M THEN score_text=Low,0.6995515695067265,0.23906705539358597
+25,IF juv_other_count-norace>=1 AND race!=African-American AND age_cat!=25 - 45 AND race!=Hispanic AND race!=Other THEN score_text=Medium,0.5714285714285714,0.7293488824101068
+26,IF age-norace>=29 AND priors_count-norace<=5 AND race-norace==African-American AND priors_count-norace<=5 AND age_cat-norace==Greater than 45 THEN score_text=Low,0.7465940054495913,0.0
+27,IF juv_other_count>=1.0 AND priors_count>=7.0 AND race!=Hispanic AND c_charge_desc-norace!=arrest case no charge THEN score_text=High,0.7666666666666667,0.5743440233236151
+28,IF age_cat-norace==Greater than 45 AND priors_count-norace<=5 AND race-norace==African-American AND c_charge_desc-norace!=Grand Theft in the 3rd Degree AND sex-norace!=Male THEN score_text=Low,0.8181818181818182,0.0
+29,IF c_charge_desc-norace==Pos Cannabis W/Intent Sel/Del AND age-norace<=29 AND age-norace>=29 AND c_charge_degree-norace==M AND priors_count-norace<=5 THEN score_text=Low,0.6666666666666666,0.0
+30,IF race-norace!=African-American AND age-norace>=29 AND c_charge_desc-norace!=arrest case no charge AND race-norace!=African-American THEN score_text=Medium,0.3333333333333333,0.0
+31,IF age-norace>=47 AND priors_count-norace<=5 AND race-norace==African-American AND sex-norace!=Male AND c_charge_desc-norace!=arrest case no charge THEN score_text=Low,0.9047619047619048,0.0
+32,IF priors_count>=3.0 AND age_cat-norace==Less than 25 AND c_charge_degree-norace==F AND c_charge_desc-norace!=Grand Theft in the 3rd Degree AND age-norace>=29 THEN score_text=High,0.5409836065573771,0.06025267249757049
+33,IF priors_count<=7.0 AND juv_fel_count>=1.0 THEN score_text=Medium,0.45454545454545453,0.5116618075801749
+34,IF c_charge_desc-norace==Felony Battery (Dom Strang) AND priors_count>=6.0 AND race!=Other THEN score_text=High,0.5333333333333333,0.29931972789115646
+35,IF priors_count-norace>=5 AND c_charge_desc-norace!=arrest case no charge AND priors_count>=10.0 AND priors_count<=11.0 AND c_charge_desc-norace!=Battery THEN score_text=Medium,0.4444444444444444,0.12050534499514098
+36,IF sex-norace==Female AND age_cat-norace!=Less than 25 AND age-norace>=29 AND race!=Caucasian AND priors_count<=4.0 THEN score_text=Low,0.7551020408163265,0.29931972789115646
+37,IF priors_count-norace>=5 AND age-norace>=29 AND age_cat-norace==Less than 25 AND c_charge_desc-norace!=arrest case no charge AND c_charge_desc-norace!=Viol Injunct Domestic Violence THEN score_text=Medium,0.35443037974683544,0.0
+38,IF priors_count>=7.0 AND race!=African-American AND c_charge_degree-norace==F AND age_cat-norace==25 - 45 AND c_charge_desc-norace!=Viol Injunct Domestic Violence THEN score_text=High,0.56,0.29931972789115646
+39,IF sex-norace!=Male AND age-norace>=29 AND age_cat-norace==Greater than 45 AND c_charge_desc-norace!=arrest case no charge AND age-norace>=29 THEN score_text=Low,0.8461538461538461,0.0
+40,IF age-norace>=29 AND sex-norace==Male AND age_cat-norace!=Greater than 45 THEN score_text=Medium,0.27496671105193077,0.0
+41,IF juv_other_count-norace<=0 AND c_charge_desc-norace==Felony Battery (Dom Strang) AND age-norace>=29 AND age-norace<=29 AND priors_count-norace<=5 THEN score_text=Low,0.5714285714285714,0.0
+42,IF age-norace>=29 AND race-norace==African-American AND sex-norace==Female AND age-norace<=29 AND c_charge_desc-norace!=Viol Injunct Domestic Violence THEN score_text=Low,0.5677083333333334,0.0
+43,IF sex-norace==Male AND age-norace>=29 AND c_charge_desc-norace!=Driving While License Revoked AND c_charge_desc-norace!=Battery AND c_charge_desc-norace!=Battery THEN score_text=Medium,0.260543580131209,0.0
+44,IF age-norace>=29 AND priors_count<=3.0 AND age-norace>=29 AND age-norace<=29 AND race-norace==African-American THEN score_text=Low,0.6193771626297578,0.06025267249757049
+45,IF age_cat-norace==Greater than 45 AND race!=Caucasian AND age-norace<=47 AND priors_count-norace<=5 AND c_charge_desc-norace!=Grand Theft in the 3rd Degree THEN score_text=Low,0.672645739910314,0.23906705539358597
+46,IF age_cat-norace==25 - 45 AND priors_count-norace<=5 AND age-norace>=29 AND sex-norace!=Male AND age-norace<=29 THEN score_text=Low,0.5985915492957746,0.0
+47,IF c_charge_degree-norace==M AND priors_count>=7.0 AND age-norace<=29 AND race==African-American AND c_charge_desc-norace!=arrest case no charge THEN score_text=High,0.6037735849056604,0.29931972789115646
+48,IF c_charge_desc-norace!=Possession of Cocaine AND priors_count>=8.0 AND race-norace==African-American AND c_charge_desc-norace!=arrest case no charge AND age_cat-norace!=Less than 25 THEN score_text=Medium,0.33540372670807456,0.06025267249757049
+49,IF age-norace>=29 AND age-norace<=29 AND c_charge_desc-norace!=arrest case no charge AND age-norace>=29 AND c_charge_desc-norace!=arrest case no charge THEN score_text=Low,0.5158982511923689,0.0
+50,IF age_cat-norace!=Less than 25 AND priors_count-norace<=5 AND race-norace==African-American AND c_charge_degree-norace==F AND c_charge_desc-norace!=Agg Battery Grt/Bod/Harm THEN score_text=Medium,0.24644030668127054,0.0
+51,IF sex-norace==Male AND c_charge_degree-norace==F AND c_charge_desc-norace!=Grand Theft in the 3rd Degree AND c_charge_desc-norace!=Grand Theft in the 3rd Degree THEN score_text=High,0.2206035379812695,0.0
+52,IF race!=African-American AND race!=Caucasian AND race!=Other AND c_charge_desc-norace!=Felony Battery (Dom Strang) AND c_charge_desc-norace!=Felony Battery (Dom Strang) THEN score_text=Low,0.6777777777777778,0.7172011661807579
+53,IF c_charge_degree-norace==F AND priors_count-norace<=5 AND priors_count-norace>=5 AND c_charge_desc-norace!=Grand Theft in the 3rd Degree AND c_charge_desc-norace!=arrest case no charge THEN score_text=Medium,0.2654494382022472,0.0
+54,IF priors_count<=3.0 AND age-norace>=29 AND c_charge_desc-norace!=arrest case no charge AND race-norace==African-American AND c_charge_desc-norace!=Battery THEN score_text=Low,0.6763565891472868,0.06025267249757049
+55,IF c_charge_degree-norace!=F AND age_cat-norace==25 - 45 AND age-norace<=29 AND c_charge_desc-norace!=Possession of Cocaine THEN score_text=Medium,0.2540983606557377,0.0
+56,IF age_cat-norace==25 - 45 AND age-norace>=29 AND priors_count-norace<=5 AND age-norace>=29 AND c_charge_desc-norace!=Felony Battery (Dom Strang) THEN score_text=Low,0.5679414157851912,0.0
+57,IF c_charge_desc-norace!=arrest case no charge AND priors_count>=4.0 AND race!=Caucasian AND c_charge_desc-norace!=Possession of Cocaine AND age<=28.0 THEN score_text=High,0.5462962962962963,0.6710398445092323
+58,IF c_charge_desc-norace!=arrest case no charge AND priors_count>=6.0 AND c_charge_desc-norace!=Grand Theft in the 3rd Degree AND c_charge_desc-norace!=arrest case no charge THEN score_text=High,0.4583333333333333,0.06025267249757049
+59,IF c_charge_desc-norace!=arrest case no charge AND priors_count-norace>=5 AND sex-norace!=Male AND priors_count-norace<=5 AND c_charge_desc-norace!=Battery THEN score_text=Medium,0.27631578947368424,0.0
+60,IF age_cat-norace==Greater than 45 AND race-norace==African-American AND age-norace<=29 AND age-norace<=29 AND c_charge_desc-norace!=arrest case no charge THEN score_text=Low,0.5964912280701754,0.0
+61,IF race-norace==African-American AND age<=20.0 THEN score_text=Medium,0.36363636363636365,0.3717201166180758
+62,IF age_cat-norace!=Less than 25 AND c_charge_desc-norace!=arrest case no charge AND sex-norace!=Male THEN score_text=High,0.08387096774193549,0.0
+63,IF c_charge_degree-norace==F AND priors_count-norace>=5 AND c_charge_desc-norace!=Possession of Cannabis AND c_charge_desc-norace!=Grand Theft in the 3rd Degree AND c_charge_desc-norace!=arrest case no charge THEN score_text=Medium,0.2647058823529412,0.0
+64,IF c_charge_degree-norace==F AND age-norace>=29 AND c_charge_desc-norace!=Felony Battery (Dom Strang) AND c_charge_desc-norace!=Battery AND c_charge_desc-norace!=Grand Theft in the 3rd Degree THEN score_text=Low,0.5137362637362637,0.0
+65,IF c_charge_degree-norace==F AND race-norace!=African-American AND c_charge_desc-norace!=Felony Battery (Dom Strang) AND c_charge_desc-norace!=Grand Theft in the 3rd Degree AND c_charge_desc-norace!=arrest case no charge THEN score_text=Medium,0.3333333333333333,0.0
+66,IF age-norace<=29 AND c_charge_desc-norace!=Grand Theft in the 3rd Degree AND c_charge_desc-norace!=arrest case no charge AND c_charge_desc-norace!=Felony Battery (Dom Strang) AND c_charge_desc-norace!=Possession of Cocaine THEN score_text=Low,0.5146750524109015,0.0
+67,IF age-norace<=29 AND c_charge_desc-norace!=Possession of Cocaine AND c_charge_desc-norace!=arrest case no charge AND c_charge_desc-norace!=Possession of Cocaine AND sex-norace!=Female THEN score_text=High,0.21470588235294116,0.0
+68,IF race!=Caucasian AND age-norace>=29 AND c_charge_desc-norace!=Viol Injunct Domestic Violence AND c_charge_desc-norace!=Viol Injunct Domestic Violence AND c_charge_desc-norace!=Agg Battery Grt/Bod/Harm THEN score_text=Low,0.5097125097125097,0.23906705539358597
+69,IF  THEN score_text=Low,0.5672003881610869,0.0
