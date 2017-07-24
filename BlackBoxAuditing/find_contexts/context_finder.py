@@ -7,7 +7,7 @@ from BlackBoxAuditing.find_contexts.find_cn2_rules import CN2_learner
 from BlackBoxAuditing.find_contexts.expand_and_find_contexts import expand_and_find_contexts
 
 
-def context_finder(original_train_csv, original_test_csv, obscured_test_csv, output, summary_file, feature_data_file, removed_attr, beam_width=10, min_covered_examples=1, by_original=True, epsilon=0.05):
+def context_finder(original_train_csv, original_test_csv, obscured_test_csv, output, summary_file, feature_data_file, removed_attr, beam_width, min_covered_examples, by_original, epsilon):
   # Create directory to dump results
   output_dir = output 
 

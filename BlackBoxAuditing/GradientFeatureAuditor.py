@@ -78,7 +78,7 @@ def _audit_worker(params):
   del repairer
   gc.collect()
 
-  return repaired,(repair_level, conf_table)
+  return repaired, (repair_level, conf_table)
 
 
 class GradientFeatureAuditor(object):
@@ -108,7 +108,7 @@ class GradientFeatureAuditor(object):
       if not os.path.exists(directory):
         os.makedirs(directory)
 
-  def audit_feature(self, feature_to_repair, output_file):
+  def audit_feature(self, feature_to_repair, output_file, dump_all):
     repair_increase_per_step = 1.0/self.repair_steps
     repair_level = 0.0
 
@@ -136,7 +136,7 @@ class GradientFeatureAuditor(object):
         json_conf_table = json.dumps(conf_table)
         f.write("{}:{}\n".format(repair_level, json_conf_table))
 
-  def audit(self, verbose=False):
+  def audit(self, verbose=False, dump_all=False):
     features_to_audit = [h for i, h in enumerate(self.headers) if i not in self.features_to_ignore]
 
     output_files = []
@@ -149,9 +149,10 @@ class GradientFeatureAuditor(object):
       full_filepath = self.OUTPUT_DIR + "/" + output_file
       output_files.append(full_filepath)
 
-      self.audit_feature(feature, full_filepath)
+      self.audit_feature(feature, full_filepath, dump_all)
 
-    print "Audit files dumped to: {}".format(self.OUTPUT_DIR)
+    if dump_all:
+      print "Audit files dumped to: {}".format(self.OUTPUT_DIR)
     return output_files
 
 
