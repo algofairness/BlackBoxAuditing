@@ -73,7 +73,8 @@ class Auditor():
     # Prepare the auditor.
     auditor = GradientFeatureAuditor(model_or_factory, headers, train_set, test_set,
                                      repair_steps=self.REPAIR_STEPS, kdd=self.kdd,
-                                     features_to_ignore=audit_indices_to_ignore)
+                                     features_to_ignore=audit_indices_to_ignore,
+                                     dump_all=dump_all)
   
     # Perform the Gradient Feature Audit and dump the audit results into files.
     audit_filenames = auditor.audit(verbose=self.verbose)
@@ -148,7 +149,7 @@ class Auditor():
           for response, guess in test_pred_tuples:
             writer.writerow([response, guess])
   
-      # Graph the audit files.
+      # Graph ://github.com/algofairness/BlackBoxAuditing.gitthe audit files.
       vprint("Graphing audit files.",self.verbose)
       for audit_filename in audit_filenames:
         audit_image_filename = audit_filename + ".png"
@@ -182,11 +183,11 @@ def main():
   data = load_data("german")
 
   # set the auditor
-  auditor = Auditor(data)
+  auditor = Auditor()
   auditor.model = Weka_SVM
 
   # call the auditor
-  auditor()
+  auditor(data)
 
 if __name__=="__main__":
   main()

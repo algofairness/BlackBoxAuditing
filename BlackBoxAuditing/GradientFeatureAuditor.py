@@ -12,8 +12,8 @@ import json
 import gc
 
 ENABLE_MULTIPROCESSING = False
-SAVE_REPAIRED_DATA = True
-SAVE_PREDICTION_DETAILS = True
+#SAVE_REPAIRED_DATA = True
+#SAVE_PREDICTION_DETAILS = True
 
 # Used to share a copy of the dataset between multiprocessing processes.
 shared_all = None
@@ -25,7 +25,10 @@ def _audit_worker(params):
   global shared_train
   global shared_test
 
-  model_or_factory, headers, ignored_features, feature_to_repair, repair_level, output_file, kdd = params
+  model_or_factory, headers, ignored_features, feature_to_repair, repair_level, output_file, kdd, dump_all = params
+
+  SAVE_REPAIRED_DATA = True if dump_all else False 
+  SAVE_PREDICTION_DETAILS = True if dump_all else False
 
   index_to_repair = headers.index(feature_to_repair)
 
@@ -55,7 +58,7 @@ def _audit_worker(params):
   test_name = "{}_{}".format(index_to_repair, repair_level)
   pred_tuples = model.test(rep_test, test_name=test_name)
   conf_table = get_conf_matrix(pred_tuples)
-
+  
   # Save the repaired version of the data if specified.
   if SAVE_REPAIRED_DATA:
     with open(output_file + ".test.repaired_{}.data".format(repair_level), "w") as f:
@@ -83,7 +86,7 @@ def _audit_worker(params):
 
 class GradientFeatureAuditor(object):
   def __init__(self, model_or_factory, headers, train_set, test_set, kdd, repair_steps=10,
-                features_to_ignore = []):
+                features_to_ignore = [], dump_all=False):
     self.repair_steps = repair_steps
     self.model_or_factory = model_or_factory
     self.headers = headers
@@ -91,6 +94,7 @@ class GradientFeatureAuditor(object):
     self.AUDIT_DIR = "audits"
     self.OUTPUT_DIR = "{}/{}".format(self.AUDIT_DIR, time.time())
     self.kdd = kdd
+    self.dump_all = dump_all
 
     global shared_all
     global shared_train
@@ -108,14 +112,14 @@ class GradientFeatureAuditor(object):
       if not os.path.exists(directory):
         os.makedirs(directory)
 
-  def audit_feature(self, feature_to_repair, output_file, dump_all):
+  def audit_feature(self, feature_to_repair, output_file):
     repair_increase_per_step = 1.0/self.repair_steps
     repair_level = 0.0
 
     worker_params = []
     while repair_level <= 1.0:
 
-      call_params = (self.model_or_factory, self.headers, self.features_to_ignore, feature_to_repair, repair_level, output_file, self.kdd)
+      call_params = (self.model_or_factory, self.headers, self.features_to_ignore, feature_to_repair, repair_level, output_file, self.kdd
       worker_params.append( call_params )
       repair_level += repair_increase_per_step
 
@@ -136,7 +140,7 @@ class GradientFeatureAuditor(object):
         json_conf_table = json.dumps(conf_table)
         f.write("{}:{}\n".format(repair_level, json_conf_table))
 
-  def audit(self, verbose=False, dump_all=False):
+  def audit(self, verbose=False):
     features_to_audit = [h for i, h in enumerate(self.headers) if i not in self.features_to_ignore]
 
     output_files = []
@@ -149,9 +153,9 @@ class GradientFeatureAuditor(object):
       full_filepath = self.OUTPUT_DIR + "/" + output_file
       output_files.append(full_filepath)
 
-      self.audit_feature(feature, full_filepath, dump_all)
+      self.audit_feature(feature, full_filepath)
 
-    if dump_all:
+    if self.dump_all:
       print "Audit files dumped to: {}".format(self.OUTPUT_DIR)
     return output_files
 
