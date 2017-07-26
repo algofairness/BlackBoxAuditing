@@ -2,8 +2,8 @@
 #       across experiments on different datasets
 # TODO: Make this file generalizable to all datasets
 
-from experiments.arrests.load_data import load_data
-from repairers.CategoricRepairer import Repairer
+from .experiments.arrests.load_data import load_data
+from .repairers.CategoricRepairer import Repairer
 import numpy as np
 import os
 
@@ -23,7 +23,7 @@ def run():
   repairer = Repairer(orig_data, feature_to_repair, repair_level)
   repaired_data = repairer.repair(test_data)
 
-  features_to_graph = range(1, 13)
+  features_to_graph = list(range(1, 13))
   for feature_to_graph in features_to_graph:
     header = headers[feature_to_graph]
 
@@ -37,11 +37,11 @@ def run():
         group_indices[stratified_val] =[]
       orig_groups[stratified_val].append(feature_val)
       group_indices[stratified_val].append(i)
-    rep_groups = {group:[repaired_data[i][feature_to_graph] for i in indices] for group, indices in group_indices.items()}
+    rep_groups = {group:[repaired_data[i][feature_to_graph] for i in indices] for group, indices in list(group_indices.items())}
 
     data_dict = {0: {}, 1: {}}
     data_list = {0: {}, 1: {}}
-    for group, data in orig_groups.items():
+    for group, data in list(orig_groups.items()):
       data_dict[0][group] = {value: 0 for value in data}
       data_dict[1][group] = {value: 0 for value in data}
       for value in data:

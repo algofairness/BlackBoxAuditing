@@ -3,14 +3,8 @@ To reproduce results from the "Auditing Black-box Models for Indirect Influence"
 paper (11/30/2016), set model_options in main.py to {'reproduce':True} 
 """
 
-
-
-
-
-
-
-from AbstractModelFactory import AbstractModelFactory
-from AbstractModelVisitor import AbstractModelVisitor
+from model_factories.AbstractModelFactory import AbstractModelFactory
+from model_factories.AbstractModelVisitor import AbstractModelVisitor
 
 import os
 import numpy as np
@@ -136,7 +130,7 @@ class ModelFactory(AbstractModelFactory):
     # Generate a layer for the input and for each additional hidden layer.
     layer_sizes = [num_features] + self.hidden_layer_sizes + [self.num_outcomes]
     layers = [x] # Count the input as the first layer
-    for i in xrange(len(layer_sizes) - 1):
+    for i in range(len(layer_sizes) - 1):
       layer_size = layer_sizes[i]
       prev_layer = layers[-1]
       next_layer_size = layer_sizes[i+1]
@@ -180,7 +174,7 @@ class ModelFactory(AbstractModelFactory):
       writer = tf.summary.FileWriter(log_dir, graph=sess.graph)
       tf.global_variables_initializer().run()
       num_steps = self.num_epochs * train_size // self.batch_size
-      for step in xrange(num_steps):
+      for step in range(num_steps):
         # get batch
         offset = (step * self.batch_size) % train_size
         batch_data = train_matrix[offset:(offset + self.batch_size), :]
@@ -244,10 +238,10 @@ class ModelVisitor(AbstractModelVisitor):
       self.model_saver.restore(sess, self.checkpoint)
       predictions = tf.argmax(self.y, 1).eval(feed_dict={self.x: test_matrix, self.y_:test_labels}, session=sess)
 
-    predictions_dict = {i:key for key,i in self.outcome_trans_dict.items()}
+    predictions_dict = {i:key for key,i in list(self.outcome_trans_dict.items())}
     predictions = [predictions_dict[pred] for pred in predictions]
 
-    return zip([row[self.response_index] for row in test_set], predictions)
+    return list(zip([row[self.response_index] for row in test_set], predictions))
 
 def list_to_tf_input(data, response_index, num_outcomes):
   """
@@ -337,8 +331,8 @@ def test_expand_and_standardize_dataset():
   new_data, new_headers = expand_and_standardize_dataset(resp_index, resp_header, data, col_vals, headers, standardizers, feats_to_ignore, columns_to_expand, outcome_trans_dict)
   correct_data = [[1.0, 1.0, -1.0, -1.0, 0], [-1.0, -1.0, 1.0, -1.0, 1], [1.0, -1.0, -1.0, 1.0, 2], [-1.0, 1.0, -1.0, -1.0, 1]]
   correct_headers = ['cont_feature', 'cat_feature_A', 'cat_feature_B', 'cat_feature_C', 'response']
-  print 'expanding and standardizing data correctly? --', new_data==correct_data
-  print 'expanding headers correctly? --', new_headers==correct_headers
+  print('expanding and standardizing data correctly? --', new_data==correct_data)
+  print('expanding headers correctly? --', new_headers==correct_headers)
 
 def test_unseen_categorical_feature():
   """
@@ -358,10 +352,10 @@ def test_unseen_categorical_feature():
 
   factory = ModelFactory(all_data, headers, response, name_prefix="test")
   model = factory.build(train_set)
-  print "factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor)
+  print("factory builds ModelVisitor? -- ", isinstance(model, ModelVisitor))
 
   predictions = model.test(test_set)
-  print "handling unseen categorical values correctly? -- ", all([pred[0] == pred[1] for pred in predictions])
+  print("handling unseen categorical values correctly? -- ", all([pred[0] == pred[1] for pred in predictions]))
 
 
 def test_list_to_tf_input():
@@ -369,8 +363,8 @@ def test_list_to_tf_input():
   tf_matrix, tf_onehot = list_to_tf_input(data, 1, 3)
   correct_matrix = [[0],[0],[0]]
   correct_onehot = [[1,0,0], [0,1,0], [0,0,1]]
-  print "list_to_tf_input matrix correct? --",np.array_equal(tf_matrix, correct_matrix)
-  print "list_to_tf_input onehot correct? --",np.array_equal(tf_onehot, correct_onehot)
+  print("list_to_tf_input matrix correct? --",np.array_equal(tf_matrix, correct_matrix))
+  print("list_to_tf_input onehot correct? --",np.array_equal(tf_onehot, correct_onehot))
 
 def test_basic_model():
   headers = ["predictor 1", "predictor 2", "response"]
@@ -386,7 +380,7 @@ def test_basic_model():
   predictions = model.test(test_set)
   intended_predictions = [pred[0] for pred in predictions]
   actual_predictions = [pred[1] for pred in predictions]
-  print "predicting numeric categories correctly? -- ", actual_predictions == intended_predictions
+  print("predicting numeric categories correctly? -- ", actual_predictions == intended_predictions)
 
 def test_categorical_response():
   headers = ["predictor 1", "predictor 2", "response"]
@@ -403,7 +397,7 @@ def test_categorical_response():
   predictions = model.test(test_set)
   resp_index = headers.index(response)
   intended_predictions = [(test_row[resp_index], train_row[resp_index]) for train_row, test_row in zip(train_set_copy,test_set_copy)]
-  print "predicting string-categories correctly? -- ", predictions == intended_predictions
+  print("predicting string-categories correctly? -- ", predictions == intended_predictions)
 
 def test_categorical_model():
   """
@@ -426,7 +420,7 @@ def test_categorical_model():
   predictions = model.test(test_set)
   resp_index = headers.index(response)
   intended_predictions = [(test_row[resp_index], train_row[resp_index]) for train_row, test_row in zip(train_set_copy,test_set)]
-  print "predicting string-categories correctly? -- ", predictions == intended_predictions
+  print("predicting string-categories correctly? -- ", predictions == intended_predictions)
 
 if __name__=='__main__':
   test()

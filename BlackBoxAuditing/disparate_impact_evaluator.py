@@ -1,8 +1,8 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
 
-from disparate_impact import disparate_impact
-from consistency_graph import *
+from .disparate_impact import disparate_impact
+from .consistency_graph import *
 
 
 from os import listdir
@@ -11,7 +11,7 @@ from os.path import isfile, join
 def load_trip_from_predictions(filename):
   with open(filename) as f:
     reader = csv.reader(f)
-    reader.next # Skip the headers.
+    reader.__next__ # Skip the headers.
     return [(f,r,p) for f,r,p in reader]
 
 def graph_disparate_impact_accuracy(directory, output_image_file):
@@ -31,7 +31,7 @@ def graph_disparate_impact_accuracy(directory, output_image_file):
     file_groups[feature].append(pred)
 
   pred_groups = {}
-  for feature, filenames in file_groups.items():
+  for feature, filenames in list(file_groups.items()):
     pred_groups[feature] = []
     for filename in filenames:
       preds = load_trip_from_predictions(filename)
@@ -45,7 +45,7 @@ def graph_disparate_impact_accuracy(directory, output_image_file):
   unprotected_group = "WHITE"
   features = []
   y_axes = []
-  for feature, pred_tups in pred_groups.items():
+  for feature, pred_tups in list(pred_groups.items()):
     if feature == "RACE":
       for protected_group in protected_groups:
         #TODO clean this bit of code up, it's hacky right now
@@ -99,7 +99,7 @@ def graph_repair_level_disparate_impact(directory, output_image_file):
     file_groups[feature].append(pred)
 
   pred_groups = {}
-  for feature, filenames in file_groups.items():
+  for feature, filenames in list(file_groups.items()):
     pred_groups[feature] = []
     for filename in filenames:
       preds = load_trip_from_predictions(filename)
@@ -113,7 +113,7 @@ def graph_repair_level_disparate_impact(directory, output_image_file):
   unprotected_group = "WHITE"
   features = []
   y_axes = []
-  for feature, pred_tups in pred_groups.items():
+  for feature, pred_tups in list(pred_groups.items()):
     if feature == "RACE":
       for protected_group in protected_groups:
         #TODO Figure out how to categorize feature values

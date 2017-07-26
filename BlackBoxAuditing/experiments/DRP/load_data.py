@@ -28,7 +28,7 @@ def load_data():
         row = [header_types[h](v) for h,v in zip(header_types, row)]
         data.append(row)
 
-  headers = header_types.keys()
+  headers = list(header_types.keys())
 
   # Translate the response into a binary.
   # index = headers.index(response)
@@ -42,7 +42,7 @@ def load_data():
 
 def test():
   headers, train, test = load_data()
-  print "load_data unpacks correctly? -- ", (headers != None and train != None and test != None)
+  print("load_data unpacks correctly? -- ", (headers != None and train != None and test != None))
 
   correct_types = [float, float, str, float, str, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, str, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, str]
 
@@ -55,8 +55,8 @@ def test():
     elif all( isinstance(row[i],str) for row in train + test ):
       gathered_types.append(str)
 
-  print "load_data types are correct? -- ", gathered_types == correct_types
-  print "load_data count is correct? -- ", 3955 == len(train) + len(test)
+  print("load_data types are correct? -- ", gathered_types == correct_types)
+  print("load_data count is correct? -- ", 3955 == len(train) + len(test))
 
 
 if __name__=="__main__":

@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
-from AbstractModelFactory import AbstractModelFactory
-from AbstractModelVisitor import AbstractModelVisitor
+from model_factories.AbstractModelFactory import AbstractModelFactory
+from model_factories.AbstractModelVisitor import AbstractModelVisitor
 
 from collections import OrderedDict
 import subprocess
@@ -21,9 +21,7 @@ TMP_DIR = "tmp/"
 if not os.path.exists(TMP_DIR):
   os.makedirs(TMP_DIR)
 
-class AbstractWekaModelFactory(AbstractModelFactory):
-  __metaclass__ = ABCMeta
-
+class AbstractWekaModelFactory(AbstractModelFactory, metaclass=ABCMeta):
   @abstractmethod
   def __init__(self, *args, **kwargs):
     super(AbstractWekaModelFactory, self).__init__(*args,**kwargs)
@@ -84,7 +82,7 @@ class AbstractWekaModelVisitor(AbstractModelVisitor):
       raw_predictions = [line.split()[prediction_index] for line in raw_lines]
       predictions = [prediction.split(":")[1] for prediction in raw_predictions]
 
-    return zip([row[self.response_index] for row in test_set], predictions)
+    return list(zip([row[self.response_index] for row in test_set], predictions))
 
 
 def run_weka_command(command):
@@ -96,11 +94,11 @@ def get_arff_type_dict(headers, data):
   values = {header:[row[i] for row in data] for i, header in enumerate(headers)}
   arff_type = OrderedDict()
   for header in headers:
-    if all( map(lambda x: isinstance(x, float), values[header]) ):
+    if all( [isinstance(x, float) for x in values[header]] ):
       arff_type[header] = "numeric"
-    elif all( map(lambda x: isinstance(x, bool), values[header]) ):
+    elif all( [isinstance(x, bool) for x in values[header]] ):
       arff_type[header] = [True,False]
-    elif all( map(lambda x: isinstance(x, int), values[header]) ):
+    elif all( [isinstance(x, int) for x in values[header]] ):
       arff_type[header] = "numeric"
     else:
       arff_type[header] = sorted(set(values[header])) # Categorical
@@ -119,7 +117,9 @@ def list_to_arff_file(headers, arff_type_dict, data, arff_file_output):
   for header in headers:
     types = arff_type_dict[header]
     if type(types) == list:
-      formatter = io.BytesIO()
+      # changed io.BytesIO() to io.StringIO() when moving to python 3.
+      # see https://stackoverflow.com/questions/37866883/unable-to-write-byte-like-string-using-csv-writer-in-python3
+      formatter = io.StringIO()
       writer = csv.writer(formatter)
       unique_values = list(set(types))
       unique_values = [arff_format(val) for val in unique_values]
@@ -133,7 +133,8 @@ def list_to_arff_file(headers, arff_type_dict, data, arff_file_output):
   arff_header += "\n@data\n"
 
   # Write the data in a CSV-like format to avoid weird escaping issues.
-  data_output = io.BytesIO()
+# changed from io.BytesIO() to io.StringIO() here as well.
+  data_output = io.StringIO()
   csv_writer = csv.writer(data_output)
   for row in data:
     row = [arff_format(val) for h, val in zip(headers,row) if h in arff_type_dict]

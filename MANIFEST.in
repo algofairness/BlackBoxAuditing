@@ -2,3 +2,11 @@ include README.md
 include requirements.txt
 include setup.py
 include setup.cfg
+
+include BlackBoxAuditing/*.sh
+include BlackBoxAuditing/r_plotting/*.Rmd
+include BlackBoxAuditing/repair_tests/*.csv
+include BlackBoxAuditing/MATLAB_code/*
+include BlackBoxAuditing/test_data/*.csv
+include BlackBoxAuditing/test_data/*.arff
+include BlackBoxAuditing/model_factories/weka.path

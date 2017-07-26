@@ -19,7 +19,7 @@ def CN2_learner(trainfile, testfile, output_dir, beam_width, min_covered_example
   # set the maximum number of selectors (conditions) found rules may combine
   learner.rule_finder.general_validator.max_rule_length = max_rule_length
 
-  print("Learning rule list for {}".format(trainfile))
+  print(("Learning rule list for {}".format(trainfile)))
   # learn a rule list for the data
   classifier = learner(training_data)
 

@@ -6,6 +6,18 @@ This repository contains a sample implementation of Gradient Feature Auditing (G
 
 This code is licensed under an [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0.html) license.
 
+# Setup and Installation
+
+1. Install the Python dependencies listed in the requirements.txt file.
+2. Install python-matplotlib if you do not already have it (https://matplotlib.org/users/installing.html).
+3. Install BlackBoxAuditing (`pip install BlackBoxAuditing`)
+
+Many of the ModelVisitors rely on [Weka](http://www.cs.waikato.ac.nz/ml/weka/). Similarly, we use [TensorFlow](https://www.tensorflow.org/) for network-based machine learning. Any Python libraries that need to be installed are included in the `requirements.txt` file. Weka and Tensorflow should be downloaded during installation, but here's the download links just in case. 
+
+- Weka 3.6.13 [download](http://www.cs.waikato.ac.nz/ml/weka/downloading.html)
+- TensorFlow [download](https://www.tensorflow.org/versions/master/get_started/os_setup.html) (original experiments run with version 0.6.0)
+
+
 # Certifying and Removing Disparate Impact
 
 After installing BlackBoxAuditing, you can run the data repair described in [Certifying and Removing Disparate Impact](http://arxiv.org/abs/1412.3756) using the command `BlackBoxAuditing-repair` on a terminal which will tell you the arguments the script takes.
@@ -94,12 +106,19 @@ load_from_file(datafile, testdata=None, correct_types=None, train_percentage=2.0
 After initializing the auditor `auditor = BlackBoxAuditor.Auditor()`, there are a few options that can be set to tune the auditor listed as follows:
 
 `auditor.measurers`: (*default = [accuracy, BCR]*) list of measurers to use for GFA
+
 `auditor.model_options`: (*default = {}*) options for machine learning model
+
 `auditor.verbose`: (*default = True*) Set to "True" to allow for more detailed status updates
+
 `auditor.REPAIR_STEPS`: (*default = 10*) Number of repair steps take 
+
 `auditor.RETRAIN_MODEL_PER_REPAIR`: (*default = False*) 
+
 `auditor.WRITE_ORIGINAL_PREDICTIONS`: (*default = True*)
+
 `auditor.ModelFactory`: (*default = Weka_SVM*) Available machine learning options: Weka_SVM, Weka_DecisionTree, TensorFlow
+
 `auditor.kdd`: (*default = False*) 
 
 
@@ -116,18 +135,6 @@ Note: if a test requires reading data from the `test_data` directory, it should 
 ## Implementing a New Machine-Learning Method
 
 The best way to create a model would be to use a ModelFactory and ModelVisitors. A ModelVisitor should be thought of as a wrapper that knows how to load a machine-learning model of a given type and communicate with that model file in order to output predicted values of some test dataset. A ModelFactory simply knows how to "build" a ModelVisitor based on some provided training data. Check out the "Abstract" files in the `sample_experiment` directory for outlines of what these two classes should do; similarly, check out the "SVM_ModelFactory" files in the `sample_experiment` subdirectory for examples that use WEKA to create model files and produce predictions.
-
-## Setup and Installation
-
-1. Install WEKA and/or Tensorflow (see below).
-2. Update the WEKA path in `model_factories/AbstractWekaModelFactory.py`.
-3. Install the Python dependencies listed in the requirements.txt file.
-4. Install python-matplotlib if you do not already have it (`sudo apt-get install python-matplotlib`).
-5. Install BlackBoxAuditing (`pip install BlackBoxAuditing`)
-
-Many of the ModelVisitors rely on [Weka](http://www.cs.waikato.ac.nz/ml/weka/). Similarly, we use [TensorFlow](https://www.tensorflow.org/) for network-based machine learning. Any Python libraries that need to be installed are included in the `requirements.txt` file.
-- Weka 3.6.13 [download](http://www.cs.waikato.ac.nz/ml/weka/downloading.html)
-- TensorFlow [download](https://www.tensorflow.org/versions/master/get_started/os_setup.html) (original experiments run with version 0.6.0)
 
 # Sources
 

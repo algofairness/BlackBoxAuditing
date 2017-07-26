@@ -1,4 +1,4 @@
-from BinSizes import FreedmanDiaconisBinSize as bsc
+from repairers.binning.BinSizes import FreedmanDiaconisBinSize as bsc
 
 def make_histogram_bins(bin_size_calculator, data, col_id):
   feature_vals = [row[col_id] for row in data]
@@ -33,18 +33,18 @@ def make_histogram_bins(bin_size_calculator, data, col_id):
 
 
 def test():
-  data = [[i,0] for i in xrange(0, 100)]
+  data = [[i,0] for i in range(0, 100)]
   bins = make_histogram_bins(bsc, data, 0)
-  print "make_histogram_bins -- no entries lost --", sum(len(row) for row in bins) == len(data)
-  print "make_histogram_bins -- correct # of bins --", (len(bins) == 5)
+  print("make_histogram_bins -- no entries lost --", sum(len(row) for row in bins) == len(data))
+  print("make_histogram_bins -- correct # of bins --", (len(bins) == 5))
 
   data = [[1]]*100
   bins = make_histogram_bins(bsc, data, 0)
-  print "homogenous feature yields one bin? ", len(bins) == 1
+  print("homogenous feature yields one bin? ", len(bins) == 1)
 
   data = [[1]]*100 + [[2]]
   bins = make_histogram_bins(bsc, data, 0)
-  print "bins being bucketed by value? -- ", len(bins) == 2
+  print("bins being bucketed by value? -- ", len(bins) == 2)
 
 
 

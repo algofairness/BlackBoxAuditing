@@ -1,7 +1,7 @@
 import argparse
 import csv
 
-from repairers.GeneralRepairer import Repairer
+from .repairers.GeneralRepairer import Repairer
 
 def main():
   parser = argparse.ArgumentParser(description="Repair a CSV file.")
@@ -32,14 +32,14 @@ def main():
     # Convert integer features to integers and float features to floats.
     for i, col in enumerate(cols):
       try:
-        cols[i] = map(int, col)
+        cols[i] = list(map(int, col))
       except ValueError:
         try:
-          cols[i] = map(float, col)
+          cols[i] = list(map(float, col))
         except ValueError:
           pass
 
-    data = [[col[j] for col in cols] for j in xrange(len(data))]
+    data = [[col[j] for col in cols] for j in range(len(data))]
     firstdata = data
 
   # Calculte the indices to repair by and to ignore.

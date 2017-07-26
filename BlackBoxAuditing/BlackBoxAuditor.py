@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from model_factories import Weka_SVM, Weka_DecisionTree, TensorFlow
 from loggers import vprint
 from GradientFeatureAuditor import GradientFeatureAuditor
@@ -5,8 +6,16 @@ from audit_reading import graph_audit, graph_audits, rank_audit_files, group_aud
 from consistency_graph import graph_prediction_consistency
 from measurements import get_conf_matrix, accuracy, BCR
 from find_contexts import context_finder
+=======
+from .model_factories import Weka_SVM, Weka_DecisionTree, TensorFlow
+from .loggers import vprint
+from .GradientFeatureAuditor import GradientFeatureAuditor
+from .audit_reading import graph_audit, graph_audits, rank_audit_files, group_audit_ranks
+from .consistency_graph import graph_prediction_consistency
+from .measurements import get_conf_matrix, accuracy, BCR
+>>>>>>> python3
 from datetime import datetime
-from data import load_data, load_from_file
+from .data import load_data, load_from_file
 import csv
 
 class Auditor():
@@ -45,20 +54,20 @@ class Auditor():
   
       # Check the quality of the initial model on verbose runs.
       if self.verbose:
-        print "Calculating original model statistics on test data:"
-        print "\tTraining Set:"
+        print("Calculating original model statistics on test data:")
+        print("\tTraining Set:")
         train_pred_tuples = model.test(train_set)
         train_conf_matrix = get_conf_matrix(train_pred_tuples)
-        print "\t\tConf-Matrix:", train_conf_matrix
+        print("\t\tConf-Matrix:", train_conf_matrix)
         for measurer in self.measurers:
-          print "\t\t{}: {}".format(measurer.__name__, measurer(train_conf_matrix))
+          print("\t\t{}: {}".format(measurer.__name__, measurer(train_conf_matrix)))
   
-        print "\tTesting Set:"
+        print("\tTesting Set:")
         test_pred_tuples = model.test(test_set)
         test_conf_matrix = get_conf_matrix(test_pred_tuples)
-        print "\t\tConf-Matrix", test_conf_matrix
+        print("\t\tConf-Matrix", test_conf_matrix)
         for measurer in self.measurers:
-          print "\t\t{}: {}".format(measurer.__name__, measurer(test_conf_matrix))
+          print("\t\t{}: {}".format(measurer.__name__, measurer(test_conf_matrix)))
   
   
       model_or_factory = model

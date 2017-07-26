@@ -79,4 +79,4 @@ for outcome in contexts_of_influence:
   summary_file.write(outcome +': \n')
   summary_file.write(contexts + '\n\n')
 
-print("Summary of Experiment written to {}".format(summary))
+print(("Summary of Experiment written to {}".format(summary)))

@@ -1,9 +1,7 @@
 from abc import ABCMeta, abstractmethod
 import time
 
-class AbstractModelVisitor(object):
-  __metaclass__ = ABCMeta
-
+class AbstractModelVisitor(object, metaclass=ABCMeta):
   def __init__(self, model_name):
     self.model_name = "{}".format(time.time())
 

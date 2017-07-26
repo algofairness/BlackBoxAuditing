@@ -13,15 +13,15 @@ def load_data():
       for j, correct_type in enumerate(correct_types):
         data[i][j] = correct_type(row[j])
 
-    train = data[:len(data)/2]
-    test = data[len(data)/2:]
+    train = data[:len(data)//2]
+    test = data[len(data)//2:]
 
   return headers, train, test
 
 
 def test():
   headers, train, test = load_data()
-  print "load_data unpacks correctly? -- ", (headers != None and train != None and test != None)
+  print("load_data unpacks correctly? -- ", (headers != None and train != None and test != None))
 
   correct_types = [str, float, int, str, float, str]
   gathered_types = []
@@ -33,7 +33,7 @@ def test():
     elif all( isinstance(row[i],str) for row in train + test ):
       gathered_types.append(str)
 
-  print "load_data types are correct? -- ", gathered_types == correct_types
+  print("load_data types are correct? -- ", gathered_types == correct_types)
 
 
 if __name__=="__main__":

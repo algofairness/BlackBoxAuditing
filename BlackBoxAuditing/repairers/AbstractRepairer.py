@@ -1,12 +1,10 @@
 from abc import ABCMeta, abstractmethod
 
-class AbstractRepairer(object):
+class AbstractRepairer(object, metaclass=ABCMeta):
   """
   A Repairer object is capable of removing the correlations of a feature
   from a dataset at a specific `repair_level`.
   """
-
-  __metaclass__ = ABCMeta
 
   def __init__(self, all_data, feature_to_repair, repair_level, kdd, features_to_ignore=[]):
     """

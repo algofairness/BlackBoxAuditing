@@ -54,23 +54,23 @@ class SparseList(list):
 def audit_test():
   N=25000
   l = SparseList(default=0)
-  for i in xrange(N):
+  for i in range(N):
     l.append(0)
 
-  for i in xrange(N):
+  for i in range(N):
     l.append(i)
 
-  for i in xrange(N):
+  for i in range(N):
     l.append(0)
 
-  l.extend(xrange(N))
+  l.extend(range(N))
 
   l.sort()
 
-  for i in xrange(4*N):
+  for i in range(4*N):
     l[i] # Call the `getter`
 
-  print "Big SparseList size correct?", len(l) == 4*N
+  print("Big SparseList size correct?", len(l) == 4*N)
 
 def test():
   l = SparseList(default=0)
@@ -79,18 +79,18 @@ def test():
   l.append(-1)
   l.append(2)
 
-  print "SparseList size correct?", len(l) == 4
-  print "SparseList accessed correctly?", l[0]==0 and l[2]==-1 and l[3] == 2
+  print("SparseList size correct?", len(l) == 4)
+  print("SparseList accessed correctly?", l[0]==0 and l[2]==-1 and l[3] == 2)
 
   l.sort()
-  print "Sorted SparseList size correct?", len(l) == 4
-  print "Sorted SparseList accessed correct?", l[0] == -1 and l[1]==0 and l[3] == 2
+  print("Sorted SparseList size correct?", len(l) == 4)
+  print("Sorted SparseList accessed correct?", l[0] == -1 and l[1]==0 and l[3] == 2)
 
   l.append(100)
   l.append(-100)
   l.sort()
-  print "Resorted SparseList size correct?", len(l) == 6
-  print "Resorted SparseList accessed correct?",  l[0] == -100 and l[5]==100
+  print("Resorted SparseList size correct?", len(l) == 6)
+  print("Resorted SparseList accessed correct?",  l[0] == -100 and l[5]==100)
 
 
 if __name__=="__main__":

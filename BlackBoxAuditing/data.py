@@ -92,7 +92,7 @@ def load_DRP(data):
         row = [header_types[h](v) for h,v in zip(header_types, row)]
         data.append(row)
 
-  headers = header_types.keys()
+  headers = list(header_types.keys())
 
   train, test = split_by_percent(data, train_percentage)
 
@@ -114,7 +114,7 @@ def load_from_file(datafile, testdata=None, correct_types=None, train_percentage
       features_to_ignore = []
 
     if correct_types is None:
-	correct_types = get_types(data, [None]*len(headers), missing_data_symbol)
+      correct_types = get_types(data, [None]*len(headers), missing_data_symbol)
     
     for i, row in enumerate(data):
       for j, correct_type in enumerate(correct_types):

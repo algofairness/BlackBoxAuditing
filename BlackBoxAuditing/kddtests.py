@@ -16,14 +16,14 @@ def kddtest(kdd):
     # Convert integer features to integers and float features to floats.
     for i, col in enumerate(cols):
       try:
-        cols[i] = map(int, col)
+        cols[i] = list(map(int, col))
       except ValueError:
         try:
-          cols[i] = map(float, col)
+          cols[i] = list(map(float, col))
         except ValueError:
           pass
 
-    data = [[col[j] for col in cols] for j in xrange(len(data))]
+    data = [[col[j] for col in cols] for j in range(len(data))]
     firstdata = data
 
   # Calculate the indices to repair by and to ignore.
@@ -65,7 +65,7 @@ def kddtest(kdd):
       return False
 
 def test():
-  print "Correct results for regular repair algorithm? -- ", kddtest(False)
-  print "Correct results for KDD algorithm? -- ", kddtest(True)
+  print("Correct results for regular repair algorithm? -- ", kddtest(False))
+  print("Correct results for KDD algorithm? -- ", kddtest(True))
 
 if __name__ == "__main__": test()

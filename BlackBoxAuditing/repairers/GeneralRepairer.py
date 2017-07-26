@@ -1,6 +1,6 @@
-from AbstractRepairer import AbstractRepairer
-from CategoricRepairer import Repairer as CategoricRepairer
-from NumericRepairer import Repairer as NumericRepairer
+from repairers.AbstractRepairer import AbstractRepairer
+from repairers.CategoricRepairer import Repairer as CategoricRepairer
+from repairers.NumericRepairer import Repairer as NumericRepairer
 
 class Repairer(AbstractRepairer):
   def __init__(self, *args, **kwargs):
