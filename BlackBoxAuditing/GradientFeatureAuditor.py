@@ -12,8 +12,6 @@ import json
 import gc
 
 ENABLE_MULTIPROCESSING = False
-#SAVE_REPAIRED_DATA = True
-#SAVE_PREDICTION_DETAILS = True
 
 # Used to share a copy of the dataset between multiprocessing processes.
 shared_all = None
@@ -77,11 +75,10 @@ def _audit_worker(params):
         row = [orig_row[index_to_repair], pred_tuples[i][0], pred_tuples[i][1]]
         writer.writerow(row)
 
-  del rep_test
   del repairer
   gc.collect()
 
-  return repaired, (repair_level, conf_table)
+  return repaired, (repair_level, conf_table), rep_test
 
 
 class GradientFeatureAuditor(object):
@@ -95,6 +92,7 @@ class GradientFeatureAuditor(object):
     self.OUTPUT_DIR = "{}/{}".format(self.AUDIT_DIR, time.time())
     self.kdd = kdd
     self.dump_all = dump_all
+    self._rep_test = {}
 
     global shared_all
     global shared_train
@@ -119,18 +117,23 @@ class GradientFeatureAuditor(object):
     worker_params = []
     while repair_level <= 1.0:
 
-      call_params = (self.model_or_factory, self.headers, self.features_to_ignore, feature_to_repair, repair_level, output_file, self.kdd
+      call_params = (self.model_or_factory, self.headers, self.features_to_ignore, feature_to_repair, repair_level, output_file, self.kdd)
       worker_params.append( call_params )
       repair_level += repair_increase_per_step
 
     if ENABLE_MULTIPROCESSING:
       pool = Pool(processes=cpu_count()/2 or 1, maxtasksperchild=1)
-      conf_table_tuples = pool.map(_audit_worker, worker_params)
+      _audit_results = pool.map(_audit_worker, worker_params)
       pool.close()
       pool.join()
       del pool
     else:
-      conf_table_tuples = [_audit_worker(params) for params in worker_params]
+      _audit_results = [_audit_worker(params) for params in worker_params]
+
+    conf_table_tuples = []
+    for res in _audit_results:
+      conf_table_tuples.append((res[0], res[1]))
+      self._rep_test[feature_to_repair] = res[2]
 
     conf_table_tuples.sort(key=lambda tuples: tuples[0])
 

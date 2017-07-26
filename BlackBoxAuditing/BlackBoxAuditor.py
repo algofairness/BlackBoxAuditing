@@ -19,6 +19,7 @@ class Auditor():
     self.WRITE_ORIGINAL_PREDICTIONS = True  
     self.ModelFactory = Weka_SVM
     self.kdd = False
+    self._rep_test = None
 
   def __call__(self, data, dump_all=False):
     start_time = datetime.now()
@@ -79,6 +80,9 @@ class Auditor():
     # Perform the Gradient Feature Audit and dump the audit results into files.
     audit_filenames = auditor.audit(verbose=self.verbose)
  
+    # Retrieve repaired data from audit
+    self._rep_test = auditor._rep_test
+
     ranked_features = []
     for measurer in self.measurers:
       vprint("Ranking audit files by {}.".format(measurer.__name__),self.verbose)
