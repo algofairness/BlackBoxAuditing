@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from model_factories import Weka_SVM, Weka_DecisionTree, TensorFlow
 from loggers import vprint
 from GradientFeatureAuditor import GradientFeatureAuditor
@@ -6,16 +5,8 @@ from audit_reading import graph_audit, graph_audits, rank_audit_files, group_aud
 from consistency_graph import graph_prediction_consistency
 from measurements import get_conf_matrix, accuracy, BCR
 from find_contexts import context_finder
-=======
-from .model_factories import Weka_SVM, Weka_DecisionTree, TensorFlow
-from .loggers import vprint
-from .GradientFeatureAuditor import GradientFeatureAuditor
-from .audit_reading import graph_audit, graph_audits, rank_audit_files, group_audit_ranks
-from .consistency_graph import graph_prediction_consistency
-from .measurements import get_conf_matrix, accuracy, BCR
->>>>>>> python3
+from data import load_data, load_from_file
 from datetime import datetime
-from .data import load_data, load_from_file
 import csv
 
 class Auditor():
@@ -28,12 +19,14 @@ class Auditor():
     self.WRITE_ORIGINAL_PREDICTIONS = True  
     self.ModelFactory = Weka_SVM
     self.kdd = False
-    self._rep_test = None
+    self._data = {}
 
-  def __call__(self, data, dump_all=False):
+  def __call__(self, data, output_dir=None, dump_all=False, features_to_audit=None):
     start_time = datetime.now()
   
     headers, train_set, test_set, response_header, features_to_ignore = data
+
+    self._data = {"headers":headers, "train":train_set, "test":test_set, "response":response_header, "ignore":features_to_ignore}
   
     """
      ModelFactories require a `build` method that accepts some training data
@@ -84,23 +77,27 @@ class Auditor():
     auditor = GradientFeatureAuditor(model_or_factory, headers, train_set, test_set,
                                      repair_steps=self.REPAIR_STEPS, kdd=self.kdd,
                                      features_to_ignore=audit_indices_to_ignore,
-                                     dump_all=dump_all)
+                                     features_to_audit=features_to_audit,
+                                     output_dir=output_dir,dump_all=dump_all)
   
     # Perform the Gradient Feature Audit and dump the audit results into files.
     audit_filenames = auditor.audit(verbose=self.verbose)
  
     # Retrieve repaired data from audit
-    self._rep_test = auditor._rep_test
+    self._data["rep_test"] = auditor._rep_test
 
-    ranked_features = []
-    for measurer in self.measurers:
-      vprint("Ranking audit files by {}.".format(measurer.__name__),self.verbose)
-      ranked_graph_filename = "{}/{}.png".format(auditor.OUTPUT_DIR, measurer.__name__)
-      graph_audits(audit_filenames, measurer, ranked_graph_filename)
-      ranks = rank_audit_files(audit_filenames, measurer)
-      vprint("\t{}".format(ranks), self.verbose)
-      ranked_features.append( (measurer, ranks) )
+ 
+#    ranked_features = []
+#    for measurer in self.measurers:
+#      vprint("Ranking audit files by {}.".format(measurer.__name__),self.verbose)
+#      ranked_graph_filename = "{}/{}.png".format(auditor.OUTPUT_DIR, measurer.__name__)
+#      graph_audits(audit_filenames, measurer, ranked_graph_filename)
+#      ranks = rank_audit_files(audit_filenames, measurer)
+#      vprint("\t{}".format(ranks), self.verbose)
+#      ranked_features.append( (measurer, ranks) )
 
+    end_time = datetime.now()
+    
     # Store a summary of this experiment.
     summary = [
       "Audit Start Time: {}\n".format(start_time),
@@ -118,11 +115,10 @@ class Auditor():
     for line in summary:
       print(line) 
 
-    for ranker, ranks in ranked_features:
-      print("Ranked Features by {}: {}\n".format(ranker.__name__, ranks))
-      groups = group_audit_ranks(audit_filenames, ranker)
-      print("\tApprox. Trend Groups: {}\n".format(groups))
-
+#    for ranker, ranks in ranked_features:
+#      print("Ranked Features by {}: {}\n".format(ranker.__name__, ranks))
+#      groups = group_audit_ranks(audit_filenames, ranker)
+#      print("\tApprox. Trend Groups: {}\n".format(groups))
 
     # Dump all experiment results if opted  
     if dump_all:
@@ -167,13 +163,20 @@ class Auditor():
       for audit_filename in audit_filenames:
         audit_image_filename = audit_filename + ".png"
         graph_audit(audit_filename, self.measurers, audit_image_filename)
-  
+ 
+      ranked_features = []
+      for measurer in self.measurers:
+        vprint("Ranking audit files by {}.".format(measurer.__name__),self.verbose)
+        ranked_graph_filename = "{}/{}.png".format(auditor.OUTPUT_DIR, measurer.__name__)
+        graph_audits(audit_filenames, measurer, ranked_graph_filename)
+        ranks = rank_audit_files(audit_filenames, measurer)
+        vprint("\t{}".format(ranks), self.verbose)
+        ranked_features.append( (measurer, ranks) )
+ 
       # Store a graph of how many predictions change as features are repaired.
       vprint("Graphing prediction changes throughout repair.",self.verbose)
       output_image = auditor.OUTPUT_DIR + "/similarity_to_original_predictions.png"
       graph_prediction_consistency(auditor.OUTPUT_DIR, output_image)
-  
-      end_time = datetime.now()
   
       # Store a summary of this experiment to file.
       summary_file = "{}/summary.txt".format(auditor.OUTPUT_DIR)
@@ -186,9 +189,11 @@ class Auditor():
           groups = group_audit_ranks(audit_filenames, ranker)
           f.write("\tApprox. Trend Groups: {}\n".format(groups))
   
-    vprint("Summary file written to: {}".format(summary_file), self.verbose)
+      vprint("Summary file written to: {}".format(summary_file), self.verbose)
 
   def find_contexts(output, removed_attr, beam_width=10, min_covered_examples=1, by_original=True, epsilon=0.05):
+    
+
     return
 
 def main():
@@ -200,7 +205,7 @@ def main():
   auditor.model = Weka_SVM
 
   # call the auditor
-  auditor(data)
+  auditor(data, output_dir="try", features_to_audit=["checking_status","duration"], dump_all=True)
 
 if __name__=="__main__":
   main()

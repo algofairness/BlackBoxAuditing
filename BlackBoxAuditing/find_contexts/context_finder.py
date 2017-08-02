@@ -1,10 +1,10 @@
 import argparse
 import time
 import os
-from BlackBoxAuditing.find_contexts.convert_and_merge_files import convert_to_tab, merge
-from BlackBoxAuditing.find_contexts.extract_influence_scores import extract_feature_influences
-from BlackBoxAuditing.find_contexts.find_cn2_rules import CN2_learner
-from BlackBoxAuditing.find_contexts.expand_and_find_contexts import expand_and_find_contexts
+from find_contexts.convert_and_merge_files import convert_to_tab, merge
+from find_contexts.extract_influence_scores import extract_feature_influences
+from find_contexts.find_cn2_rules import CN2_learner
+from find_contexts.expand_and_find_contexts import expand_and_find_contexts
 
 
 def context_finder(original_train_csv, original_test_csv, obscured_test_csv, output, summary_file, feature_data_file, removed_attr, beam_width, min_covered_examples, by_original, epsilon):
@@ -52,5 +52,5 @@ def context_finder(original_train_csv, original_test_csv, obscured_test_csv, out
     summary_file.write(outcome +': \n')
     summary_file.write(contexts + '\n\n')
 
-print("Summary of Experiment written to {}".format(summary))
+  print("Summary of Experiment written to {}".format(summary))
 

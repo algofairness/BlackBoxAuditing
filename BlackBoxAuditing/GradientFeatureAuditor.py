@@ -7,7 +7,7 @@ from model_factories.AbstractModelVisitor import AbstractModelVisitor
 from multiprocessing import Pool, cpu_count
 import csv
 import time
-import os
+import os, shutil
 import json
 import gc
 
@@ -63,7 +63,8 @@ def _audit_worker(params):
       writer = csv.writer(f)
       for row in [headers]+rep_test:
         writer.writerow(row)
-    repaired = output_file+".test.repaired_{}.data".format(repair_level)
+  
+  repaired = output_file+".test.repaired_{}.data".format(repair_level)
 
   # Save the prediction_tuples and the original values of the features to repair.
   if SAVE_PREDICTION_DETAILS:
@@ -83,15 +84,15 @@ def _audit_worker(params):
 
 class GradientFeatureAuditor(object):
   def __init__(self, model_or_factory, headers, train_set, test_set, kdd, repair_steps=10,
-                features_to_ignore = [], dump_all=False):
+                features_to_ignore = None, features_to_audit=None, output_dir=None, dump_all=False):
     self.repair_steps = repair_steps
     self.model_or_factory = model_or_factory
     self.headers = headers
-    self.features_to_ignore = features_to_ignore
-    self.AUDIT_DIR = "audits"
-    self.OUTPUT_DIR = "{}/{}".format(self.AUDIT_DIR, time.time())
+    self.features_to_ignore = features_to_ignore if features_to_ignore!=None else []
+    self.OUTPUT_DIR = output_dir if output_dir!=None else "audits/{}".format(time.time())
     self.kdd = kdd
     self.dump_all = dump_all
+    self.features_to_audit = features_to_audit
     self._rep_test = {}
 
     global shared_all
@@ -106,9 +107,10 @@ class GradientFeatureAuditor(object):
     # Note: Be cautious when using this on large-sized datasets.
 
     # Create any output directories that don't exist.
-    for directory in [self.AUDIT_DIR, self.OUTPUT_DIR]:
-      if not os.path.exists(directory):
-        os.makedirs(directory)
+    directory = self.OUTPUT_DIR
+    if os.path.exists(directory):
+      shutil.rmtree(directory)
+    os.makedirs(directory)
 
   def audit_feature(self, feature_to_repair, output_file):
     repair_increase_per_step = 1.0/self.repair_steps
@@ -117,7 +119,7 @@ class GradientFeatureAuditor(object):
     worker_params = []
     while repair_level <= 1.0:
 
-      call_params = (self.model_or_factory, self.headers, self.features_to_ignore, feature_to_repair, repair_level, output_file, self.kdd)
+      call_params = (self.model_or_factory, self.headers, self.features_to_ignore, feature_to_repair, repair_level, output_file, self.kdd, self.dump_all)
       worker_params.append( call_params )
       repair_level += repair_increase_per_step
 
@@ -144,7 +146,7 @@ class GradientFeatureAuditor(object):
         f.write("{}:{}\n".format(repair_level, json_conf_table))
 
   def audit(self, verbose=False):
-    features_to_audit = [h for i, h in enumerate(self.headers) if i not in self.features_to_ignore]
+    features_to_audit = [h for i, h in enumerate(self.headers) if i not in self.features_to_ignore] if self.features_to_audit is None else self.features_to_audit
 
     output_files = []
     for i, feature in enumerate(features_to_audit):
@@ -158,12 +160,7 @@ class GradientFeatureAuditor(object):
 
       self.audit_feature(feature, full_filepath)
 
-<<<<<<< HEAD
-    if self.dump_all:
-      print "Audit files dumped to: {}".format(self.OUTPUT_DIR)
-=======
     print("Audit files dumped to: {}".format(self.OUTPUT_DIR))
->>>>>>> python3
     return output_files
 
 
