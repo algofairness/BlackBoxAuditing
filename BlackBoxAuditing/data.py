@@ -61,7 +61,7 @@ def load_data(data):
         for i, row in enumerate(test):
           for j, correct_type in enumerate(correct_types):
             test[i][j] = correct_type(row[j])
-  return headers, train, test, response_header, features_to_ignore
+  return headers, train, test, response_header, features_to_ignore, correct_types
 
 
 def load_DRP(data):
@@ -96,7 +96,7 @@ def load_DRP(data):
 
   train, test = split_by_percent(data, train_percentage)
 
-  return headers, train, test, header, features_to_ignore
+  return headers, train, test, header, features_to_ignore, header_types
 
 
 def load_from_file(datafile, testdata=None, correct_types=None, train_percentage=2.0/3.0,
@@ -132,4 +132,4 @@ def load_from_file(datafile, testdata=None, correct_types=None, train_percentage
           for j, correct_type in enumerate(correct_types):
             test[i][j] = correct_type(row[j])
 
-  return headers, train, test, response_header, features_to_ignore
+  return headers, train, test, response_header, features_to_ignore, correct_types

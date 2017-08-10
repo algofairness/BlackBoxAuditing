@@ -4,10 +4,14 @@ from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 from codecs import open
-import os 
+import os, sys 
 
 here = os.path.abspath(os.path.dirname(__file__))
 
+if sys.version_info[0] == 3:
+    source_dir = '.'
+else:
+    source_dir = 'python2_source'
 
 class PostDevelopCommand(develop):
   """Post-installation for development mode."""
@@ -47,7 +51,7 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
   long_description = f.read()
 
 NAME ='BlackBoxAuditing'
-VERSION = '0.0.2'
+VERSION = '0.0.3'
 
 DESCRIPTION = 'Sample Implementation of Gradient Feature Auditing (GFA)'
 LONG_DESCRIPTION = long_description
@@ -63,6 +67,7 @@ CLASSIFIERS = [
   'Topic :: Software Development',
   'License :: OSI Approved :: Apache Software License',
   'Programming Language :: Python :: 2.7',
+  'Programming Language :: Python :: 3.0',
 ]
 KEYWORDS = 'algorithmic fairness'
 
@@ -73,6 +78,9 @@ PACKAGE_DATA = {
   'BlackBoxAuditing.model_factories': ['weka.path'],
 }
 INCLUDE_PACKAGE_DATA = True
+PACKAGE_DIR = {
+  '': source_dir
+}
 
 INSTALL_REQUIRES = [
   'tensorflow',
@@ -104,6 +112,7 @@ setup(
   packages=PACKAGES,
   package_data=PACKAGE_DATA,
   include_package_data=INCLUDE_PACKAGE_DATA,
+  package_dir = PACKAGE_DIR,
   install_requires=INSTALL_REQUIRES,
   cmdclass=CMDCLASS,
   entry_points=ENTRY_POINTS

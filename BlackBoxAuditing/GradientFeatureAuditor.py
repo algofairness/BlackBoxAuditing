@@ -77,9 +77,10 @@ def _audit_worker(params):
         writer.writerow(row)
 
   del repairer
-  gc.collect()
+  del rep_test
+  gc.collect() 
 
-  return repaired, (repair_level, conf_table), rep_test
+  return repaired, (repair_level, conf_table)
 
 
 class GradientFeatureAuditor(object):
@@ -118,26 +119,26 @@ class GradientFeatureAuditor(object):
 
     worker_params = []
     while repair_level <= 1.0:
-
-      call_params = (self.model_or_factory, self.headers, self.features_to_ignore, feature_to_repair, repair_level, output_file, self.kdd, self.dump_all)
+      # Always save the full repair
+      dump = self.dump_all if repair_level+repair_increase_per_step <= 1.0 else True
+    
+      call_params = (self.model_or_factory, self.headers, self.features_to_ignore, feature_to_repair, repair_level, output_file, self.kdd, dump)
       worker_params.append( call_params )
       repair_level += repair_increase_per_step
 
     if ENABLE_MULTIPROCESSING:
       pool = Pool(processes=cpu_count()/2 or 1, maxtasksperchild=1)
-      _audit_results = pool.map(_audit_worker, worker_params)
+      conf_table_tuples = pool.map(_audit_worker, worker_params)
       pool.close()
       pool.join()
       del pool
     else:
-      _audit_results = [_audit_worker(params) for params in worker_params]
-
-    conf_table_tuples = []
-    for res in _audit_results:
-      conf_table_tuples.append((res[0], res[1]))
-      self._rep_test[feature_to_repair] = res[2]
+      conf_table_tuples = [_audit_worker(params) for params in worker_params]
 
     conf_table_tuples.sort(key=lambda tuples: tuples[0])
+
+    # Store location of full repaired data
+    self._rep_test[feature_to_repair] = conf_table_tuples[-1][0]
 
     with open(output_file, "a") as f:
       f.write("GFA Audit for:{}\n".format(feature_to_repair))
@@ -160,7 +161,11 @@ class GradientFeatureAuditor(object):
 
       self.audit_feature(feature, full_filepath)
 
-    print("Audit files dumped to: {}".format(self.OUTPUT_DIR))
+    audit_msg1 = "Audit file dump set to {}".format(self.dump_all)
+    audit_msg2 = "All audit files have been saved." if self.dump_all else "Only mininal audit files have been saved."
+    print("{}: {}".format(audit_msg1, audit_msg2))
+    print("Audit files dumped to: {}.\n".format(self.OUTPUT_DIR))
+    
     return output_files
 
 

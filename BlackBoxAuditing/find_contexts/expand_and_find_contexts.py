@@ -78,15 +78,15 @@ class Rule:
 """
 Format data 
 """
-def get_data(datafile):
-  reader = csv.DictReader(open(datafile, 'r'))
-  data = []
-  for row in reader:
+def get_data(data):
+  data_dict = []
+  headers = data[0]
+  for row in data[1:]:
     row_dict = {}
-    for key in row:
-      row_dict[key] = convert_ifnum(row[key])
-    data.append(row_dict)
-  return data
+    for i, element in enumerate(row):
+      row_dict[headers[i]] = convert_ifnum(element)
+    data_dict.append(row_dict)
+  return data_dict
 
 """
 Takes rules from the original rule list and converts them to Rule objects
@@ -158,10 +158,7 @@ def get_rules_from_file(rulefile, data):
 Get the possible values that original features are mapped to in the obscured version.
 """
 
-def get_orig_to_obscured_map(original_csv, obscured_csv):
-  original_reader = csv.DictReader(open(original_csv, "r"))
-  obscured_reader = csv.DictReader(open(obscured_csv, "r"))
-
+def get_orig_to_obscured_map(orig_data, obscured_data, headers):
   # dict mapping from attribute name to orig value to list of obscured values
   # "prior_count" -> { 3.0 -> [1.0, 2.0]}
   orig_to_obscured = {}
@@ -170,10 +167,11 @@ def get_orig_to_obscured_map(original_csv, obscured_csv):
   # 2 -> {"prior_count" -> 1.0}
   rownum_to_origval = {}
 
-  for i, rowdict in enumerate(original_reader):
+  for i, row in enumerate(orig_data):
     rownum_to_origval[i] = {}
-    for attr in rowdict:
-      attr_val = convert_ifnum(rowdict[attr])
+    for j, val in enumerate(row):
+      attr = headers[j]
+      attr_val = convert_ifnum(val)
       rownum_to_origval[i][attr] = attr_val
 
       if attr not in orig_to_obscured:
@@ -181,9 +179,10 @@ def get_orig_to_obscured_map(original_csv, obscured_csv):
       if attr_val not in orig_to_obscured[attr]:
         orig_to_obscured[attr][attr_val] = []
 
-  for i, rowdict in enumerate(obscured_reader):
-    for attr in rowdict:
-      attr_val = convert_ifnum(rowdict[attr])
+  for i, row in enumerate(obscured_data):
+    for j, val in enumerate(row):
+      attr = headers[j]
+      attr_val = convert_ifnum(val)
 
       if attr not in orig_to_obscured:
         print(("Warning: can't find original attribute to match this obscured attribte:" + attr))
@@ -191,6 +190,7 @@ def get_orig_to_obscured_map(original_csv, obscured_csv):
 
       if attr_val not in orig_to_obscured[attr][orig_val]:
         orig_to_obscured[attr][orig_val].append(attr_val)
+
   return orig_to_obscured
 
 """

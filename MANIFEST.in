@@ -10,3 +10,12 @@ include BlackBoxAuditing/MATLAB_code/*
 include BlackBoxAuditing/test_data/*.csv
 include BlackBoxAuditing/test_data/*.arff
 include BlackBoxAuditing/model_factories/weka.path
+
+include python2_source
+include python2_source/BlackBoxAuditing/*.sh
+include python2_source/BlackBoxAuditing/r_plotting/*.Rmd
+include python2_source/BlackBoxAuditing/repair_tests/*.csv
+include python2_source/BlackBoxAuditing/MATLAB_code/*
+include python2_source/BlackBoxAuditing/test_data/*.csv
+include python2_source/BlackBoxAuditing/test_data/*.arff
+include python2_source/BlackBoxAuditing/model_factories/weka.path
