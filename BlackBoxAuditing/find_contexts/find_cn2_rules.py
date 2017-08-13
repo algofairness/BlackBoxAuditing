@@ -1,5 +1,5 @@
 import Orange
-import csv
+import os,csv
 
 def CN2_learner(trainfile, testfile, output_dir, beam_width, min_covered_examples, max_rule_length, influence_scores):
   print("Setting up CN2 Learner")

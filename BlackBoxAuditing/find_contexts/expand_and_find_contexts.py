@@ -158,7 +158,7 @@ def get_rules_from_file(rulefile, data):
 Get the possible values that original features are mapped to in the obscured version.
 """
 
-def get_orig_to_obscured_map(orig_data, obscured_data, headers):
+def get_orig_to_obscured_map(orig_data, obscured_data):
   # dict mapping from attribute name to orig value to list of obscured values
   # "prior_count" -> { 3.0 -> [1.0, 2.0]}
   orig_to_obscured = {}
@@ -167,6 +167,7 @@ def get_orig_to_obscured_map(orig_data, obscured_data, headers):
   # 2 -> {"prior_count" -> 1.0}
   rownum_to_origval = {}
 
+  headers = obscured_data[0]
   for i, row in enumerate(orig_data):
     rownum_to_origval[i] = {}
     for j, val in enumerate(row):
@@ -179,13 +180,14 @@ def get_orig_to_obscured_map(orig_data, obscured_data, headers):
       if attr_val not in orig_to_obscured[attr]:
         orig_to_obscured[attr][attr_val] = []
 
-  for i, row in enumerate(obscured_data):
+  for i, row in enumerate(obscured_data[1:]):
     for j, val in enumerate(row):
       attr = headers[j]
       attr_val = convert_ifnum(val)
 
       if attr not in orig_to_obscured:
         print(("Warning: can't find original attribute to match this obscured attribte:" + attr))
+      
       orig_val = rownum_to_origval[i][attr]
 
       if attr_val not in orig_to_obscured[attr][orig_val]:
@@ -291,7 +293,7 @@ def find_contexts_of_influence(rules, obscured_tag):
 Expand rules and find all contexts of influence
 """
 def expand_and_find_contexts(original_csv, obscured_csv, merged_csv, rulesfile,
-            influence_scores, obscured_tag, output_dir, by_original, epsilon):
+              influence_scores, obscured_tag, output_dir, by_original, epsilon):
   # Format data 
   data = get_data(merged_csv)
 

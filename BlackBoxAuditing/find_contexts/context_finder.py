@@ -5,13 +5,13 @@ from find_contexts.find_cn2_rules import CN2_learner
 from find_contexts.expand_and_find_contexts import expand_and_find_contexts
 
 
-def context_finder(orig_train, orig_test, obscured_test, orig_train_tab, orig_test_tab, merged_data, output_dir, influence_scores, beam_width, min_covered_examples, max_rule_length, by_original, epsilon):
+def context_finder(orig_train, orig_test, obscured_train, orig_train_tab, orig_test_tab, merged_data, obscured_tag, output_dir, influence_scores, beam_width, min_covered_examples, max_rule_length, by_original, epsilon):
   # Generate rule list for the original data using the CN2 algorithm
   rulesfile, accuracy, AUC = CN2_learner(orig_train_tab, orig_test_tab, output_dir, beam_width, min_covered_examples, max_rule_length, influence_scores)
 
   # Generate fully expanded rule list, store best expanded rule for each of the original rules,
   # and return contexts of discrimination
-  contexts_of_influence = expand_and_find_contexts(orig_test, obscured_test, merged_data, rulesfile, influence_scores, obscured_tag, output_dir, by_original, epsilon)
+  contexts_of_influence = expand_and_find_contexts(orig_train, obscured_train, merged_data, rulesfile, influence_scores, obscured_tag, output_dir, by_original, epsilon)
 
   parsed_contexts = []
   for outcome in contexts_of_influence:

@@ -196,12 +196,12 @@ class Auditor():
     audits_data = self._audits_data
     orig_train = audits_data["train"]
     orig_test = audits_data["test"]
-    obscured_test_data = audits_data["rep_test"][removed_attr]
+    obscured_train_data = audits_data["rep_test"][removed_attr]
     headers = audits_data["headers"]
     response_header = audits_data["response"]
     features_to_ignore = audits_data["ignore"]
     correct_types = audits_data["types"]
-    obscured_tag = "no-"+removed_attr
+    obscured_tag = "-no"+removed_attr
 
     # Extract influence scores
     ranks = audits_data["ranks"]
@@ -211,32 +211,32 @@ class Auditor():
       influence_scores[element[0]+obscured_tag] = 0.0
 
     # Get obscured data from file:
-    obscured_test = []
-    obscured_test_reader = csv.reader(open(obscured_test_data, 'r'))
-    for row in obscured_test_reader:
-      obscured_test.append(row)
+    obscured_train = []
+    obscured_train_reader = csv.reader(open(obscured_train_data, 'r'))
+    for row in obscured_train_reader:
+      obscured_train.append(row)
 
     # load data from audit to prepare it for context finding process
-    audit_params = (orig_train, orig_test, obscured_test, headers, response_header, features_to_ignore, correct_types, obscured_tag)
+    audit_params = (orig_train, orig_test, obscured_train, headers, response_header, features_to_ignore, correct_types, obscured_tag)
 
     orig_train_tab, orig_test_tab, merged_data = load(audit_params, output_dir)
    
     # run the context_finder 
-    context_finder(orig_train, orig_test, obscured_test, orig_train_tab, orig_test_tab, merged_data, output_dir, influence_scores, beam_width, min_covered_examples, max_rule_length, by_original, epsilon)
+    context_finder(orig_train, orig_test, obscured_train, orig_train_tab, orig_test_tab, merged_data, obscured_tag, output_dir, influence_scores, beam_width, min_covered_examples, max_rule_length, by_original, epsilon)
 
 def main():
   # format data
-  data = load_data("german")
+  data = load_data("sample")
 
   # set the auditor
   auditor = Auditor()
   auditor.model = Weka_SVM
 
   # call the auditor
-  dir_ = "~/Documents/BlackBoxAuditing/BlackBoxAuditing/try"
-  auditor(data, output_dir=dir_, features_to_audit=["duration"], dump_all=False)
+  dir_ = "try"
+  auditor(data, output_dir=dir_, dump_all=False)
 
-  auditor.find_contexts("duration",dir_)
+  auditor.find_contexts("Feature A (i)",dir_, beam_width=500, min_covered_examples=61, max_rule_length=3, by_original=True, epsilon=0.05)
 
 if __name__=="__main__":
   main()

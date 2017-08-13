@@ -20,12 +20,12 @@ def generate_meta_data(headers, response_header, features_to_ignore):
 
 def generate_tab_data(headers, types, meta_data, data, output):
   tab_data = open(output, 'w')
-  tab_data.write("\t".join(headers))
-  tab_data.write("\t".join(types))
-  tab_data.write("\t".join(meta_data))
+  tab_data.write("\t".join(headers)+'\n')
+  tab_data.write("\t".join(types)+'\n')
+  tab_data.write("\t".join(meta_data)+'\n')
 
   for row in data:
-    tab_data.write("\t".join(row))
+    tab_data.write("\t".join(str(x) for x in row)+'\n')
 
 def merge_data(orig_data, obscured_data, header, obscured_tag):
   merged_data = []
@@ -53,10 +53,10 @@ def load(audit_params, OUTPUT_DIR):
   meta_data = generate_meta_data(headers, response_header, features_to_ignore)
   
   orig_train_tab = OUTPUT_DIR+"/original_train.tab"
-  generate_tab_data = (headers, correct_types, meta_data, orig_train, orig_train_tab)
+  generate_tab_data(headers, converted_types, meta_data, orig_train, orig_train_tab)
 
   orig_test_tab = OUTPUT_DIR+"/original_test.tab"
-  generate_tab_data = (headers, correct_types, meta_data, orig_test, orig_test_tab)
+  generate_tab_data(headers, converted_types, meta_data, orig_test, orig_test_tab)
   
   # generate merged_data
   merged_data = merge_data(orig_test, obscured_test, headers, obscured_tag)
