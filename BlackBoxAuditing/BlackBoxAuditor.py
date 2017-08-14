@@ -233,9 +233,9 @@ def main():
   auditor.model = Weka_SVM
 
   # call the auditor
-  auditor(data, output_dir="output", dump_all=False)
+  auditor(data, output_dir="german_audit_output", dump_all=False)
 
-  auditor.find_contexts("age_cat",output_dir="output")
+  auditor.find_contexts("age_cat",output_dir="german_context_output")
 
 if __name__=="__main__":
   main()
