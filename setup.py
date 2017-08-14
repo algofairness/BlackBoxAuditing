@@ -51,7 +51,7 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
   long_description = f.read()
 
 NAME ='BlackBoxAuditing'
-VERSION = '0.0.3'
+VERSION = '0.0.4'
 
 DESCRIPTION = 'Sample Implementation of Gradient Feature Auditing (GFA)'
 LONG_DESCRIPTION = long_description
@@ -79,7 +79,7 @@ PACKAGE_DATA = {
 }
 INCLUDE_PACKAGE_DATA = True
 PACKAGE_DIR = {
-  '': source_dir
+  '': source_dir,
 }
 
 INSTALL_REQUIRES = [
