@@ -1,8 +1,8 @@
 # NOTE: These settings and imports should be the only things that change
 #       across experiments on different datasets and ML model types.
 
-from .disparate_impact import disparate_impact
-from .consistency_graph import *
+from BlackBoxAuditing.disparate_impact import disparate_impact
+from BlackBoxAuditing.consistency_graph import *
 
 
 from os import listdir

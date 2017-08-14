@@ -2,8 +2,8 @@
 Development script for converting audit files into graphs.
 """
 
-from .audit_reading import graph_audits, graph_audit, rank_audit_files
-from .measurements import BCR, accuracy
+from BlackBoxAuditing.audit_reading import graph_audits, graph_audit, rank_audit_files
+from BlackBoxAuditing.measurements import BCR, accuracy
 
 from os import listdir
 from os.path import isfile, join

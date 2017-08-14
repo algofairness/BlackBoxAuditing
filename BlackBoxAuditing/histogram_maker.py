@@ -2,8 +2,8 @@
 #       across experiments on different datasets
 # TODO: Make this file generalizable to all datasets
 
-from .experiments.arrests.load_data import load_data
-from .repairers.CategoricRepairer import Repairer
+from BlackBoxAuditing.experiments.arrests.load_data import load_data
+from BlackBoxAuditing.repairers.CategoricRepairer import Repairer
 import numpy as np
 import os
 

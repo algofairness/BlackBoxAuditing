@@ -1,11 +1,11 @@
-from model_factories import Weka_SVM, Weka_DecisionTree, TensorFlow
-from loggers import vprint
-from GradientFeatureAuditor import GradientFeatureAuditor
-from audit_reading import graph_audit, graph_audits, rank_audit_files, group_audit_ranks
-from consistency_graph import graph_prediction_consistency
-from measurements import get_conf_matrix, accuracy, BCR
-from find_contexts import context_finder, load
-from data import load_data, load_from_file
+from BlackBoxAuditing.model_factories import Weka_SVM, Weka_DecisionTree, TensorFlow
+from BlackBoxAuditing.loggers import vprint
+from BlackBoxAuditing.GradientFeatureAuditor import GradientFeatureAuditor
+from BlackBoxAuditing.audit_reading import graph_audit, graph_audits, rank_audit_files, group_audit_ranks
+from BlackBoxAuditing.consistency_graph import graph_prediction_consistency
+from BlackBoxAuditing.measurements import get_conf_matrix, accuracy, BCR
+#from BlackBoxAuditing.find_contexts import context_finder, load
+from BlackBoxAuditing.data import load_data, load_from_file
 from datetime import datetime
 import csv
 import os
@@ -233,10 +233,8 @@ def main():
   auditor.model = Weka_SVM
 
   # call the auditor
-  dir_ = "try"
-  auditor(data, output_dir=dir_, dump_all=False)
+  auditor(data, output_dir="output", dump_all=False)
 
-  auditor.find_contexts("Feature A (i)",dir_, beam_width=500, min_covered_examples=61, max_rule_length=3, by_original=True, epsilon=0.05)
 
 if __name__=="__main__":
   main()

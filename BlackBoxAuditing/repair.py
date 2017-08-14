@@ -1,7 +1,7 @@
 import argparse
 import csv
 
-from .repairers.GeneralRepairer import Repairer
+from BlackBoxAuditing.repairers.GeneralRepairer import Repairer
 
 def main():
   parser = argparse.ArgumentParser(description="Repair a CSV file.")

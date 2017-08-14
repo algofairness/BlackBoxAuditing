@@ -1,4 +1,4 @@
-from model_factories.AbstractWekaModelFactory import AbstractWekaModelFactory, AbstractWekaModelVisitor, TMP_DIR
+from BlackBoxAuditing.model_factories.AbstractWekaModelFactory import AbstractWekaModelFactory, AbstractWekaModelVisitor, TMP_DIR
 
 import os
 

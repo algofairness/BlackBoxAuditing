@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
-from model_factories.AbstractModelFactory import AbstractModelFactory
-from model_factories.AbstractModelVisitor import AbstractModelVisitor
+from BlackBoxAuditing.model_factories.AbstractModelFactory import AbstractModelFactory
+from BlackBoxAuditing.model_factories.AbstractModelVisitor import AbstractModelVisitor
 
 from collections import OrderedDict
 import subprocess
