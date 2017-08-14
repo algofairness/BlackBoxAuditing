@@ -4,7 +4,7 @@ from BlackBoxAuditing.GradientFeatureAuditor import GradientFeatureAuditor
 from BlackBoxAuditing.audit_reading import graph_audit, graph_audits, rank_audit_files, group_audit_ranks
 from BlackBoxAuditing.consistency_graph import graph_prediction_consistency
 from BlackBoxAuditing.measurements import get_conf_matrix, accuracy, BCR
-#from BlackBoxAuditing.find_contexts import context_finder, load
+from BlackBoxAuditing.find_contexts import context_finder, load
 from BlackBoxAuditing.data import load_data, load_from_file
 from datetime import datetime
 import csv
@@ -226,7 +226,7 @@ class Auditor():
 
 def main():
   # format data
-  data = load_data("sample")
+  data = load_data("german")
 
   # set the auditor
   auditor = Auditor()
@@ -235,6 +235,7 @@ def main():
   # call the auditor
   auditor(data, output_dir="output", dump_all=False)
 
+  auditor.find_contexts("age_cat",output_dir="output")
 
 if __name__=="__main__":
   main()

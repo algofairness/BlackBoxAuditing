@@ -16,35 +16,33 @@ def context_finder(orig_train, orig_test, obscured_train, orig_train_tab, orig_t
   parsed_contexts = []
   for outcome in contexts_of_influence:
     list_of_contexts = contexts_of_influence[outcome]
-    contexts = " OR \n".join([" AND ".join(context) for context in list_of_contexts])
+    contexts = '\t'+" OR \n\t".join([" AND ".join(context) for context in list_of_contexts])
     parsed_contexts.append((outcome, contexts))
-    summary_file.write(outcome +': \n')
-    summary_file.write(contexts + '\n\n')
 
   # Store summary results:
-  summary_info = ["CN2 Settings Used:",
-                  "rules found for {}".format(original_train_csv),
+  summary_info = ["\nCN2 Settings Used:",
+                  "rules found for {}".format(orig_train_tab),
                   "beam_width: {}".format(beam_width),
                   "min_covered_examples: {}".format(min_covered_examples),
                   "max_rule_length: {}\n".format(max_rule_length),
                   "CN2 Model Evaluation:",
-                  "Model tested on {}".format(original_test_csv),
+                  "Model tested on {}".format(orig_test_tab),
                   "Accuracy: {}".format(accuracy),
                   "AUC: {}\n".format(AUC)]
 
   # Print summary results
   for info_line in summary_info:
-    print(summary_info)
+    print(info_line)
 
    
-  print("Contexts of influence found:")
+  print("\nContexts of influence found:")
   for parsed_context in parsed_contexts:
     print(parsed_context[0])
-    print(parsed_context[1])
+    print(parsed_context[1]+'\n\n')
 
     
   # Write results to summary file:
-  summary = "{}/summary.txt".format(output_dir)
+  summary = "{}/contexts.summary".format(output_dir)
   summary_file = open(summary, 'w')
 
   for info_line in summary_info:
