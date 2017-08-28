@@ -51,6 +51,8 @@ auditor.model = Weka_SVM
 # call the auditor with the data
 auditor(data, output_dir="german_audit_output")
 
+# find contexts of discrimination in dataset
+auditor.find_contexts("age_cat", output_dir="german_context_output")
 
 """
 Using your own dataset
@@ -65,6 +67,10 @@ auditor.model = Weka_DecisionTree
 
 # call the auditor with the data
 auditor(data, output_dir="german_audit_output")
+
+# find contexts of discrimination in dataset
+auditor.find_contexts("age_cat", output_dir="german_context_output")
+
 ```
 
 ### More Advanced Script Options
@@ -135,7 +141,21 @@ auditor(data, output_dir=None, dump_all=False, features_to_audit=None)
 
 #### Finding Contexts of Influence
 
-After the auditor has been called 'auditor(data)' and a full audit has been completed (i.e. every feature has been audited), 
+`find_contexts` uses a CN2 rule learner to learn a rule list for the data and then uses both the rule list and information from a full audit to extract groups of features that have significant influence on the response label in the context of a given feature of interest. 
+ 
+Completing a full audit is required before calling find_contexts. Calling find_contexts on a partial audit will raise a `RuntimeError`. Refer to the following function call and its defaults:
+
+```
+find_contexts(removed_attr, output_dir, beam_width=10, min_covered_examples=1, max_rule_length=5, by_original=True, epsilon=0.05)
+```
+
+* *removed_attr*: name of the feature which the contexts of influence will be found with respect to. Audited data obscured with respect to this feature will be used. 
+* *output_dir*: name of the directory that the context results will be dumped to.
+* *beam_width*: the number of solution streams considered at one time when searching for rules in the CN2 algorithm.
+* *min_covered_examples*: the minimum number of examples a found rule must cover to be considered as an addition to the rule list.
+* *max_rule_length*: the maximum number of conditions that found rules may combine.
+* *by_original*: consider the best expanded rule within epsilon of original quality (True) or best quality of expanded rules (False).
+* *epsilon*: Number within which we consider best expanded rule of the original quality.
 
 ## Testing Code Changes
 
@@ -150,6 +170,36 @@ Note: if a test requires reading data from the `test_data` directory, it should 
 ## Implementing a New Machine-Learning Method
 
 The best way to create a model would be to use a ModelFactory and ModelVisitors. A ModelVisitor should be thought of as a wrapper that knows how to load a machine-learning model of a given type and communicate with that model file in order to output predicted values of some test dataset. A ModelFactory simply knows how to "build" a ModelVisitor based on some provided training data. Check out the "Abstract" files in the `sample_experiment` directory for outlines of what these two classes should do; similarly, check out the "SVM_ModelFactory" files in the `sample_experiment` subdirectory for examples that use WEKA to create model files and produce predictions.
+
+#For local developers
+
+## Upload a new version of BBA
+
+The following details instructions for uploading an updated version of BBA to PyPi. If you do not have twine and setuptools installs, install them with the following commands:
+
+```
+pip install twine
+pip install -U pip setuptools
+```
+Once all changes to the code have been tested, update the version number of BBA in `BlackBoxAuditing/setup.py` by modifying the variable `VERSION`.
+
+If any non-python files were added to BBA that need to be included in the updated distribution, be sure to include them in the file `BlackBoxAuditing/MANIFEST.in`. Also update the `BlackBoxAuditing/requirements.txt` if necessary.
+
+To create the source distribution of the project, run the following command:
+
+```
+python3 setup.py sdist
+```
+
+This will add the distribution to a directory `dist/`. Once the source distribution has been created, upload it PyPi using twine:
+
+```
+twine upload dist/BlackBoxAuditing-0.x.y.tar.gz
+```
+
+where 0.x.y is the version number of the updated project. This will prompt the user to input the username and password of the pypi account under which BBA is registered.
+
+For more information and details for distributing a python project with twine, visit https://packaging.python.org/tutorials/distributing-packages/.
 
 # Sources
 

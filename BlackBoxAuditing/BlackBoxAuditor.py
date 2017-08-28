@@ -27,7 +27,7 @@ class Auditor():
   
     headers, train_set, test_set, response_header, features_to_ignore, correct_types = data
 
-    self._audits_data = {"headers":headers, "train":train_set, "test":test_set, "response":response_header, "ignore":features_to_ignore, "types":correct_types}
+    self._audits_data = {"headers":headers, "train":train_set, "test":test_set, "response":response_header, "ignore":features_to_ignore, "types":correct_types, "full_audit":True if features_to_audit is None else False}
   
     """
      ModelFactories require a `build` method that accepts some training data
@@ -188,12 +188,13 @@ class Auditor():
       vprint("Summary file written to: {}\n".format(summary_file), self.verbose)
 
   def find_contexts(self, removed_attr, output_dir, beam_width=10, min_covered_examples=1, max_rule_length=5, by_original=True, epsilon=0.05):
-    # Create directory to dump results
-    if not os.path.exists(output_dir):
-      os.makedirs(output_dir)
-
     # retrive data from the audit
     audits_data = self._audits_data
+    full_audit = audits_data["full_audit"]
+    # Make sure a full audit was completed
+    if not full_audit:
+      raise RuntimeError("Only partial audit completed. Must run a full audit to call find_contexts.")
+
     orig_train = audits_data["train"]
     orig_test = audits_data["test"]
     obscured_test_data = audits_data["rep_test"][removed_attr]
@@ -202,6 +203,10 @@ class Auditor():
     features_to_ignore = audits_data["ignore"]
     correct_types = audits_data["types"]
     obscured_tag = "-no"+removed_attr
+    
+    # Create directory to dump results
+    if not os.path.exists(output_dir):
+      os.makedirs(output_dir)
 
     # Extract influence scores
     ranks = audits_data["ranks"]

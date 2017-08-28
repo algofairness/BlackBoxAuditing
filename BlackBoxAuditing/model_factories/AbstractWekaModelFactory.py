@@ -21,7 +21,9 @@ TMP_DIR = "tmp/"
 if not os.path.exists(TMP_DIR):
   os.makedirs(TMP_DIR)
 
-class AbstractWekaModelFactory(AbstractModelFactory, metaclass=ABCMeta):
+class AbstractWekaModelFactory(AbstractModelFactory):
+  __metaclass__ = ABCMeta
+
   @abstractmethod
   def __init__(self, *args, **kwargs):
     super(AbstractWekaModelFactory, self).__init__(*args,**kwargs)
