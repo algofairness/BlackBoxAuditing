@@ -1,8 +1,8 @@
 import argparse
 import time
 import os
-from find_contexts.find_cn2_rules import CN2_learner
-from find_contexts.expand_and_find_contexts import expand_and_find_contexts
+from BlackBoxAuditing.find_contexts.find_cn2_rules import CN2_learner
+from BlackBoxAuditing.find_contexts.expand_and_find_contexts import expand_and_find_contexts
 
 
 def context_finder(orig_train, orig_test, obscured_train, orig_train_tab, orig_test_tab, merged_data, obscured_tag, output_dir, influence_scores, beam_width, min_covered_examples, max_rule_length, by_original, epsilon):
