@@ -13,45 +13,11 @@ if sys.version_info[0] == 3:
 else:
     source_dir = 'python2_source'
 
-class PostDevelopCommand(develop):
-  """Post-installation for development mode."""
-  def run(self):
-    # Find path to weka.jar
-    def find(name, path):
-      for root, dirs, files in os.walk(path):
-        if name in files:
-          return os.path.join(root, name)
- 
-    # Update WEKA_PATH
-    WEKA_PATH = find("weka.jar",'/')
-    file_location = 'BlackBoxAuditing/model_factories/weka.path'
-    with open(os.path.join(here, file_location), 'w') as f:
-      f.write(WEKA_PATH)
-
-    develop.run(self)
-
-class PostInstallCommand(install):
-  """Post-installation for installation mode."""
-  def run(self):
-    # Find path to weka.jar
-    def find(name, path):
-      for root, dirs, files in os.walk(path):
-        if name in files:
-          return os.path.join(root, name)
-
-    # Update WEKA_PATH
-    WEKA_PATH = find("weka.jar",'/')
-    file_location = 'BlackBoxAuditing/model_factories/weka.path'
-    with open(os.path.join(here, file_location), 'w') as f:
-      f.write(WEKA_PATH)    
-
-    install.run(self)
-
 with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
   long_description = f.read()
 
 NAME ='BlackBoxAuditing'
-VERSION = '0.1.6'
+VERSION = '0.1.13'
 
 DESCRIPTION = 'Sample Implementation of Gradient Feature Auditing (GFA)'
 LONG_DESCRIPTION = long_description
@@ -73,9 +39,8 @@ KEYWORDS = 'algorithmic fairness'
 
 PACKAGES = find_packages()
 PACKAGE_DATA = {
-  'BlackBoxAuditing': ['*.sh','r_plotting/*.Rmd', 'repair_tests/*.csv', 'MATLAB_code/*'],
-  'BlackBoxAuditing.test_data': ['*.csv', '*.arff'],
-  'BlackBoxAuditing.model_factories': ['weka.path'],
+  'BlackBoxAuditing': ['*.sh','r_plotting/*.Rmd', 'repair_tests/*.csv', 'MATLAB_code/*', 'weka.jar'],
+  'BlackBoxAuditing.test_data': ['*.csv', '*.arff']
 }
 INCLUDE_PACKAGE_DATA = True
 PACKAGE_DIR = {
@@ -84,11 +49,10 @@ PACKAGE_DIR = {
 
 INSTALL_REQUIRES = [
   'tensorflow',
-  'weka']
+  'weka',
+  'Orange3']
 
 CMDCLASS = {
-  'develop': PostDevelopCommand,
-  'install': PostInstallCommand,
 }
 
 ENTRY_POINTS = {
