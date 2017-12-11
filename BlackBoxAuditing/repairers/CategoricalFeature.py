@@ -40,7 +40,9 @@ class CategoricalFeature:
     bin_list = list(self.bin_data.items())
     bin_index_dict_reverse = self.bin_index_dict_reverse
     k = self.num_bins
-    num_edges = 2*k + 1 + k*k + k # the number of edges that will be added to the graph
+    total_items = 0
+    for i, amt in bin_list:
+        total_items += amt
     DG.add_node('s')
     DG.add_node('t')
     for i in range(0, k): #lefthand side nodes have capacity = number of observations in category i
@@ -53,15 +55,15 @@ class CategoricalFeature:
       DG.add_edge(i, 't', capacity=desired_count, weight=0)
     #Add special node to hold overflow
     DG.add_node(2*k)
-    DG.add_edge(2*k, 't', capacity=num_edges, weight=0)
+    DG.add_edge(2*k, 't', capacity=total_items, weight=0)
     for i in range(0, k):
       for j in range(k,2*k): #for each edge from a lefthand side node to a righhand side node:
         if (i+k)==j:  #IF they represent the same category, the edge weight is 0
-            DG.add_edge(i, j, capacity=num_edges, weight=0)
+            DG.add_edge(i, j, weight=0)
         else: #IF they represent different categories, the edge weight is 1
-          DG.add_edge(i, j, capacity=num_edges, weight=1)
+          DG.add_edge(i, j, weight=1)
       #THIS IS THE OVERFLOW NODE!!
-      DG.add_edge(i, 2*k, capacity=num_edges, weight=2)
+      DG.add_edge(i, 2*k, weight=2)
     return DG
 
   def repair(self, DG): #new_feature = repair_feature(feature, create_graph(feature))
@@ -88,7 +90,7 @@ class CategoricalFeature:
           repair_bin_dict[q] = group #otherwise key that category index and set it's value as the group list in that category
     new_feature = CategoricalFeature(repair_data) #initialize our new_feature (repaired feature)
     new_feature.bin_fulldata = repair_bin_dict
-    return [new_feature,overflow]
+    return new_feature, overflow
 
 
 def test():
@@ -97,7 +99,7 @@ def test():
   desired_count_dict = {"A": 1, "B": 2, "C": 2, "D": 3}
   desired_category_count = lambda category : desired_count_dict[category]
   DG = test_feature.create_graph(desired_category_count)
-  [new_feature, overflow] = test_feature.repair(DG)
+  new_feature, overflow = test_feature.repair(DG)
   edges = [(0, 8, {'weight': 2}), (0, 4, {'weight': 0}), (0, 5, {'weight': 1}), (0, 6, {'weight': 1}), (0, 7, {'weight': 1}), (1, 8, {'weight': 2}), (1, 4, {'weight': 1}), (1, 5, {'weight': 0}), (1, 6, {'weight': 1}), (1, 7, {'weight': 1}), (2, 8, {'weight': 2}), (2, 4, {'weight': 1}), (2, 5, {'weight': 1}), (2, 6, {'weight': 0}), (2, 7, {'weight': 1}), (3, 8, {'weight': 2}), (3, 4, {'weight': 1}), (3, 5, {'weight': 1}), (3, 6, {'weight': 1}), (3, 7, {'weight': 0}), (4, 't', {'capacity': 1, 'weight': 0}), (5, 't', {'capacity': 2, 'weight': 0}), (6, 't', {'capacity': 2, 'weight': 0}), (7, 't', {'capacity': 3, 'weight': 0}), (8, 't', {'weight': 0}), ('s', 0, {'capacity': 3, 'weight': 0}), ('s', 1, {'capacity': 3, 'weight': 0}), ('s', 2, {'capacity': 3, 'weight': 0}), ('s', 3, {'capacity': 3, 'weight': 0})]
   
   new_data = [0, 'B', 'C', 'D', 'D', 'D', 'C', 'B', 0, 0, 0, 'A'] 
