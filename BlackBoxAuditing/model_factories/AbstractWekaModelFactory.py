@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from BlackBoxAuditing.model_factories.AbstractModelFactory import AbstractModelFactory
 from BlackBoxAuditing.model_factories.AbstractModelVisitor import AbstractModelVisitor
-
 from collections import OrderedDict
 import subprocess
 import io
@@ -10,11 +9,10 @@ import os
 import tempfile
 
 here = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(here, "weka.path"), 'r') as f:
-  WEKA_PATH = f.readline()
+WEKA_PATH = "/".join(here.split("/")[:-1]) + "/weka.jar" # point to weka.jar in parent directory
 
 if not os.path.isfile(WEKA_PATH):
-  raise Exception("WEKA_PATH is not properly set!")
+    raise Exception("WEKA_PATH is not properly set. File does not exist: "+ WEKA_PATH)
 
 # Create the TMP_DIR if it does not already exist.
 TMP_DIR = "tmp/"

@@ -12,7 +12,6 @@ This code is licensed under an [Apache 2.0](https://www.apache.org/licenses/LICE
 2. Install python-matplotlib if you do not already have it (https://matplotlib.org/users/installing.html).
 4. Install BlackBoxAuditing (`pip3 install BlackBoxAuditing`)
 4. Install a recent version of Java ([if you're on OS X, you'll want to go here](http://www.oracle.com/technetwork/java/javase/downloads/jdk9-downloads-3848520.html)).
->>>>>>> 086f529c0d82380416b5929931b132d722f3a503
 
 Many of the ModelVisitors rely on [Weka](http://www.cs.waikato.ac.nz/ml/weka/). Similarly, we use [TensorFlow](https://www.tensorflow.org/) for network-based machine learning. Any Python libraries that need to be installed are included in the `requirements.txt` file. Weka and Tensorflow should be downloaded during installation, but here's the download links just in case. 
 
