@@ -1,4 +1,5 @@
 import networkx as nx
+from networkx.algorithms.flow import (preflow_push, edmonds_karp, shortest_augmenting_path)
 from collections import defaultdict
 import random
 
@@ -39,27 +40,28 @@ class CategoricalFeature:
     bin_list = list(self.bin_data.items())
     bin_index_dict_reverse = self.bin_index_dict_reverse
     k = self.num_bins
+    num_edges = 2*k + 1 + k*k + k # the number of edges that will be added to the graph
     DG.add_node('s')
     DG.add_node('t')
     for i in range(0, k): #lefthand side nodes have capacity = number of observations in category i
       DG.add_node(i)
-      DG.add_edge('s', i, {'capacity' : bin_list[i][1], 'weight' : 0})
+      DG.add_edge('s', i, capacity=bin_list[i][1], weight=0)
     for i in range(k, 2*k): #righthand side nodes have capacity = DESIRED number of observations in category i
       DG.add_node(i)
       cat = bin_index_dict_reverse[i-k]
       desired_count = count_generator(cat)
-      DG.add_edge(i, 't', {'capacity' : desired_count, 'weight' : 0})
+      DG.add_edge(i, 't', capacity=desired_count, weight=0)
     #Add special node to hold overflow
     DG.add_node(2*k)
-    DG.add_edge(2*k, 't', {'weight' : 0})
+    DG.add_edge(2*k, 't', capacity=num_edges, weight=0)
     for i in range(0, k):
       for j in range(k,2*k): #for each edge from a lefthand side node to a righhand side node:
         if (i+k)==j:  #IF they represent the same category, the edge weight is 0
-          DG.add_edge(i, j, {'weight' : 0})
+            DG.add_edge(i, j, capacity=num_edges, weight=0)
         else: #IF they represent different categories, the edge weight is 1
-          DG.add_edge(i, j, {'weight' : 1})
+          DG.add_edge(i, j, capacity=num_edges, weight=1)
       #THIS IS THE OVERFLOW NODE!!
-      DG.add_edge(i, 2*k, {'weight' : 2})
+      DG.add_edge(i, 2*k, capacity=num_edges, weight=2)
     return DG
 
   def repair(self, DG): #new_feature = repair_feature(feature, create_graph(feature))

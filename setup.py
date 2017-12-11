@@ -17,7 +17,7 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
   long_description = f.read()
 
 NAME ='BlackBoxAuditing'
-VERSION = '0.1.13'
+VERSION = '0.1.23'
 
 DESCRIPTION = 'Sample Implementation of Gradient Feature Auditing (GFA)'
 LONG_DESCRIPTION = long_description
@@ -49,7 +49,8 @@ PACKAGE_DIR = {
 
 INSTALL_REQUIRES = [
   'tensorflow',
-  'weka',
+  'networkx',
+  'matplotlib',
   'Orange3']
 
 CMDCLASS = {
