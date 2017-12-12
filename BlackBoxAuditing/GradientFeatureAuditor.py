@@ -1,8 +1,13 @@
-from BlackBoxAuditing.repairers.GeneralRepairer import Repairer
-from BlackBoxAuditing.loggers import vprint
-from BlackBoxAuditing.measurements import get_conf_matrix
-from BlackBoxAuditing.model_factories.AbstractModelFactory import AbstractModelFactory
-from BlackBoxAuditing.model_factories.AbstractModelVisitor import AbstractModelVisitor
+#from BlackBoxAuditing.repairers.GeneralRepairer import Repairer
+#from BlackBoxAuditing.loggers import vprint
+#from BlackBoxAuditing.measurements import get_conf_matrix
+#from BlackBoxAuditing.model_factories.AbstractModelFactory import AbstractModelFactory
+#from BlackBoxAuditing.model_factories.AbstractModelVisitor import AbstractModelVisitor
+from repairers.GeneralRepairer import Repairer
+from loggers import vprint
+from measurements import get_conf_matrix
+from model_factories.AbstractModelFactory import AbstractModelFactory
+from model_factories.AbstractModelVisitor import AbstractModelVisitor
 
 from multiprocessing import Pool, cpu_count
 import csv
@@ -40,11 +45,11 @@ def _audit_worker(params):
 
     # Log that this specific model was used for this repair level.
     with open(output_file + ".models.names.txt", "a") as f:
-      f.write("{}: {}\n".format(repair_level, model.model_name))
+      f.write("{0:.1f}: {}\n".format(repair_level, model.model_name))
 
     # Save the repaired version of the data if specified.
     if SAVE_REPAIRED_DATA:
-      with open(output_file + ".train.repaired_{}.data".format(repair_level), "w") as f:
+      with open(output_file + ".train.repaired_{0:.1f}.data".format(repair_level), "w") as f:
         writer = csv.writer(f)
         for row in [headers]+rep_train:
           writer.writerow(row)
@@ -59,16 +64,16 @@ def _audit_worker(params):
   
   # Save the repaired version of the data if specified.
   if SAVE_REPAIRED_DATA:
-    with open(output_file + ".test.repaired_{}.data".format(repair_level), "w") as f:
+    with open(output_file + ".test.repaired_{0:.1f}.data".format(repair_level), "w") as f:
       writer = csv.writer(f)
       for row in [headers]+rep_test:
         writer.writerow(row)
   
-  repaired = output_file+".test.repaired_{}.data".format(repair_level)
+  repaired = output_file+".test.repaired_{0:.1f}.data".format(repair_level)
 
   # Save the prediction_tuples and the original values of the features to repair.
   if SAVE_PREDICTION_DETAILS:
-    with open(output_file + ".repaired_{}.predictions".format(repair_level), "w") as f:
+    with open(output_file + ".repaired_{0:.1f}.predictions".format(repair_level), "w") as f:
       writer = csv.writer(f)
       file_headers = ["Pre-Repaired Feature", "Response", "Prediction"]
       writer.writerow(file_headers)
@@ -147,6 +152,7 @@ class GradientFeatureAuditor(object):
         f.write("{}:{}\n".format(repair_level, json_conf_table))
 
   def audit(self, verbose=False):
+
     features_to_audit = [h for i, h in enumerate(self.headers) if i not in self.features_to_ignore] if self.features_to_audit is None else self.features_to_audit
 
     output_files = []
@@ -165,7 +171,7 @@ class GradientFeatureAuditor(object):
     audit_msg2 = "All audit files have been saved." if self.dump_all else "Only mininal audit files have been saved."
     print("{}: {}".format(audit_msg1, audit_msg2))
     print("Audit files dumped to: {}.\n".format(self.OUTPUT_DIR))
-    
+   
     return output_files
 
 

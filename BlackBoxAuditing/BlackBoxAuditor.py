@@ -1,11 +1,19 @@
-from BlackBoxAuditing.model_factories import Weka_SVM, Weka_DecisionTree, TensorFlow
-from BlackBoxAuditing.loggers import vprint
-from BlackBoxAuditing.GradientFeatureAuditor import GradientFeatureAuditor
-from BlackBoxAuditing.audit_reading import graph_audit, graph_audits, rank_audit_files, group_audit_ranks
-from BlackBoxAuditing.consistency_graph import graph_prediction_consistency
-from BlackBoxAuditing.measurements import get_conf_matrix, accuracy, BCR
-from BlackBoxAuditing.find_contexts import context_finder, load
-from BlackBoxAuditing.data import load_data, load_from_file
+#from BlackBoxAuditing.model_factories import Weka_SVM, Weka_DecisionTree, TensorFlow
+#from BlackBoxAuditing.loggers import vprint
+#from BlackBoxAuditing.GradientFeatureAuditor import GradientFeatureAuditor
+#from BlackBoxAuditing.audit_reading import graph_audit, graph_audits, rank_audit_files, group_audit_ranks
+#from BlackBoxAuditing.consistency_graph import graph_prediction_consistency
+#from BlackBoxAuditing.measurements import get_conf_matrix, accuracy, BCR
+#from BlackBoxAuditing.find_contexts import context_finder, load
+#from BlackBoxAuditing.data import load_data, load_from_file
+from model_factories import Weka_SVM, Weka_DecisionTree, TensorFlow
+from loggers import vprint
+from GradientFeatureAuditor import GradientFeatureAuditor
+from audit_reading import graph_audit, graph_audits, rank_audit_files, group_audit_ranks
+from consistency_graph import graph_prediction_consistency
+from measurements import get_conf_matrix, accuracy, BCR
+from find_contexts import context_finder, load
+from data import load_data, load_from_file
 from datetime import datetime
 import csv
 import os
@@ -90,7 +98,7 @@ class Auditor():
     ranked_features = []
     for measurer in self.measurers:
       vprint("Ranking audit files by {}.".format(measurer.__name__),self.verbose)
-      ranked_graph_filename = "{}/{}.png".format(auditor.OUTPUT_DIR, measurer.__name__)
+      #ranked_graph_filename = "{}/{}.png".format(auditor.OUTPUT_DIR, measurer.__name__)
       ranks = rank_audit_files(audit_filenames, measurer)
       vprint("\t{}".format(ranks), self.verbose)
       ranked_features.append( (measurer, ranks) )
@@ -160,10 +168,7 @@ class Auditor():
           for response, guess in test_pred_tuples:
             writer.writerow([response, guess])
  
-      for measurer in self.measures:
-         graph_audits(audit_filenames, measurer, ranked_graph_filename)     
- 
-      # Graph ://github.com/algofairness/BlackBoxAuditing.gitthe audit files.
+      # Graph the audit files.
       vprint("Graphing audit files.",self.verbose)
       for audit_filename in audit_filenames:
         audit_image_filename = audit_filename + ".png"
@@ -174,18 +179,22 @@ class Auditor():
       output_image = auditor.OUTPUT_DIR + "/similarity_to_original_predictions.png"
       graph_prediction_consistency(auditor.OUTPUT_DIR, output_image)
   
-      # Store a summary of this experiment to file.
-      summary_file = "{}/summary.txt".format(auditor.OUTPUT_DIR)
-      with open(summary_file, "w") as f:
-        for line in summary:
-          f.write(line+'\n')
+    for measurer in self.measurers:
+       ranked_graph_filename = "{}/{}.png".format(auditor.OUTPUT_DIR, measurer.__name__)
+       graph_audits(audit_filenames, measurer, ranked_graph_filename)     
+ 
+    # Store a summary of this experiment to file.
+    summary_file = "{}/summary.txt".format(auditor.OUTPUT_DIR)
+    with open(summary_file, "w") as f:
+      for line in summary:
+        f.write(line+'\n')
   
-        for ranker, ranks in ranked_features:
-          f.write("Ranked Features by {}: {}\n".format(ranker.__name__, ranks))
-          groups = group_audit_ranks(audit_filenames, ranker)
-          f.write("\tApprox. Trend Groups: {}\n".format(groups))
+      for ranker, ranks in ranked_features:
+        f.write("Ranked Features by {}: {}\n".format(ranker.__name__, ranks))
+        groups = group_audit_ranks(audit_filenames, ranker)
+        f.write("\tApprox. Trend Groups: {}\n".format(groups))
   
-      vprint("Summary file written to: {}\n".format(summary_file), self.verbose)
+    vprint("Summary file written to: {}\n".format(summary_file), self.verbose)
 
   def find_contexts(self, removed_attr, output_dir, beam_width=10, min_covered_examples=1, max_rule_length=5, by_original=True, epsilon=0.05):
     # retrive data from the audit
@@ -238,7 +247,7 @@ def main():
   auditor.model = Weka_SVM
 
   # call the auditor
-  auditor(data, output_dir="german_audit_output", dump_all=False)
+  auditor(data, output_dir="german_audit_output", dump_all=False) 
 
   auditor.find_contexts("age_cat",output_dir="german_context_output")
 
