@@ -19,7 +19,15 @@ Many of the ModelVisitors rely on [Weka](http://www.cs.waikato.ac.nz/ml/weka/). 
 
 # Certifying and Removing Disparate Impact
 
-After installing BlackBoxAuditing, you can run the data repair described in [Certifying and Removing Disparate Impact](http://arxiv.org/abs/1412.3756) using the command `BlackBoxAuditing-repair` on a terminal which will tell you the arguments the script takes.
+After installing BlackBoxAuditing, you can run the data repair described in [Certifying and Removing Disparate Impact](http://arxiv.org/abs/1412.3756) using the command `BlackBoxAuditing-repair` on a terminal which will tell you the arguments the script takes. The required arguments are input_csv, output_csv, repair_level, and kdd. There is a require flag -p (--protected) which designates the protected feature(s). An optional flag -i (--ignored) designates features to ignore during the repair process. 
+
+```
+# repair german.csv with respect to "age" at repair level 0.5, ignoring "occupation"."
+BlackBoxAuditing-repair german.csv repaired_german.csv 0.5 True -p "age" -i "occupation"
+
+# repairer your_data.csv with respect to "feat1" and "feat2" at repair level 0.8
+BlackBoxAuditing-repair your_data.csv repaired_data.csv 0.8 False -p "feat1" "feat2"
+```
 
 # Black Box Auditing
 

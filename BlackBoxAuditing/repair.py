@@ -61,7 +61,7 @@ def main():
     # Repair the input data and write it to a CSV.
     data = repairer.repair(data)
 
-  with open(args.output_csv, "wb") as f:
+  with open(args.output_csv, "w") as f:
     writer = csv.writer(f)
     writer.writerow(headers)
     for row in data:
