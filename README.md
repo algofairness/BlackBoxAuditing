@@ -25,7 +25,7 @@ After installing BlackBoxAuditing, you can run the data repair described in [Cer
 # repair german.csv with respect to "age" at repair level 0.5, ignoring "occupation".
 BlackBoxAuditing-repair german.csv repaired_german.csv 0.5 True -p "age" -i "occupation"
 
-# repairer your_data.csv with respect to "feat1" and "feat2" at repair level 0.8.
+# repair your_data.csv with respect to "feat1" and "feat2" at repair level 0.8.
 BlackBoxAuditing-repair your_data.csv repaired_data.csv 0.8 False -p "feat1" "feat2"
 ```
 
