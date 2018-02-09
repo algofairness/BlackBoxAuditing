@@ -1,4 +1,4 @@
-from BlackBoxAuditing.model_factories import Weka_SVM, Weka_DecisionTree, TensorFlow
+from BlackBoxAuditing.model_factories import SVM, DecisionTree, NeuralNetwork
 from BlackBoxAuditing.loggers import vprint
 from BlackBoxAuditing.GradientFeatureAuditor import GradientFeatureAuditor
 from BlackBoxAuditing.audit_reading import graph_audit, graph_audits, rank_audit_files, group_audit_ranks
@@ -18,7 +18,7 @@ class Auditor():
     self.REPAIR_STEPS = 10
     self.RETRAIN_MODEL_PER_REPAIR = False
     self.WRITE_ORIGINAL_PREDICTIONS = True  
-    self.ModelFactory = Weka_SVM
+    self.ModelFactory = SVM
     self.kdd = False
     self._audits_data = {}
 
@@ -236,7 +236,7 @@ def main():
 
   # set the auditor
   auditor = Auditor()
-  auditor.model = Weka_SVM
+  auditor.model = SVM
 
   # call the auditor
   auditor(data, output_dir="german_audit_output", dump_all=False) 

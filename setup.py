@@ -16,8 +16,8 @@ else:
 with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
   long_description = f.read()
 
-NAME ='BlackBoxAuditing'
-VERSION = '0.1.26'
+NAME ='blackboxauditing'
+VERSION = '0.1.27'
 
 DESCRIPTION = 'Sample Implementation of Gradient Feature Auditing (GFA)'
 LONG_DESCRIPTION = long_description
@@ -39,7 +39,7 @@ KEYWORDS = 'algorithmic fairness'
 
 PACKAGES = find_packages()
 PACKAGE_DATA = {
-  'BlackBoxAuditing': ['*.sh','r_plotting/*.Rmd', 'repair_tests/*.csv', 'MATLAB_code/*', 'weka.jar'],
+  'BlackBoxAuditing': ['*.sh','r_plotting/*.Rmd', 'repair_tests/*.csv', 'MATLAB_code/*'],
   'BlackBoxAuditing.test_data': ['*.csv', '*.arff']
 }
 INCLUDE_PACKAGE_DATA = True
@@ -48,7 +48,6 @@ PACKAGE_DIR = {
 }
 
 INSTALL_REQUIRES = [
-  'tensorflow',
   'networkx',
   'matplotlib',
   'Orange3']
