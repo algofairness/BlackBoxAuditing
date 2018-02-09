@@ -323,9 +323,9 @@ def test_simple_data():
     resp_index = headers.index(response)
     
     intended_predictions = [(test_row[resp_index], train_row[resp_index]) for train_row, test_row in zip(train_set_copy,test_set)]
-    incorr = (predictions[-9:] != intended_predictions[-9:])
-    corr = (predictions[:-9] == intended_predictions[:-9])
-    print("handling simple data correctly? -- ", (corr and incorr) == True)
+    last_few_preds = all(pred[0] == pred[1] for pred in predictions[-9:]) 
+    all_but_last_few = all(pred[0] == pred[1] for pred in predictions[:-9])
+    print("handling simple data correctly? -- ", (all_but_last_few and not last_few_preds) == True)
 
 if __name__=='__main__':
   test()

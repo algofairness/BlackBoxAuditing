@@ -8,14 +8,7 @@ This code is licensed under an [Apache 2.0](https://www.apache.org/licenses/LICE
 
 # Setup and Installation
 
-1. Install a recent version of Java ([if you're on OS X, you'll want to go here](http://www.oracle.com/technetwork/java/javase/downloads/jdk9-downloads-3848520.html)).
-2. Install BlackBoxAuditing (`pip3 install BlackBoxAuditing`)
-
-Many of the ModelVisitors rely on [Weka](http://www.cs.waikato.ac.nz/ml/weka/). Similarly, we use [TensorFlow](https://www.tensorflow.org/) for network-based machine learning. Any Python libraries that need to be installed are included in the `requirements.txt` file. Weka and Tensorflow should be downloaded during installation, but here's the download links just in case. 
-
-- Weka 3.6.13 [download](http://www.cs.waikato.ac.nz/ml/weka/downloading.html)
-- TensorFlow [download](https://www.tensorflow.org/versions/master/get_started/os_setup.html) (original experiments run with version 0.6.0)
-
+1. Install BlackBoxAuditing (`pip3 install BlackBoxAuditing`)
 
 # Certifying and Removing Disparate Impact
 
@@ -43,7 +36,7 @@ After installing BlackBoxAuditing, GFA can be run on a dataset (as in [Auditing 
 # import BlackBoxAuditing
 import BlackBoxAuditing as BBA
 # import machine learning technique
-from BlackBoxAuditing.model_factories import Weka_SVM, Weka_DecisionTree
+from BlackBoxAuditing.model_factories import SVM, DecisionTree, NeuralNetwork
 
 """
 Using a preloaded dataset
@@ -53,7 +46,7 @@ data = BBA.load_data("german")
 
 # initialize the auditor and set parameters
 auditor = BBA.Auditor()
-auditor.model = Weka_SVM
+auditor.model = SVM
 
 # call the auditor with the data
 auditor(data, output_dir="german_audit_output")
@@ -70,7 +63,7 @@ data = BBA.load_from_file(datafile)
 
 # initialize the auditor and set parameters
 auditor = BBA.Auditor()
-auditor.model = Weka_DecisionTree
+auditor.model = DecisionTree
 
 # call the auditor with the data
 auditor(data, output_dir="german_audit_output")
@@ -129,7 +122,7 @@ After initializing the auditor `auditor = BlackBoxAuditor.Auditor()`, there are 
 
 `auditor.WRITE_ORIGINAL_PREDICTIONS`: (*default = True*)
 
-`auditor.ModelFactory`: (*default = Weka_SVM*) Available machine learning options: Weka_SVM, Weka_DecisionTree, TensorFlow
+`auditor.ModelFactory`: (*default = SVM*) Available machine learning options: SVM, DecisionTree, NeuralNetwork
 
 `auditor.kdd`: (*default = False*) 
 
@@ -176,7 +169,7 @@ Note: if a test requires reading data from the `test_data` directory, it should 
 
 ## Implementing a New Machine-Learning Method
 
-The best way to create a model would be to use a ModelFactory and ModelVisitors. A ModelVisitor should be thought of as a wrapper that knows how to load a machine-learning model of a given type and communicate with that model file in order to output predicted values of some test dataset. A ModelFactory simply knows how to "build" a ModelVisitor based on some provided training data. Check out the "Abstract" files in the `sample_experiment` directory for outlines of what these two classes should do; similarly, check out the "SVM_ModelFactory" files in the `sample_experiment` subdirectory for examples that use WEKA to create model files and produce predictions.
+The best way to create a model would be to use a ModelFactory and ModelVisitors. A ModelVisitor should be thought of as a wrapper that knows how to load a machine-learning model of a given type and communicate with that model file in order to output predicted values of some test dataset. A ModelFactory simply knows how to "build" a ModelVisitor based on some provided training data. Check out the "Abstract" files in the `sample_experiment` directory for outlines of what these two classes should do.
 
 #For local developers
 
