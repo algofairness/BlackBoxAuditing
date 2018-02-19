@@ -74,7 +74,7 @@ auditor.find_contexts("age_cat", output_dir="german_context_output")
 
 ```
 
-# Output of Auditor
+## Outputs of the Auditor
 ### Auditing with repair steps
 
 Calling the auditor on a dataset will evaluate the predictive ability of a model at different repair steps for each feature. The auditor will create a subdirectory "<your data>_audit_output" in the directory from which you run the auditor. This directory will contain three summary files: accuracy.png, BCR.png, and summary.txt. The two graphical summaries, accuracy.png and BCR.png, show the predictive ability of the model at different repair levels for each repaired feature, using accuracy and BCR respectively as metrics. Non-graphical summaries of the audit are included in the summary.txt file. This file includes the model options used, lists which features were repaired, and ranks the features by the amount repair with respect to each feature affects the accuracy of the model. Approximate trend groups are also included in the summary.txt file, indicating the groups of features for which repairing with respect to each those features has a similar effect on the accuracy of the model. Detailed reports of the repair with respect to each of the features are included in the remaining files of the output.
@@ -84,8 +84,7 @@ Calling the auditor on a dataset will evaluate the predictive ability of a model
 Calling the find_contexts() method of the auditor will train a model to determine rule-based contexts for classification in the dataset. The method create a subdirectory "<your data>_context_output" in the directory from which you run the auditor. This directory contains a file named contexts.summary. This file includes the model options used, and the contexts of influence found in the data. The directory also contains expanded rules
 
 
-
-### More Advanced Script Options
+## More Advanced Script Options
 
 #### Using a preloaded dataset
 
