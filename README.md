@@ -47,7 +47,7 @@ data = BBA.load_data("german")
 
 # initialize the auditor and set parameters
 auditor = BBA.Auditor()
-auditor.model = SVM
+auditor.ModelFactory= SVM
 
 # call the auditor with the data
 auditor(data, output_dir="german_audit_output")
@@ -64,7 +64,7 @@ data = BBA.load_from_file(datafile)
 
 # initialize the auditor and set parameters
 auditor = BBA.Auditor()
-auditor.model = DecisionTree
+auditor.ModelFactory= DecisionTree
 
 # call the auditor with the data
 auditor(data, output_dir="german_audit_output")
