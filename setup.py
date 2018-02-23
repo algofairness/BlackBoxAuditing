@@ -50,7 +50,9 @@ PACKAGE_DIR = {
 INSTALL_REQUIRES = [
   'networkx',
   'matplotlib',
-  'Orange3']
+  'Orange3',
+  'pandas',
+  'numpy']
 
 CMDCLASS = {
 }
