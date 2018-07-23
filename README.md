@@ -25,7 +25,7 @@ BlackBoxAuditing-repair your_data.csv repaired_data.csv 0.8 False -p "feat1" "fe
 
 # Black Box Auditing
 
-To run GFA on a dataset (as in [Auditing Black-box Models for Indirect Influence](http://arxiv.org/abs/1602.07043)),
+The below instructions focus on running GFA on a dataset (as in [Auditing Black-box Models for Indirect Influence](http://arxiv.org/abs/1602.07043)).  There is also a [tutorial](https://algofairness.github.io/fatconference-2018-auditing-tutorial/) (with a jupyter notebook) from FAT* 2018 and a [video](https://www.youtube.com/watch?v=rtDkl_0vLks) of the tutorial.
 
 
 ## Running as a Python Script
