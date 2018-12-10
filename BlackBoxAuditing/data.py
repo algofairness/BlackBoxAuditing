@@ -1,5 +1,7 @@
-from BlackBoxAuditing.splitters import split_by_percent
 import csv
+import pandas
+
+from BlackBoxAuditing.splitters import split_by_percent
 from BlackBoxAuditing.test_data import preloaded
 
 def is_int(string):
@@ -133,3 +135,22 @@ def load_from_file(datafile, testdata=None, correct_types=None, train_percentage
             test[i][j] = correct_type(row[j])
 
   return headers, train, test, response_header, features_to_ignore, correct_types
+
+def load_testdf_only(testset_X_df, testset_y_df):
+  """
+  Assumes the data are floats except for the y values which are 0/1 values where 0 is 'bad' and
+  1 is 'good'.
+  """
+  response_header = testset_y_df.columns.values.tolist()[0]
+  testset_y_df = testset_y_df[response_header].apply(str)
+  combined_df = pandas.concat([testset_X_df, testset_y_df], axis=1)
+  headers = combined_df.columns.values.tolist()
+  combined_test = combined_df.values.tolist()
+  correct_types = []
+  for col in headers:
+     if col == response_header:
+        correct_types.append(str)
+     else:
+        correct_types.append(float)
+
+  return headers, [], combined_test, response_header, [], correct_types
