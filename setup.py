@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 from codecs import open
-import os, sys 
+import os, sys
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -17,7 +17,7 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
   long_description = f.read()
 
 NAME ='BlackBoxAuditing'
-VERSION = '0.1.40'
+VERSION = '0.1.50'
 
 DESCRIPTION = 'Sample Implementation of Gradient Feature Auditing (GFA)'
 LONG_DESCRIPTION = long_description
