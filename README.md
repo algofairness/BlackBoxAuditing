@@ -182,7 +182,7 @@ Note: if a test requires reading data from the `test_data` directory, it should 
 
 The best way to create a model would be to use a ModelFactory and ModelVisitors. A ModelVisitor should be thought of as a wrapper that knows how to load a machine-learning model of a given type and communicate with that model file in order to output predicted values of some test dataset. A ModelFactory simply knows how to "build" a ModelVisitor based on some provided training data. Check out the "Abstract" files in the `sample_experiment` directory for outlines of what these two classes should do.
 
-#For local developers
+# For local developers
 
 ## Upload a new version of BBA
 
