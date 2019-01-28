@@ -1,7 +1,13 @@
-import Orange
 import os,csv
 
 def CN2_learner(trainfile, testfile, output_dir, beam_width, min_covered_examples, max_rule_length, influence_scores):
+  # FIXME: Orange is less-than-trivial to install, and often
+  # installation silently fails when some modules are not compiled
+  # Since we don't often need to call CN2_learner, the workaround
+  # is to defer the import to when the function is actually called,
+  # in order for `import BlackBoxAuditing` not to fail as often.
+  import Orange
+  
   print("Setting up CN2 Learner")
   # format data for classification
   training_data = Orange.data.Table.from_file(trainfile)

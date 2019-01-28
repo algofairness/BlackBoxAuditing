@@ -17,7 +17,7 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
   long_description = f.read()
 
 NAME ='BlackBoxAuditing'
-VERSION = '0.1.50'
+VERSION = '0.1.51'
 
 DESCRIPTION = 'Sample Implementation of Gradient Feature Auditing (GFA)'
 LONG_DESCRIPTION = long_description
