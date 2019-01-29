@@ -17,7 +17,7 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
   long_description = f.read()
 
 NAME ='BlackBoxAuditing'
-VERSION = '0.1.51'
+VERSION = '0.1.52'
 
 DESCRIPTION = 'Sample Implementation of Gradient Feature Auditing (GFA)'
 LONG_DESCRIPTION = long_description
@@ -50,7 +50,7 @@ PACKAGE_DIR = {
 INSTALL_REQUIRES = [
   'networkx',
   'matplotlib',
-  'Orange3>=3.3.5,<=3.7.1',
+  # 'Orange3>=3.3.5,<=3.7.1',
   'pandas',
   'numpy']
 
