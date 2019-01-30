@@ -1,5 +1,13 @@
 import os,csv
 
+try:
+  import Orange
+except ModuleNotFoundError:
+  print('''You don't appear to have Orange installed. We do not require
+Orange to be installed by default since the package tends to be relatively
+challenging to install, but you will need it in order to run `CN2_learner`.''')
+  raise
+
 def CN2_learner(trainfile, testfile, output_dir, beam_width, min_covered_examples, max_rule_length, influence_scores):
   # FIXME: Orange is less-than-trivial to install, and often
   # installation silently fails when some modules are not compiled
