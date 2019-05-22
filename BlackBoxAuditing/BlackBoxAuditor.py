@@ -11,7 +11,6 @@ from BlackBoxAuditing.GradientFeatureAuditor import GradientFeatureAuditor
 from BlackBoxAuditing.audit_reading import graph_audit, graph_audits, rank_audit_files, group_audit_ranks
 from BlackBoxAuditing.consistency_graph import graph_prediction_consistency
 from BlackBoxAuditing.measurements import get_conf_matrix, accuracy, BCR
-from BlackBoxAuditing.find_contexts import context_finder, load
 from BlackBoxAuditing.data import load_data, load_from_file, load_testdf_only
 
 
@@ -203,6 +202,9 @@ class Auditor():
     vprint("Summary file written to: {}\n".format(summary_file), self.verbose)
 
   def find_contexts(self, removed_attr, output_dir, beam_width=10, min_covered_examples=1, max_rule_length=5, by_original=True, epsilon=0.05):
+    # import done here so that Orange install is optional
+    from BlackBoxAuditing.find_contexts import context_finder, load
+
     # retrive data from the audit
     audits_data = self._audits_data
     full_audit = audits_data["full_audit"]
