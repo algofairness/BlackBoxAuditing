@@ -150,6 +150,11 @@ class GradientFeatureAuditor(object):
 
     features_to_audit = [h for i, h in enumerate(self.headers) if i not in self.features_to_ignore] if self.features_to_audit is None else self.features_to_audit
 
+    
+    with open(self.OUTPUT_DIR + "/unrepaired_test_data", "w") as f:
+      writer = csv.writer(f)
+      for row in shared_test:
+        writer.writerow(row)
     output_files = []
     for i, feature in enumerate(features_to_audit):
       message = "Auditing: '{}' ({}/{}).".format(feature,i+1,len(features_to_audit))
@@ -161,6 +166,8 @@ class GradientFeatureAuditor(object):
       output_files.append(full_filepath)
 
       self.audit_feature(feature, full_filepath)
+
+    
 
     audit_msg1 = "Audit file dump set to {}".format(self.dump_all)
     audit_msg2 = "All audit files have been saved." if self.dump_all else "Only mininal audit files have been saved."

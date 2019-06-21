@@ -1,8 +1,14 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from scipy import stats
 import json
 import os, shutil
 import random
 import csv
-
+from os import listdir
+from os.path import isfile, join
 import matplotlib
 matplotlib.use('Agg') # Set the back-end
 import matplotlib.pyplot as plt
@@ -70,6 +76,108 @@ def graph_audit(filename, measurers, output_image_file):
     writer.writerow(headers)
     for i, repair_level in enumerate(x_axis):
       writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
+
+
+#graph_distributions--Graphs Distributions for all combinations of categorical and numerical features#######################################################
+def graph_distributions(directory):
+  #gets all files in the directory
+  only_files = [f for f in listdir(directory) if isfile(join(directory, f))]
+
+  #gets the files that contain repaired data for each feature (they end in 1.0.data)
+  files_to_graph = []
+  for file in only_files:
+    if "1.0.data" in file:
+      files_to_graph.append(file)
+
+  for file in files_to_graph:
+    #fill test_data with the data in the file
+    test_data_filename = directory + "/" + "unrepaired_test_data"    
+    with open(test_data_filename) as f:
+      reader = csv.reader(f)
+      test_data = [row for row in reader]
+    #set the values to the correct types and record which colums have numerical and categorical data
+    categorical_features = {}
+    numerical_features = []
+    for i, row in enumerate(test_data):
+      for j, val in enumerate(row):
+        try:
+          test_data[i][j] = int(val)
+        except:
+          try:
+            test_data[i][j] = float(val)
+          except:
+            pass
+      if i == 0:
+        for j, val in enumerate(row):
+          if type(val) == int or type(val) == float:
+            numerical_features.append(j)
+          else:
+            categorical_features[j] = []
+
+    #get the groups for each categorical feature
+    for i, row in enumerate(test_data):
+      for j, val in enumerate(row):
+        if j in categorical_features:
+          if not val in categorical_features[j]:
+            categorical_features[j].append(val)
+    
+    #fill repaired_data with the data in the file
+    repaired_data_filename = directory + "/" + file
+    with open(repaired_data_filename) as f:
+      reader = csv.reader(f)
+      repaired_data = [row for row in reader]
+      headers = repaired_data.pop(0)
+    #set the values to the correct types
+    for i, row in enumerate(repaired_data):
+      for j, val in enumerate(row):
+        try:
+          repaired_data[i][j] = int(val)
+        except:
+          try:
+            repaired_data[i][j] = float(val)
+          except:
+            pass
+    #find the feature the file is repaired for 
+    rep_feat_TF  = [True]*len(repaired_data[0])
+    for i, row in enumerate(repaired_data):
+      if i == 0:
+          last_vals = row
+      for j, val in enumerate(row):
+        if last_vals[j] != val:
+          rep_feat_TF[j] = False
+      last_vals = row
+    
+    rep_feat = rep_feat_TF.index(True)
+    #if its repaired for a numerical feature, exit the loop and move on to the next file
+    if not rep_feat in categorical_features:
+      continue
+    #create histograms comparing the groups and repaireed groups for every numerical feature
+    for num_feat in numerical_features:
+      #initialize test_to_graph and repaired_to_graph, which will hold the data that will be graphed
+      test_to_graph = {i:[] for i, _ in enumerate(categorical_features[rep_feat])}
+      repaired_to_graph = {i:[] for i, _ in enumerate(categorical_features[rep_feat])}
+      #goes through each row, adding the data to the correct group for both repaired and test data
+      for i, row in enumerate(test_data):
+        for group in categorical_features[rep_feat]:
+          if row[rep_feat] == group:
+            test_to_graph[categorical_features[rep_feat].index(group)].append(row[num_feat])
+            repaired_to_graph[categorical_features[rep_feat].index(group)].append(repaired_data[i][num_feat])
+
+      #create and save graph
+      i = 0
+      while i < len(test_to_graph):
+        t = test_to_graph[i]
+        r = repaired_to_graph[i]
+        #Add a bit of noise to keep seaborn from breaking
+        t = [float(n) for n in t]
+        t = [(n + 0.00001*random.randint(1, 1000)) for n in t]
+        r = [float(n) for n in r]
+        r = [(n + 0.00001*random.randint(1, 1000)) for n in r]
+        sns.distplot(t, hist=False, label=categorical_features[rep_feat][i], axlabel = headers[num_feat])
+        sns.distplot(r, hist=False, label=("Reapired " + categorical_features[rep_feat][i]))
+        i += 1
+      plt.savefig(directory + "/" + (str(file)).replace(".","_") + ":" + headers[rep_feat] + "_" + headers[num_feat] + "_Distribution")
+      plt.clf()
 
 def graph_audits(filenames, measurer, output_image_file):
   features = []

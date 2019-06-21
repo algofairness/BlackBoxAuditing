@@ -2,7 +2,7 @@
 Development script for converting audit files into graphs.
 """
 
-from BlackBoxAuditing.audit_reading import graph_audits, graph_audit, rank_audit_files
+from BlackBoxAuditing.audit_reading import graph_audits, graph_audit, rank_audit_files, graph_distributions
 from BlackBoxAuditing.measurements import BCR, accuracy
 
 from os import listdir
@@ -25,6 +25,7 @@ def audit_directory(directory):
     graph_audits(audits, measurer, ranked_graph_filename)
     ranks = rank_audit_files(audits, measurer)
     print(measurer.__name__, ranks)
+  graph_distributions(directory)
 
 
 if __name__=="__main__":
