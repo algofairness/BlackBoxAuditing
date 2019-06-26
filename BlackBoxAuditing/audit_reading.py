@@ -78,6 +78,40 @@ def graph_audit(filename, measurers, output_image_file):
       writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
 
 
+
+
+########################################################################################################################
+def graph_audit_no_write(feature, confusion_matrix, measurers):
+  header_line = "GFA Audit for:" + feature
+  x_axis = [repair_level for repair_level, _ in confusion_matrix]
+  y_axes = []
+
+  # Graph the results for each requested measurement.
+  for measurer in measurers:
+    y_axis = [measurer(matrix) for _, matrix in confusion_matrix]
+    plt.plot(x_axis, y_axis, label=measurer.__name__)
+    y_axes.append(y_axis)
+
+  # Format and save the graph to an image file.
+  plt.title(header_line)
+  plt.axis([0,1,0,1.1]) # Make all the plots consistently sized.
+  plt.xlabel("Repair Level")
+  plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+  plt.show()
+  plt.clf() # Clear the entire figure so future plots are empty.
+
+  # Save the data used to generate that image file.
+  #with open(output_image_file + ".data", "w") as f:
+  #  writer = csv.writer(f)
+  #  headers = ["Repair Level"] + [calc.__name__ for calc in measurers]
+  #  writer.writerow(headers)
+  #  for i, repair_level in enumerate(x_axis):
+  #    writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
+#########################################################################################################################
+
+
+
+
 #graph_distributions--Graphs Distributions for all combinations of categorical and numerical features#######################################################
 def graph_distributions(directory):
   #gets all files in the directory
@@ -179,6 +213,62 @@ def graph_distributions(directory):
       plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
       plt.savefig(directory + "/" + (str(file)).replace(".","_") + ":" + headers[rep_feat] + "_" + headers[num_feat] + "_Distribution", bbox_inches='tight')
       plt.clf()
+
+
+
+
+
+#####################################################################################################################################################
+def graph_distributions_no_write(feature, feat_num, test_data, rep_tests, headers):
+  feat_index = headers.index(feature)
+  numerical_features = []
+  for j, _ in enumerate(test_data[0]):
+    if type(test_data[0][j]) == int or type(test_data[0][j]) == float:
+      numerical_features.append(j)
+
+  if feat_index in numerical_features:
+    return
+
+  groups = []
+  for i, row in enumerate(test_data):
+    for j, val in enumerate(row):
+      if j == feat_index:
+        if not val in groups:
+          groups.append(val)
+    
+  rep_test = rep_tests[feat_num]
+  for num_feat in numerical_features:
+    #initialize test_to_graph and repaired_to_graph, which will hold the data that will be graphed
+    test_to_graph = {i:[] for i, _ in enumerate(groups)}
+    repaired_to_graph = {i:[] for i, _ in enumerate(groups)}
+    #goes through each row, adding the data to the correct group for both repaired and test data
+    for i, row in enumerate(test_data):
+      for group in groups:
+        if row[feat_index] == group:
+          test_to_graph[groups.index(group)].append(row[num_feat])
+          repaired_to_graph[groups.index(group)].append(rep_test[i][num_feat])
+    #create and save graph
+    i = 0
+    while i < len(test_to_graph):
+      t = test_to_graph[i]
+      r = repaired_to_graph[i]
+      #Add a bit of noise to keep seaborn from breaking
+      t = [float(n) for n in t]
+      t = [(n + 0.00001*random.randint(1, 1000)) for n in t]
+      r = [float(n) for n in r]
+      r = [(n + 0.00001*random.randint(1, 1000)) for n in r]
+      sns.distplot(t, hist=False, label=groups[i], axlabel = headers[num_feat])
+      sns.distplot(r, hist=False, label=("Reapired " + groups[i]))
+      i += 1
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.show()
+    plt.clf()
+############################################################################################################################################################################
+
+
+
+
+
 
 def graph_audits(filenames, measurer, output_image_file):
   features = []
@@ -458,4 +548,5 @@ def test():
 
 if __name__=="__main__":
   test()
+
 

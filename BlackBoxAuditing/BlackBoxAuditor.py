@@ -8,10 +8,11 @@ from BlackBoxAuditing.model_factories import SVM, DecisionTree, NeuralNetwork
 from BlackBoxAuditing.model_factories.SKLearnModelVisitor import SKLearnModelVisitor
 from BlackBoxAuditing.loggers import vprint
 from BlackBoxAuditing.GradientFeatureAuditor import GradientFeatureAuditor
-from BlackBoxAuditing.audit_reading import graph_audit, graph_audits, graph_audits_no_write, rank_audit_files, rank_audit_files_no_write, group_audit_ranks, group_audit_ranks_no_write group_audit_ranks
+from BlackBoxAuditing.audit_reading import graph_audit, graph_audits, graph_audits_no_write, rank_audit_files, rank_audit_files_no_write, group_audit_ranks, group_audit_ranks_no_write, group_audit_ranks
 from BlackBoxAuditing.consistency_graph import graph_prediction_consistency
 from BlackBoxAuditing.measurements import get_conf_matrix, accuracy, BCR
 from BlackBoxAuditing.data import load_data, load_from_file, load_testdf_only
+from BlackBoxAuditing.make_graphs import audit_directory, audit_data
 
 
 class Auditor():
@@ -27,11 +28,16 @@ class Auditor():
     self.kdd = False
     self._audits_data = {}
 
-  def __call__(self, data, output_dir=None, dump_all=False, features_to_audit=None, write_to_file=True):
+  def __call__(self, data, output_dir=None, dump_all=False, features_to_audit=None, write_to_file=True, print_all_data=False, make_all_graphs=False):
     start_time = datetime.now()
     if not write_to_file:
       dump_all = False
       output_dir = None
+    else:
+      print_all_data = False
+      if output_dir == None:
+        make_all_graphs = False
+
     headers, train_set, test_set, response_header, features_to_ignore, correct_types = data
 
     self._audits_data = {"headers" : headers, "train" : train_set, "test" : test_set,
@@ -98,7 +104,7 @@ class Auditor():
     if write_to_file:
       audit_filenames = auditor.audit(verbose=self.verbose)
     else:
-      conf_tables = auditor.audit(verbose=self.verbose, write_to_file=write_to_file)
+      rep_tests, conf_tables = auditor.audit(verbose=self.verbose, write_to_file=write_to_file, print_all_data=print_all_data)
 
     # Retrieve repaired data from audit
     self._audits_data["rep_test"] = auditor._rep_test
@@ -203,9 +209,13 @@ class Auditor():
           f.write("\tApprox. Trend Groups: {}\n".format(groups))
 
       vprint("Summary file written to: {}\n".format(summary_file), self.verbose)
+      if make_all_graphs:
+        audit_directory(output_dir)
     else:
       for measurer in self.measurers:
         graph_audits_no_write(conf_tables, measurer)
+      if make_all_graphs:
+        audit_data(conf_tables, test_set, rep_tests, headers)
 
   def find_contexts(self, removed_attr, output_dir, beam_width=10, min_covered_examples=1, max_rule_length=5, by_original=True, epsilon=0.05):
     # import done here so that Orange install is optional
@@ -309,3 +319,4 @@ class MockModelPredict1234():
 if __name__ == "__main__":
 #    german_example_audit()
     test()
+
