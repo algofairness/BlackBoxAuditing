@@ -83,6 +83,79 @@ def _audit_worker(params):
   return repaired, (repair_level, conf_table)
 
 
+
+
+
+##########################################################################################################################################
+def _audit_worker_no_write(params):
+  global shared_all
+  global shared_train
+  global shared_test
+
+  model_or_factory, headers, ignored_features, feature_to_repair, repair_level, kdd, dump_all = params
+
+  SAVE_REPAIRED_DATA = True if dump_all else False 
+  SAVE_PREDICTION_DETAILS = True if dump_all else False
+
+  index_to_repair = headers.index(feature_to_repair)
+
+  repairer = Repairer(shared_all, index_to_repair,
+                      repair_level, kdd, features_to_ignore=ignored_features)
+
+  # Build a model on repaired training data if specified.
+  if isinstance(model_or_factory, AbstractModelFactory):
+    rep_train = repairer.repair(shared_train)
+    model = model_or_factory.build(rep_train)
+
+    # Log that this specific model was used for this repair level.
+    #with open(output_file + ".models.names.txt", "a") as f:
+    #  f.write("{0:.1f}: {}\n".format(repair_level, model.model_name))
+
+    # Save the repaired version of the data if specified.
+    #if SAVE_REPAIRED_DATA:
+    #  with open(output_file + ".train.repaired_{0:.1f}.data".format(repair_level), "w") as f:
+    #    writer = csv.writer(f)
+    #    for row in [headers]+rep_train:
+    #      writer.writerow(row)
+  else:
+    model = model_or_factory
+
+  rep_test = repairer.repair(shared_test)
+
+  test_name = "{}_{}".format(index_to_repair, repair_level)
+  pred_tuples = model.test(rep_test, test_name=test_name)
+  conf_table = get_conf_matrix(pred_tuples)
+  
+  # Save the repaired version of the data if specified.
+  #if SAVE_REPAIRED_DATA:
+  #  with open(output_file + ".test.repaired_{0:.1f}.data".format(repair_level), "w") as f:
+  #    writer = csv.writer(f)
+  #    for row in [headers]+rep_test:
+  #      writer.writerow(row)
+  
+  #repaired = output_file+".test.repaired_{0:.1f}.data".format(repair_level)
+
+  # Save the prediction_tuples and the original values of the features to repair.
+  #if SAVE_PREDICTION_DETAILS:
+  #  with open(output_file + ".repaired_{0:.1f}.predictions".format(repair_level), "w") as f:
+  #    writer = csv.writer(f)
+  #    file_headers = ["Pre-Repaired Feature", "Response", "Prediction"]
+  #    writer.writerow(file_headers)
+  #    for i, orig_row in enumerate(shared_test):
+  #      row = [orig_row[index_to_repair], pred_tuples[i][0], pred_tuples[i][1]]
+  #      writer.writerow(row)
+
+  del repairer
+  del rep_test
+  gc.collect() 
+
+  return (repair_level, conf_table)
+#########################################################################################################################################
+
+
+
+
+
 class GradientFeatureAuditor(object):
   def __init__(self, model_or_factory, headers, train_set, test_set, kdd, repair_steps=10,
                 features_to_ignore = None, features_to_audit=None, output_dir=None, dump_all=False):
@@ -146,35 +219,85 @@ class GradientFeatureAuditor(object):
         json_conf_table = json.dumps(conf_table)
         f.write("{}:{}\n".format(repair_level, json_conf_table))
 
-  def audit(self, verbose=False):
 
+
+
+####################################################################################################################################################################
+  def audit_feature_no_write(self, feature_to_repair):
+    repair_increase_per_step = 1.0/self.repair_steps
+    repair_level = 0.0
+
+    worker_params = []
+    while repair_level <= 1.0:
+      # Always save the full repair
+      dump = self.dump_all if repair_level+repair_increase_per_step <= 1.0 else True
+    
+      call_params = (self.model_or_factory, self.headers, self.features_to_ignore, feature_to_repair, repair_level, self.kdd, dump)
+      worker_params.append( call_params )
+      repair_level += repair_increase_per_step
+
+    if ENABLE_MULTIPROCESSING:
+      pool = Pool(processes=cpu_count()/2 or 1, maxtasksperchild=1)
+      conf_table_tuples = pool.map(_audit_worker, worker_params)
+      pool.close()
+      pool.join()
+      del pool
+    else:
+      conf_table_tuples = [_audit_worker_no_write(params) for params in worker_params]
+
+    conf_table_tuples.sort(key=lambda tuples: tuples[0])
+
+    # Store location of full repaired data
+    self._rep_test[feature_to_repair] = conf_table_tuples[-1][0]
+
+    #with open(output_file, "a") as f:
+    #  f.write("GFA Audit for:{}\n".format(feature_to_repair))
+    #  for repair_level, conf_table in conf_table_tuples:
+    #    json_conf_table = json.dumps(conf_table)
+    #    f.write("{}:{}\n".format(repair_level, json_conf_table))
+    return conf_table_tuples
+##############################################################################################################################################################################
+
+
+
+
+
+  def audit(self, verbose=False, write_to_file=True):
     features_to_audit = [h for i, h in enumerate(self.headers) if i not in self.features_to_ignore] if self.features_to_audit is None else self.features_to_audit
+    
+    if write_to_file:
+      with open(self.OUTPUT_DIR + "/unrepaired_test_data", "w") as f:
+        writer = csv.writer(f)
+        for row in shared_test:
+          writer.writerow(row)
+      output_files = []
+      for i, feature in enumerate(features_to_audit):
+        message = "Auditing: '{}' ({}/{}).".format(feature,i+1,len(features_to_audit))
+        vprint(message, verbose)
+
+        cleaned_feature_name = feature.replace(".","_").replace(" ","_")
+        output_file = "{}.audit".format(cleaned_feature_name)
+        full_filepath = self.OUTPUT_DIR + "/" + output_file
+        output_files.append(full_filepath)
+
+        self.audit_feature(feature, full_filepath)
 
     
-    with open(self.OUTPUT_DIR + "/unrepaired_test_data", "w") as f:
-      writer = csv.writer(f)
-      for row in shared_test:
-        writer.writerow(row)
-    output_files = []
-    for i, feature in enumerate(features_to_audit):
-      message = "Auditing: '{}' ({}/{}).".format(feature,i+1,len(features_to_audit))
-      vprint(message, verbose)
 
-      cleaned_feature_name = feature.replace(".","_").replace(" ","_")
-      output_file = "{}.audit".format(cleaned_feature_name)
-      full_filepath = self.OUTPUT_DIR + "/" + output_file
-      output_files.append(full_filepath)
-
-      self.audit_feature(feature, full_filepath)
-
-    
-
-    audit_msg1 = "Audit file dump set to {}".format(self.dump_all)
-    audit_msg2 = "All audit files have been saved." if self.dump_all else "Only mininal audit files have been saved."
-    print("{}: {}".format(audit_msg1, audit_msg2))
-    print("Audit files dumped to: {}.\n".format(self.OUTPUT_DIR))
+      audit_msg1 = "Audit file dump set to {}".format(self.dump_all)
+      audit_msg2 = "All audit files have been saved." if self.dump_all else "Only mininal audit files have been saved."
+      print("{}: {}".format(audit_msg1, audit_msg2))
+      print("Audit files dumped to: {}.\n".format(self.OUTPUT_DIR))
    
-    return output_files
+      return output_files
+    else:
+      feature_conf_table_tuples = {}
+      for i, feature in enumerate(features_to_audit):
+        message = "Auditing: '{}' ({}/{}).".format(feature,i+1,len(features_to_audit))
+        vprint(message, verbose)
+
+        feature_conf_table_tuples[feature] = self.audit_feature_no_write(feature)
+      return feature_conf_table_tuples
 
 
 class MockModel(AbstractModelVisitor):
@@ -203,3 +326,4 @@ def test():
 
 if __name__=="__main__":
   test()
+

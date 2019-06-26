@@ -176,7 +176,8 @@ def graph_distributions(directory):
         sns.distplot(t, hist=False, label=categorical_features[rep_feat][i], axlabel = headers[num_feat])
         sns.distplot(r, hist=False, label=("Reapired " + categorical_features[rep_feat][i]))
         i += 1
-      plt.savefig(directory + "/" + (str(file)).replace(".","_") + ":" + headers[rep_feat] + "_" + headers[num_feat] + "_Distribution")
+      plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+      plt.savefig(directory + "/" + (str(file)).replace(".","_") + ":" + headers[rep_feat] + "_" + headers[num_feat] + "_Distribution", bbox_inches='tight')
       plt.clf()
 
 def graph_audits(filenames, measurer, output_image_file):
@@ -209,7 +210,45 @@ def graph_audits(filenames, measurer, output_image_file):
     headers = ["Repair Level"] + features
     writer.writerow(headers)
     for i, repair_level in enumerate(x_axis):
-      writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
+      writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])\
+
+
+
+
+
+#######################################################################################################################################
+def graph_audits_no_write(conf_tables, measurer):
+  features = []
+  y_axes = []
+  for feature in conf_tables:
+    confusion_matrices = conf_tables[feature]
+    x_axis = [repair_level for repair_level, _ in confusion_matrices]
+    y_axis = [measurer(matrix) for _, matrix in confusion_matrices]
+    plt.plot(x_axis, y_axis, label=feature)
+
+    features.append(feature)
+    y_axes.append(y_axis)
+
+  # Format and save the graph to an image file.
+  plt.title(measurer.__name__)
+  plt.axis([0,1,0,1.1]) # Make all the plots consistently sized.
+  plt.xlabel("Repair Level")
+  plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+  plt.show()
+  #plt.savefig(output_image_file, bbox_inches='tight')
+  plt.clf() # Clear the entire figure so future plots are empty.
+
+  # Save the data used to generate that image file.
+  #with open(output_image_file + ".data", "w") as f:
+  #  writer = csv.writer(f)
+  #  headers = ["Repair Level"] + features
+  #  writer.writerow(headers)
+  #  for i, repair_level in enumerate(x_axis):
+  #    writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])\
+#######################################################################################################################################3
+
+
+
 
 
 def rank_audit_files(filenames, measurer):
@@ -227,6 +266,26 @@ def rank_audit_files(filenames, measurer):
 
   scores.sort(key = lambda score_tup: score_tup[1], reverse=True)
   return scores
+
+
+
+
+################################################################################################################
+def rank_audit_files_no_write(conf_tables, measurer):
+  scores = []
+  for feature in conf_tables:
+    ct = conf_tables[feature]
+    _, start_matrix = ct[0]
+    _, end_matrix = ct[-1]
+    score_difference = measurer(start_matrix)-measurer(end_matrix)
+    scores.append( (feature, score_difference) )
+
+  scores.sort(key = lambda score_tup: score_tup[1], reverse=True)
+  return scores
+################################################################################################################
+
+
+
 
 
 def group_audit_ranks(filenames, measurer, similarity_bound=0.05):
@@ -291,6 +350,73 @@ def group_audit_ranks(filenames, measurer, similarity_bound=0.05):
   return groups
 
 
+
+
+
+#####################################################################################################################################
+def group_audit_ranks_no_write(conf_tables, measurer, similarity_bound=0.05):
+  """
+  Given a list of audit files, rank them using the `measurer` and
+  return the features that never deviate more than `similarity_bound`
+  across repairs.
+  """
+
+  def _partition_groups(feature_scores):
+    groups = []
+    for feature, score in feature_scores:
+      added_to_group = False
+
+      # Check to see if the feature belongs in a group with any other features.
+      for i, group in enumerate(groups):
+        mean_score, group_feature_scores = group
+        if abs(mean_score - score) < similarity_bound:
+          groups[i][1].append( (feature, score) )
+
+          # Recalculate the representative mean.
+          groups[i][0] = sum([s for _, s in group_feature_scores])/len(group_feature_scores)
+          added_to_group = True
+          break
+
+      # If this feature did not much with the current groups, create another group.
+      if not added_to_group:
+        groups.append( [score, [(feature,score)]] )
+
+    # Return just the features.
+    return [[feature for feature, score in group] for _, group in groups]
+
+
+  score_dict = {}
+  features = []
+  for feature in conf_tables:
+    features.append(feature)
+
+    confusion_matrices = conf_tables[feature]
+    for rep_level, matrix in confusion_matrices:
+      score = measurer(matrix)
+      if rep_level not in score_dict:
+        score_dict[rep_level] = {}
+      score_dict[rep_level][feature] = score
+
+  # Sort by repair level increasing repair level.
+  score_keys = sorted(score_dict.keys())
+
+  groups = [features]
+  while score_keys:
+    key = score_keys.pop()
+    new_groups = []
+    for group in groups:
+      group_features = [(f, score_dict[key][f]) for f in group]
+      sub_groups = _partition_groups(group_features)
+      new_groups.extend(sub_groups)
+    groups = new_groups
+  return groups
+#######################################################################################################################################
+
+
+
+
+
+
 def test():
   TMP_DIR = "tmp"
   if not os.path.exists(TMP_DIR):
@@ -332,3 +458,4 @@ def test():
 
 if __name__=="__main__":
   test()
+
