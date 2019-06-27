@@ -28,25 +28,13 @@ def audit_directory(directory):
   graph_distributions(directory)
 
 
-
-
-################################################################################################33
-def audit_data(conf_matrices, test_set, rep_tests, headers):
+def audit_data_directly(conf_matrices, test_set, rep_tests, headers):
   measurers = [accuracy, BCR]
   for i, cm in enumerate(conf_matrices):
     graph_audit_no_write(cm, conf_matrices[cm], measurers)
-    graph_distributions_no_write(cm, i, test_set, rep_tests, headers)
-
-  #for measurer in measurers:
-  #  graph_audits_no_write(conf_matrices, measurer)
-  #  ranks = rank_audit_files_no_write(conf_matrices, measurer)
-  #  print(measurer.__name__, ranks)
-  
-#####################################################################################################
-
-
-
-
+  for i, cm in enumerate(conf_matrices):
+    feat_index = headers.index(cm)
+    graph_distributions_no_write(cm, feat_index, test_set, rep_tests, headers)
 
 
 if __name__=="__main__":
@@ -55,5 +43,6 @@ if __name__=="__main__":
     audit_directory(directory)
   except:
     print("proper usage: make_graphs.py <directory/with/audits>")
+
 
 

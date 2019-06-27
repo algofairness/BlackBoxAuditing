@@ -83,10 +83,6 @@ def _audit_worker(params):
   return repaired, (repair_level, conf_table)
 
 
-
-
-
-##########################################################################################################################################
 def _audit_worker_no_write(params, print_all_data=False):
   global shared_all
   global shared_train
@@ -147,10 +143,6 @@ def _audit_worker_no_write(params, print_all_data=False):
   gc.collect() 
 
   return [rep_test, repair_level, conf_table]
-#########################################################################################################################################
-
-
-
 
 
 class GradientFeatureAuditor(object):
@@ -217,9 +209,6 @@ class GradientFeatureAuditor(object):
         f.write("{}:{}\n".format(repair_level, json_conf_table))
 
 
-
-
-####################################################################################################################################################################
   def audit_feature_no_write(self, feature_to_repair, print_all_data=False):
     repair_increase_per_step = 1.0/self.repair_steps
     repair_level = 0.0
@@ -258,10 +247,6 @@ class GradientFeatureAuditor(object):
         print("{}:{}".format(repair_level, json_conf_table))
 
     return rep_test, conf_table_tuples
-##############################################################################################################################################################################
-
-
-
 
 
   def audit(self, verbose=False, write_to_file=True, print_all_data=False):

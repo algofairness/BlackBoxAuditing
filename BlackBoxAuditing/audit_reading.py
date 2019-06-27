@@ -78,9 +78,6 @@ def graph_audit(filename, measurers, output_image_file):
       writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
 
 
-
-
-########################################################################################################################
 def graph_audit_no_write(feature, confusion_matrix, measurers):
   header_line = "GFA Audit for:" + feature
   x_axis = [repair_level for repair_level, _ in confusion_matrix]
@@ -100,19 +97,8 @@ def graph_audit_no_write(feature, confusion_matrix, measurers):
   plt.show()
   plt.clf() # Clear the entire figure so future plots are empty.
 
-  # Save the data used to generate that image file.
-  #with open(output_image_file + ".data", "w") as f:
-  #  writer = csv.writer(f)
-  #  headers = ["Repair Level"] + [calc.__name__ for calc in measurers]
-  #  writer.writerow(headers)
-  #  for i, repair_level in enumerate(x_axis):
-  #    writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
-#########################################################################################################################
 
-
-
-
-#graph_distributions--Graphs Distributions for all combinations of categorical and numerical features#######################################################
+# Graphs Distributions for all combinations of categorical and numerical features
 def graph_distributions(directory):
   #gets all files in the directory
   only_files = [f for f in listdir(directory) if isfile(join(directory, f))]
@@ -185,7 +171,7 @@ def graph_distributions(directory):
     #if its repaired for a numerical feature, exit the loop and move on to the next file
     if not rep_feat in categorical_features:
       continue
-    #create histograms comparing the groups and repaireed groups for every numerical feature
+    #create histograms comparing the groups and repaired groups for every numerical feature
     for num_feat in numerical_features:
       #initialize test_to_graph and repaired_to_graph, which will hold the data that will be graphed
       test_to_graph = {i:[] for i, _ in enumerate(categorical_features[rep_feat])}
@@ -211,16 +197,14 @@ def graph_distributions(directory):
         sns.distplot(r, hist=False, label=("Reapired " + categorical_features[rep_feat][i]))
         i += 1
       plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+      plt.title("{} vs {} Distribution".format(headers[rep_feat], headers[num_feat]))
       plt.savefig(directory + "/" + (str(file)).replace(".","_") + ":" + headers[rep_feat] + "_" + headers[num_feat] + "_Distribution", bbox_inches='tight')
       plt.clf()
 
 
-
-
-
-#####################################################################################################################################################
-def graph_distributions_no_write(feature, feat_num, test_data, rep_tests, headers):
-  feat_index = headers.index(feature)
+# Graphs distributions for each categorical feature without reading from or writing to file
+def graph_distributions_no_write(feature, feat_index, test_data, rep_tests, headers):
+  # get the indexes of all numerical features
   numerical_features = []
   for j, _ in enumerate(test_data[0]):
     if type(test_data[0][j]) == int or type(test_data[0][j]) == float:
@@ -229,14 +213,31 @@ def graph_distributions_no_write(feature, feat_num, test_data, rep_tests, header
   if feat_index in numerical_features:
     return
 
+  # gets the different groups for the categorical feature
   groups = []
   for i, row in enumerate(test_data):
-    for j, val in enumerate(row):
-      if j == feat_index:
-        if not val in groups:
-          groups.append(val)
-    
-  rep_test = rep_tests[feat_num]
+    val = row[feat_index]
+    if not val in groups:
+      groups.append(val)
+  
+  #gets the correct repaired data to use
+  rep_test = None
+  for rt in rep_tests:
+    rep_feat_TF  = [True]*len(rt[0])
+    for i, row in enumerate(rt):
+      if i == 0:
+        last_vals = row
+      for j, val in enumerate(row):
+        if last_vals[j] != val:
+          rep_feat_TF[j] = False
+      last_vals = row
+    rep_feat = rep_feat_TF.index(True)
+    if rep_feat == feat_index:
+      rep_test = rt
+      break
+  if rep_test == None:
+    return
+  #create histograms comparing the groups and repaired groups for every numerical feature
   for num_feat in numerical_features:
     #initialize test_to_graph and repaired_to_graph, which will hold the data that will be graphed
     test_to_graph = {i:[] for i, _ in enumerate(groups)}
@@ -261,13 +262,9 @@ def graph_distributions_no_write(feature, feat_num, test_data, rep_tests, header
       sns.distplot(r, hist=False, label=("Reapired " + groups[i]))
       i += 1
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.title("{} vs {} Distribution".format(feature, headers[num_feat]))
     plt.show()
     plt.clf()
-############################################################################################################################################################################
-
-
-
-
 
 
 def graph_audits(filenames, measurer, output_image_file):
@@ -303,10 +300,6 @@ def graph_audits(filenames, measurer, output_image_file):
       writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])\
 
 
-
-
-
-#######################################################################################################################################
 def graph_audits_no_write(conf_tables, measurer):
   features = []
   y_axes = []
@@ -328,18 +321,6 @@ def graph_audits_no_write(conf_tables, measurer):
   #plt.savefig(output_image_file, bbox_inches='tight')
   plt.clf() # Clear the entire figure so future plots are empty.
 
-  # Save the data used to generate that image file.
-  #with open(output_image_file + ".data", "w") as f:
-  #  writer = csv.writer(f)
-  #  headers = ["Repair Level"] + features
-  #  writer.writerow(headers)
-  #  for i, repair_level in enumerate(x_axis):
-  #    writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])\
-#######################################################################################################################################3
-
-
-
-
 
 def rank_audit_files(filenames, measurer):
   scores = []
@@ -357,10 +338,6 @@ def rank_audit_files(filenames, measurer):
   scores.sort(key = lambda score_tup: score_tup[1], reverse=True)
   return scores
 
-
-
-
-################################################################################################################
 def rank_audit_files_no_write(conf_tables, measurer):
   scores = []
   for feature in conf_tables:
@@ -372,10 +349,6 @@ def rank_audit_files_no_write(conf_tables, measurer):
 
   scores.sort(key = lambda score_tup: score_tup[1], reverse=True)
   return scores
-################################################################################################################
-
-
-
 
 
 def group_audit_ranks(filenames, measurer, similarity_bound=0.05):
@@ -440,10 +413,6 @@ def group_audit_ranks(filenames, measurer, similarity_bound=0.05):
   return groups
 
 
-
-
-
-#####################################################################################################################################
 def group_audit_ranks_no_write(conf_tables, measurer, similarity_bound=0.05):
   """
   Given a list of audit files, rank them using the `measurer` and
@@ -500,11 +469,6 @@ def group_audit_ranks_no_write(conf_tables, measurer, similarity_bound=0.05):
       new_groups.extend(sub_groups)
     groups = new_groups
   return groups
-#######################################################################################################################################
-
-
-
-
 
 
 def test():
@@ -548,5 +512,6 @@ def test():
 
 if __name__=="__main__":
   test()
+
 
 

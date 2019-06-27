@@ -12,7 +12,7 @@ from BlackBoxAuditing.audit_reading import graph_audit, graph_audits, graph_audi
 from BlackBoxAuditing.consistency_graph import graph_prediction_consistency
 from BlackBoxAuditing.measurements import get_conf_matrix, accuracy, BCR
 from BlackBoxAuditing.data import load_data, load_from_file, load_testdf_only
-from BlackBoxAuditing.make_graphs import audit_directory, audit_data
+from BlackBoxAuditing.make_graphs import audit_directory, audit_data_directly
 
 
 class Auditor():
@@ -215,7 +215,7 @@ class Auditor():
       for measurer in self.measurers:
         graph_audits_no_write(conf_tables, measurer)
       if make_all_graphs:
-        audit_data(conf_tables, test_set, rep_tests, headers)
+        audit_data_directly(conf_tables, test_set, rep_tests, headers)
 
   def find_contexts(self, removed_attr, output_dir, beam_width=10, min_covered_examples=1, max_rule_length=5, by_original=True, epsilon=0.05):
     # import done here so that Orange install is optional
