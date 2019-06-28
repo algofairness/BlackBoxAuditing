@@ -102,17 +102,6 @@ def _audit_worker_no_write(params, print_all_data=False):
   if isinstance(model_or_factory, AbstractModelFactory):
     rep_train = repairer.repair(shared_train)
     model = model_or_factory.build(rep_train)
-
-    # Log that this specific model was used for this repair level.
-    #with open(output_file + ".models.names.txt", "a") as f:
-    #  f.write("{0:.1f}: {}\n".format(repair_level, model.model_name))
-
-    # Save the repaired version of the data if specified.
-    #if SAVE_REPAIRED_DATA:
-    #  with open(output_file + ".train.repaired_{0:.1f}.data".format(repair_level), "w") as f:
-    #    writer = csv.writer(f)
-    #    for row in [headers]+rep_train:
-    #      writer.writerow(row)
   else:
     model = model_or_factory
 
@@ -128,8 +117,6 @@ def _audit_worker_no_write(params, print_all_data=False):
     for row in [headers]+rep_test:
         print(row)
   
-  #repaired = output_file+".test.repaired_{0:.1f}.data".format(repair_level)
-
   # Save the prediction_tuples and the original values of the features to repair.
   if print_all_data:
     print("\n\nRepaired {} {} Predictions".format(feature_to_repair, repair_level), "w")
@@ -231,9 +218,8 @@ class GradientFeatureAuditor(object):
     else:
       conf_table_tuples = [_audit_worker_no_write(params, print_all_data=print_all_data) for params in worker_params]
       for i, ctt in enumerate(conf_table_tuples):
-        rep_test = ctt.pop(0)
+        repaired_data = ctt.pop(0)
         conf_table_tuples[i] = tuple(ctt)
-
 
     conf_table_tuples.sort(key=lambda tuples: tuples[0])
 
@@ -246,7 +232,7 @@ class GradientFeatureAuditor(object):
         json_conf_table = json.dumps(conf_table)
         print("{}:{}".format(repair_level, json_conf_table))
 
-    return rep_test, conf_table_tuples
+    return repaired_data, conf_table_tuples
 
 
   def audit(self, verbose=False, write_to_file=True, print_all_data=False):
@@ -278,14 +264,14 @@ class GradientFeatureAuditor(object):
    
       return output_files
     else:
-      feature_conf_table_tuples = {}
-      rep_tests = [0]*len(features_to_audit)
+      conf_table_tuples_for_all_features = {}
+      all_repaired_data = [0]*len(features_to_audit)
       for i, feature in enumerate(features_to_audit):
         message = "Auditing: '{}' ({}/{}).".format(feature,i+1,len(features_to_audit))
         vprint(message, verbose)
 
-        rep_tests[i], feature_conf_table_tuples[feature] = self.audit_feature_no_write(feature, print_all_data=print_all_data)
-      return rep_tests, feature_conf_table_tuples
+        all_repaired_data[i], conf_table_tuples_for_all_features[feature] = self.audit_feature_no_write(feature, print_all_data=print_all_data)
+      return all_repaired_data, conf_table_tuples_for_all_features
 
 
 class MockModel(AbstractModelVisitor):

@@ -78,14 +78,14 @@ def graph_audit(filename, measurers, output_image_file):
       writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
 
 
-def graph_audit_no_write(feature, confusion_matrix, measurers):
+def graph_audit_no_write(feature, confusion_matrices, measurers):
   header_line = "GFA Audit for:" + feature
-  x_axis = [repair_level for repair_level, _ in confusion_matrix]
+  x_axis = [repair_level for repair_level, _ in confusion_matrices]
   y_axes = []
 
   # Graph the results for each requested measurement.
   for measurer in measurers:
-    y_axis = [measurer(matrix) for _, matrix in confusion_matrix]
+    y_axis = [measurer(matrix) for _, matrix in confusion_matrices]
     plt.plot(x_axis, y_axis, label=measurer.__name__)
     y_axes.append(y_axis)
 
@@ -101,11 +101,11 @@ def graph_audit_no_write(feature, confusion_matrix, measurers):
 # Graphs Distributions for all combinations of categorical and numerical features
 def graph_distributions(directory):
   #gets all files in the directory
-  only_files = [f for f in listdir(directory) if isfile(join(directory, f))]
+  files = [f for f in listdir(directory) if isfile(join(directory, f))]
 
   #gets the files that contain repaired data for each feature (they end in 1.0.data)
   files_to_graph = []
-  for file in only_files:
+  for file in files:
     if "1.0.data" in file:
       files_to_graph.append(file)
 
@@ -115,30 +115,27 @@ def graph_distributions(directory):
     with open(test_data_filename) as f:
       reader = csv.reader(f)
       test_data = [row for row in reader]
-    #set the values to the correct types and record which colums have numerical and categorical data
+    #set the values to the correct types and record which colums have numerical and categorical data and get the groups for each categorical feature
     categorical_features = {}
     numerical_features = []
     for i, row in enumerate(test_data):
       for j, val in enumerate(row):
         try:
-          test_data[i][j] = int(val)
+          val = int(val)
+          test_data[i][j] = val
         except:
           try:
-            test_data[i][j] = float(val)
+            val = float(val)
+            test_data[i][j] = val
           except:
             pass
-      if i == 0:
-        for j, val in enumerate(row):
+        if i == 0:
           if type(val) == int or type(val) == float:
             numerical_features.append(j)
           else:
-            categorical_features[j] = []
-
-    #get the groups for each categorical feature
-    for i, row in enumerate(test_data):
-      for j, val in enumerate(row):
-        if j in categorical_features:
-          if not val in categorical_features[j]:
+            categorical_features[j] = [val]
+        else:
+          if j in categorical_features and not val in categorical_features[j]:
             categorical_features[j].append(val)
     
     #fill repaired_data with the data in the file
@@ -167,21 +164,21 @@ def graph_distributions(directory):
           rep_feat_TF[j] = False
       last_vals = row
     
-    rep_feat = rep_feat_TF.index(True)
+    rep_feat_index = rep_feat_TF.index(True)
     #if its repaired for a numerical feature, exit the loop and move on to the next file
-    if not rep_feat in categorical_features:
+    if not rep_feat_index in categorical_features:
       continue
     #create histograms comparing the groups and repaired groups for every numerical feature
     for num_feat in numerical_features:
       #initialize test_to_graph and repaired_to_graph, which will hold the data that will be graphed
-      test_to_graph = {i:[] for i, _ in enumerate(categorical_features[rep_feat])}
-      repaired_to_graph = {i:[] for i, _ in enumerate(categorical_features[rep_feat])}
+      test_to_graph = {i:[] for i, _ in enumerate(categorical_features[rep_feat_index])}
+      repaired_to_graph = {i:[] for i, _ in enumerate(categorical_features[rep_feat_index])}
       #goes through each row, adding the data to the correct group for both repaired and test data
       for i, row in enumerate(test_data):
-        for group in categorical_features[rep_feat]:
-          if row[rep_feat] == group:
-            test_to_graph[categorical_features[rep_feat].index(group)].append(row[num_feat])
-            repaired_to_graph[categorical_features[rep_feat].index(group)].append(repaired_data[i][num_feat])
+        for group in categorical_features[rep_feat_index]:
+          if row[rep_feat_index] == group:
+            test_to_graph[categorical_features[rep_feat_index].index(group)].append(row[num_feat])
+            repaired_to_graph[categorical_features[rep_feat_index].index(group)].append(repaired_data[i][num_feat])
 
       #create and save graph
       i = 0
@@ -193,17 +190,17 @@ def graph_distributions(directory):
         t = [(n + 0.00001*random.randint(1, 1000)) for n in t]
         r = [float(n) for n in r]
         r = [(n + 0.00001*random.randint(1, 1000)) for n in r]
-        sns.distplot(t, hist=False, label=categorical_features[rep_feat][i], axlabel = headers[num_feat])
-        sns.distplot(r, hist=False, label=("Reapired " + categorical_features[rep_feat][i]))
+        sns.distplot(t, hist=False, label=categorical_features[rep_feat_index][i], axlabel = headers[num_feat])
+        sns.distplot(r, hist=False, label=("Reapired " + categorical_features[rep_feat_index][i]))
         i += 1
       plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-      plt.title("{} vs {} Distribution".format(headers[rep_feat], headers[num_feat]))
-      plt.savefig(directory + "/" + (str(file)).replace(".","_") + ":" + headers[rep_feat] + "_" + headers[num_feat] + "_Distribution", bbox_inches='tight')
+      plt.title("{} vs {} Distribution".format(headers[rep_feat_index], headers[num_feat]))
+      plt.savefig(directory + "/" + (str(file)).replace(".","_") + ":" + headers[rep_feat_index] + "_" + headers[num_feat] + "_Distribution", bbox_inches='tight')
       plt.clf()
 
 
 # Graphs distributions for each categorical feature without reading from or writing to file
-def graph_distributions_no_write(feature, feat_index, test_data, rep_tests, headers):
+def graph_distributions_no_write(feature, feat_index, test_data, all_repaired_data, headers):
   # get the indexes of all numerical features
   numerical_features = []
   for j, _ in enumerate(test_data[0]):
@@ -221,10 +218,10 @@ def graph_distributions_no_write(feature, feat_index, test_data, rep_tests, head
       groups.append(val)
   
   #gets the correct repaired data to use
-  rep_test = None
-  for rt in rep_tests:
-    rep_feat_TF  = [True]*len(rt[0])
-    for i, row in enumerate(rt):
+  repaired_data = None
+  for rd in all_repaired_data:
+    rep_feat_TF  = [True]*len(rd[0])
+    for i, row in enumerate(rd):
       if i == 0:
         last_vals = row
       for j, val in enumerate(row):
@@ -233,10 +230,11 @@ def graph_distributions_no_write(feature, feat_index, test_data, rep_tests, head
       last_vals = row
     rep_feat = rep_feat_TF.index(True)
     if rep_feat == feat_index:
-      rep_test = rt
+      repaired_data = rd
       break
-  if rep_test == None:
+  if repaired_data == None:
     return
+
   #create histograms comparing the groups and repaired groups for every numerical feature
   for num_feat in numerical_features:
     #initialize test_to_graph and repaired_to_graph, which will hold the data that will be graphed
@@ -247,7 +245,7 @@ def graph_distributions_no_write(feature, feat_index, test_data, rep_tests, head
       for group in groups:
         if row[feat_index] == group:
           test_to_graph[groups.index(group)].append(row[num_feat])
-          repaired_to_graph[groups.index(group)].append(rep_test[i][num_feat])
+          repaired_to_graph[groups.index(group)].append(repaired_data[i][num_feat])
     #create and save graph
     i = 0
     while i < len(test_to_graph):
@@ -300,11 +298,11 @@ def graph_audits(filenames, measurer, output_image_file):
       writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])\
 
 
-def graph_audits_no_write(conf_tables, measurer):
+def graph_audits_no_write(cm_all_feat, measurer):
   features = []
   y_axes = []
-  for feature in conf_tables:
-    confusion_matrices = conf_tables[feature]
+  for feature in cm_all_feat:
+    confusion_matrices = cm_all_feat[feature]
     x_axis = [repair_level for repair_level, _ in confusion_matrices]
     y_axis = [measurer(matrix) for _, matrix in confusion_matrices]
     plt.plot(x_axis, y_axis, label=feature)
@@ -338,12 +336,12 @@ def rank_audit_files(filenames, measurer):
   scores.sort(key = lambda score_tup: score_tup[1], reverse=True)
   return scores
 
-def rank_audit_files_no_write(conf_tables, measurer):
+def rank_audit_files_no_write(cm_all_feat, measurer):
   scores = []
-  for feature in conf_tables:
-    ct = conf_tables[feature]
-    _, start_matrix = ct[0]
-    _, end_matrix = ct[-1]
+  for feature in cm_all_feat:
+    confusion_matrices = cm_all_feat[feature]
+    _, start_matrix = confusion_matrices[0]
+    _, end_matrix = confusion_matrices[-1]
     score_difference = measurer(start_matrix)-measurer(end_matrix)
     scores.append( (feature, score_difference) )
 
@@ -413,7 +411,7 @@ def group_audit_ranks(filenames, measurer, similarity_bound=0.05):
   return groups
 
 
-def group_audit_ranks_no_write(conf_tables, measurer, similarity_bound=0.05):
+def group_audit_ranks_no_write(cm_all_feat, measurer, similarity_bound=0.05):
   """
   Given a list of audit files, rank them using the `measurer` and
   return the features that never deviate more than `similarity_bound`
@@ -446,10 +444,10 @@ def group_audit_ranks_no_write(conf_tables, measurer, similarity_bound=0.05):
 
   score_dict = {}
   features = []
-  for feature in conf_tables:
+  for feature in cm_all_feat:
     features.append(feature)
 
-    confusion_matrices = conf_tables[feature]
+    confusion_matrices = cm_all_feat[feature]
     for rep_level, matrix in confusion_matrices:
       score = measurer(matrix)
       if rep_level not in score_dict:

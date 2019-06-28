@@ -104,7 +104,7 @@ class Auditor():
     if write_to_file:
       audit_filenames = auditor.audit(verbose=self.verbose)
     else:
-      rep_tests, conf_tables = auditor.audit(verbose=self.verbose, write_to_file=write_to_file, print_all_data=print_all_data)
+      all_repaired_data, conf_tables = auditor.audit(verbose=self.verbose, write_to_file=write_to_file, print_all_data=print_all_data)
 
     # Retrieve repaired data from audit
     self._audits_data["rep_test"] = auditor._rep_test
@@ -215,7 +215,7 @@ class Auditor():
       for measurer in self.measurers:
         graph_audits_no_write(conf_tables, measurer)
       if make_all_graphs:
-        audit_data_directly(conf_tables, test_set, rep_tests, headers)
+        audit_data_directly(conf_tables, test_set, all_repaired_data, headers)
 
   def find_contexts(self, removed_attr, output_dir, beam_width=10, min_covered_examples=1, max_rule_length=5, by_original=True, epsilon=0.05):
     # import done here so that Orange install is optional

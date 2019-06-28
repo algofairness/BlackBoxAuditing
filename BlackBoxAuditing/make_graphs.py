@@ -28,13 +28,14 @@ def audit_directory(directory):
   graph_distributions(directory)
 
 
-def audit_data_directly(conf_matrices, test_set, rep_tests, headers):
+def audit_data_directly(conf_matrices_for_all_features, test_set, all_repaired_data, headers):
   measurers = [accuracy, BCR]
-  for i, cm in enumerate(conf_matrices):
-    graph_audit_no_write(cm, conf_matrices[cm], measurers)
-  for i, cm in enumerate(conf_matrices):
-    feat_index = headers.index(cm)
-    graph_distributions_no_write(cm, feat_index, test_set, rep_tests, headers)
+  for i, feature in enumerate(conf_matrices_for_all_features):
+    graph_audit_no_write(feature, conf_matrices_for_all_features[feature], measurers)
+
+  for i, feature in enumerate(conf_matrices_for_all_features):
+    feat_index = headers.index(feature)
+    graph_distributions_no_write(feature, feat_index, test_set, all_repaired_data, headers)
 
 
 if __name__=="__main__":
