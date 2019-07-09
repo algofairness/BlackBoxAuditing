@@ -28,7 +28,7 @@ def audit_directory(directory):
   graph_distributions(directory)
 
 
-def audit_data_directly(conf_matrices_for_all_features, test_set, all_repaired_data, headers):
+def audit_data_no_write(conf_matrices_for_all_features, test_set, all_repaired_data, headers):
   measurers = [accuracy, BCR]
   for i, feature in enumerate(conf_matrices_for_all_features):
     graph_audit_no_write(feature, conf_matrices_for_all_features[feature], measurers)

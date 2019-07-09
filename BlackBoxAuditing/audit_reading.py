@@ -199,6 +199,100 @@ def graph_distributions(directory):
       plt.clf()
 
 
+# Graphs Distributions for a particular repaired and numerical feature, only showing some groups if desired
+def graph_particular_distribution(directory, file, num_feat_index, only_groups=None):
+  #only_groups should be in the form of ["group1", "group2", ect]
+  #fill test_data with the data in the file
+  test_data_filename = directory + "/" + "unrepaired_test_data"    
+  with open(test_data_filename) as f:
+    reader = csv.reader(f)
+    test_data = [row for row in reader]
+  
+  #fill repaired_data with the data in the file
+  repaired_data_filename = directory + "/" + file
+  with open(repaired_data_filename) as f:
+    reader = csv.reader(f)
+    repaired_data = [row for row in reader]
+    headers = repaired_data.pop(0)
+
+  #set the values to the correct types
+  for i, row in enumerate(repaired_data):
+    for j, val in enumerate(row):
+      try:
+        repaired_data[i][j] = int(val)
+      except:
+        try:
+          repaired_data[i][j] = float(val)
+        except:
+          pass
+
+  #find the feature the file is repaired for 
+  rep_feat_TF  = [True]*len(repaired_data[0])
+  for i, row in enumerate(repaired_data):
+    if i == 0:
+        last_vals = row
+    for j, val in enumerate(row):
+      if last_vals[j] != val:
+        rep_feat_TF[j] = False
+    last_vals = row
+  rep_feat_index = rep_feat_TF.index(True)
+
+  #set the values to the correct types and get the groups for the repaired feature
+  groups = []
+  for i, row in enumerate(test_data):
+    for j, val in enumerate(row):
+      try:
+        val = int(val)
+        test_data[i][j] = val
+      except:
+        try:
+          val = float(val)
+          test_data[i][j] = val
+        except:
+          pass
+      if only_groups == None:
+        if j == rep_feat_index and not val in groups:
+          groups.append(val)
+      else:
+        groups = only_groups
+
+  
+
+  #initialize test_to_graph and repaired_to_graph, which will hold the data that will be graphed
+  test_to_graph = {i:[] for i, _ in enumerate(groups)}
+  repaired_to_graph = {i:[] for i, _ in enumerate(groups)}
+  #goes through each row, adding the data to the correct group for both repaired and test data
+  for i, row in enumerate(test_data):
+    for group in groups:
+      if row[rep_feat_index] == group:
+        test_to_graph[groups.index(group)].append(row[num_feat_index])
+        repaired_to_graph[groups.index(group)].append(repaired_data[i][num_feat_index])
+
+  #create and save graph
+  i = 0
+  while i < len(test_to_graph):
+    t = test_to_graph[i]
+    r = repaired_to_graph[i]
+    #Add a bit of noise to keep seaborn from breaking
+    t = [float(n) for n in t]
+    t = [(n + 0.00001*random.randint(1, 1000)) for n in t]
+    r = [float(n) for n in r]
+    r = [(n + 0.00001*random.randint(1, 1000)) for n in r]
+    sns.distplot(t, hist=False, label=groups[i], axlabel = headers[num_feat_index])
+    sns.distplot(r, hist=False, label=("Reapired " + groups[i]))
+    i += 1
+  #generate figname
+  figname = directory + "/" + (str(file)).replace(".","_") + ":" + headers[rep_feat_index] + "_" + headers[num_feat_index]
+  if not only_groups == None:
+    for g in groups:
+      figname += "_" + g
+  figname += "_Distribution"
+  plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+  plt.title("{} vs {} Distribution".format(headers[rep_feat_index], headers[num_feat_index]))
+  plt.savefig(figname, bbox_inches='tight')
+  plt.clf()
+
+
 # Graphs distributions for each categorical feature without reading from or writing to file
 def graph_distributions_no_write(feature, feat_index, test_data, all_repaired_data, headers):
   # get the indexes of all numerical features

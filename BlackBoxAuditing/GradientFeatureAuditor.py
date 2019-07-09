@@ -113,13 +113,13 @@ def _audit_worker_no_write(params, print_all_data=False):
   
   # Save the repaired version of the data if specified.
   if print_all_data:
-    print("\n\nTest Repaired {} {} Data".format(feature_to_repair, repair_level), "w")
+    print("\n\nTest Repaired {} {} Data".format(feature_to_repair, repair_level))
     for row in [headers]+rep_test:
         print(row)
   
   # Save the prediction_tuples and the original values of the features to repair.
   if print_all_data:
-    print("\n\nRepaired {} {} Predictions".format(feature_to_repair, repair_level), "w")
+    print("\n\nRepaired {} {} Predictions".format(feature_to_repair, repair_level))
     file_headers = ["Pre-Repaired Feature", "Response", "Prediction"]
     print(file_headers)
     for i, orig_row in enumerate(shared_test):
