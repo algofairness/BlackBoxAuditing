@@ -201,7 +201,7 @@ def graph_distributions(directory):
 
 # Graphs Distributions for a particular repaired and numerical feature, only showing some groups if desired
 def graph_particular_distribution(directory, file, num_feat_index, only_groups=None):
-  #only_groups should be in the form of ["group1", "group2", ect]
+  #only_groups should be in the form of ["group1", "group2", ect] or [("group1", repaired?), ("group2", repaired?), ect]
   #fill test_data with the data in the file
   test_data_filename = directory + "/" + "unrepaired_test_data"    
   with open(test_data_filename) as f:
@@ -239,6 +239,7 @@ def graph_particular_distribution(directory, file, num_feat_index, only_groups=N
 
   #set the values to the correct types and get the groups for the repaired feature
   groups = []
+  no_repaired = []
   for i, row in enumerate(test_data):
     for j, val in enumerate(row):
       try:
@@ -253,10 +254,15 @@ def graph_particular_distribution(directory, file, num_feat_index, only_groups=N
       if only_groups == None:
         if j == rep_feat_index and not val in groups:
           groups.append(val)
-      else:
+      elif not type(only_groups[0]) == type((0, 0)):
         groups = only_groups
-
-  
+      else:
+        for g in only_groups:
+          if not g[0] in groups:
+            groups.append(g[0])
+          if g[1] == False:
+            no_repaired.append(g[0])
+      #print(groups)
 
   #initialize test_to_graph and repaired_to_graph, which will hold the data that will be graphed
   test_to_graph = {i:[] for i, _ in enumerate(groups)}
@@ -279,13 +285,16 @@ def graph_particular_distribution(directory, file, num_feat_index, only_groups=N
     r = [float(n) for n in r]
     r = [(n + 0.00001*random.randint(1, 1000)) for n in r]
     sns.distplot(t, hist=False, label=groups[i], axlabel = headers[num_feat_index])
-    sns.distplot(r, hist=False, label=("Reapired " + groups[i]))
+    if not groups[i] in no_repaired:
+      sns.distplot(r, hist=False, label=("Repaired " + groups[i]))
     i += 1
   #generate figname
   figname = directory + "/" + (str(file)).replace(".","_") + ":" + headers[rep_feat_index] + "_" + headers[num_feat_index]
   if not only_groups == None:
     for g in groups:
       figname += "_" + g
+      if g in no_repaired:
+        figname += "-no_rep"
   figname += "_Distribution"
   plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
   plt.title("{} vs {} Distribution".format(headers[rep_feat_index], headers[num_feat_index]))
