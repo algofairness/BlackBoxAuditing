@@ -200,8 +200,16 @@ def graph_distributions(directory):
 
 
 # Graphs Distributions for a particular repaired and numerical feature, only showing some groups if desired
-def graph_particular_distribution(directory, file, num_feat_index, only_groups=None):
+def graph_particular_distribution(directory, file, num_feat_index, only_groups=None, rfi=None):
   #only_groups should be in the form of ["group1", "group2", ect] or [("group1", repaired?), ("group2", repaired?), ect]
+  #rfi is the index of the repaired feature, to be used if the data isnt 100% repaired
+
+  if not "1.0.data" in file and rfi == None:
+    print("If data is not completely repaired, you must specify the repaired index")
+    return
+  if "1.0.data" in file:
+    rfi = None
+
   #fill test_data with the data in the file
   test_data_filename = directory + "/" + "unrepaired_test_data"    
   with open(test_data_filename) as f:
@@ -226,16 +234,19 @@ def graph_particular_distribution(directory, file, num_feat_index, only_groups=N
         except:
           pass
 
-  #find the feature the file is repaired for 
-  rep_feat_TF  = [True]*len(repaired_data[0])
-  for i, row in enumerate(repaired_data):
-    if i == 0:
+  if rfi == None:
+    #find the feature the file is repaired for 
+    rep_feat_TF  = [True]*len(repaired_data[0])
+    for i, row in enumerate(repaired_data):
+      if i == 0:
         last_vals = row
-    for j, val in enumerate(row):
-      if last_vals[j] != val:
-        rep_feat_TF[j] = False
-    last_vals = row
-  rep_feat_index = rep_feat_TF.index(True)
+      for j, val in enumerate(row):
+        if last_vals[j] != val:
+          rep_feat_TF[j] = False
+      last_vals = row
+    rep_feat_index = rep_feat_TF.index(True)
+  else:
+    rep_feat_index = rfi
 
   #set the values to the correct types and get the groups for the repaired feature
   groups = []
