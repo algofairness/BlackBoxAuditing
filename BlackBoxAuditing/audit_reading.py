@@ -48,7 +48,7 @@ def load_audit_confusion_matrices(filename):
 
 def graph_audit(filename, measurers, output_image_file, write_to_file=True, print_all_data=False, feature=None, confusion_matrices=None):
   if not write_to_file and (feature == None or confusion_matrices == None):
-    raise Exception("Must input feature and confusion_matrices if write_to_file is True")
+    raise Exception("if write_to_file is False, additional data must be provided")
 
   if write_to_file:
     with open(filename) as audit_file:
@@ -131,56 +131,52 @@ def get_num_and_cat_feats(data):
 
 # Graphs Distributions for all combinations of categorical and numerical features
 def graph_distributions(directory, file, response_header, write_to_file=True, rep_feat_index=None, test_data=None, repaired_data=None, headers=None, rep_lev=""):
-  if not write_to_file:
-    if test_data == None:
-      raise Exception("Must input test_data if write_to_file is False")
-    if repaired_data == None:
-      raise Exception("Must input repaired data if write_to_file is False")
-    if headers == None:
-      raise Exception("Must input headers if write_to_file is False")
-  # gets the test and repaired data, numerical and categorical features, and headers from the files
+  if not write_to_file and (rep_feat_index == None or test_data == None or repaired_data == None or headers == None or rep_lev == ""):
+    raise Exception("if write_to_file is False, additional data must be provided")
+
+  # gest the test and repaired data, and the repaired feature index
   if write_to_file:
     test_data, headers = get_data_from_file(directory + "/" + "original_test_data.csv")
     repaired_data, _ = get_data_from_file(directory + "/" + file)
     # uses the filename to get the repaired feature index
     rep_feat_index = headers.index(file.split(".")[0])
 
-  
+  #gets numerical and categorical features
   numerical_features, categorical_features = get_num_and_cat_feats(test_data)
 
   # if its repaired for a numerical feature, exit and move on to the next file
   if not rep_feat_index in categorical_features:
     return
-  #create histograms comparing the groups and repaired groups for every numerical feature
+
+  #create distributions for the different groups and their repaired variants
   for num_feat in numerical_features:
     if headers[num_feat] == response_header:
       return
-    #initialize test_to_graph and repaired_to_graph, which will hold the data that will be graphed
-    test_to_graph = {i:[] for i, _ in enumerate(categorical_features[rep_feat_index])}
-    repaired_to_graph = {i:[] for i, _ in enumerate(categorical_features[rep_feat_index])}
+    #initialize test_to_graph and repaired_to_graph, which will hold the data to be graphed for each group
+    test_to_graph = {group:[] for group in categorical_features[rep_feat_index]}
+    repaired_to_graph = {group:[] for group in categorical_features[rep_feat_index]}
     #goes through each row, adding the data to the correct group for both repaired and test data
     for i, row in enumerate(test_data):
       for group in categorical_features[rep_feat_index]:
         if row[rep_feat_index] == group:
-          test_to_graph[categorical_features[rep_feat_index].index(group)].append(row[num_feat])
-          repaired_to_graph[categorical_features[rep_feat_index].index(group)].append(repaired_data[i][num_feat])
-    #create and save graph
-    i = 0
-    while i < len(test_to_graph):
-      t = test_to_graph[i]
-      r = repaired_to_graph[i]
+          test_to_graph[group].append(row[num_feat])
+          repaired_to_graph[group].append(repaired_data[i][num_feat])
+
+    #create and save/show graph
+    for group in test_to_graph:
+      test_final = test_to_graph[group]
+      repaired_final = repaired_to_graph[group]
       #Add a bit of noise to keep seaborn from breaking
-      t = [float(n) for n in t]
-      t = [(n + 0.00001*random.randint(1, 1000)) for n in t]
-      r = [float(n) for n in r]
-      r = [(n + 0.00001*random.randint(1, 1000)) for n in r]
-      sns.distplot(t, hist=False, label=categorical_features[rep_feat_index][i], axlabel = headers[num_feat])
-      sns.distplot(r, hist=False, label=("Reapired " + categorical_features[rep_feat_index][i]))
-      i += 1
+      test_final = [float(val) for val in test_final]
+      test_final = [(val + 0.00001*random.randint(1, 1000)) for val in test_final]
+      repaired_final = [float(val) for val in repaired_final]
+      repaired_final = [(val + 0.00001*random.randint(1, 1000)) for val in repaired_final]
+      sns.distplot(test_final, hist=False, label=group, axlabel = headers[num_feat])
+      sns.distplot(repaired_final, hist=False, label=("Reapired " + group))
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.title("{} vs {} Distribution {}".format(headers[rep_feat_index], headers[num_feat], rep_lev))
     if write_to_file:
-      plt.savefig(directory + "/" + (str(file)).replace(".","_") + ":" + headers[rep_feat_index] + "_" + headers[num_feat] + "_Distribution", bbox_inches='tight')
+      plt.savefig(directory + "/" + headers[num_feat] + "_" + (str(file)).replace(".","_") + "_Distribution", bbox_inches='tight')
     else:
       plt.show()
     plt.clf()

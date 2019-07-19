@@ -13,7 +13,7 @@ import sys
 
 def audit_directory(directory, response_header, write_to_file=True, print_all_data=False, dump_all=False, conf_matrices_for_all_features=None, test_data=None, all_repaired_data=None, headers=None):
   if not write_to_file and (conf_matrices_for_all_features == None or test_data == None or all_repaired_data == None or headers == None):
-    raise Exception("Must input feature and confusion_matrices if write_to_file is False")
+    raise Exception("if write_to_file is False, additional data must be provided")
   measurers = [accuracy, BCR]
   if write_to_file:
     only_files = [f for f in listdir(directory) if isfile(join(directory, f))]
