@@ -141,14 +141,14 @@ def graph_distributions(directory, file, response_header, write_to_file=True, re
     # uses the filename to get the repaired feature index
     rep_feat_index = headers.index(file.split(".")[0])
 
-  #gets numerical and categorical features
+  # gets numerical and categorical features
   numerical_features, categorical_features = get_num_and_cat_feats(test_data)
 
   # if its repaired for a numerical feature, exit and move on to the next file
   if not rep_feat_index in categorical_features:
     return
 
-  #create distributions for the different groups and their repaired variants
+  # create distributions for the different groups and their repaired variants
   for num_feat in numerical_features:
     if headers[num_feat] == response_header:
       return
