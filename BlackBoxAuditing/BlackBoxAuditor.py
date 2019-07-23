@@ -27,6 +27,7 @@ class Auditor():
     self.trained_model = None
     self.kdd = False
     self._audits_data = {}
+    self.repair_mode = "Orig"
 
   def __call__(self, data, output_dir=None, dump_all=False, features_to_audit=None, print_all_data=False, make_all_graphs=False):
     start_time = datetime.now()
@@ -101,9 +102,9 @@ class Auditor():
 
     # Perform the Gradient Feature Audit and dump the audit results into files.
     if write_to_file:
-      audit_filenames = auditor.audit(verbose=self.verbose)
+      audit_filenames = auditor.audit(verbose=self.verbose, repair_mode=self.repair_mode)
     else:
-      all_repaired_data, conf_tables = auditor.audit(verbose=self.verbose, write_to_file=write_to_file, print_all_data=print_all_data)
+      all_repaired_data, conf_tables = auditor.audit(verbose=self.verbose, write_to_file=write_to_file, print_all_data=print_all_data, repair_mode=self.repair_mode)
 
     # Retrieve repaired data from audit
     self._audits_data["rep_test"] = auditor._rep_test

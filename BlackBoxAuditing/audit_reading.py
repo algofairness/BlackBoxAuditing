@@ -131,7 +131,7 @@ def get_num_and_cat_feats(data):
 
 # Graphs Distributions for all combinations of categorical and numerical features
 def graph_distributions(directory, file, response_header, write_to_file=True, rep_feat_index=None, test_data=None, repaired_data=None, headers=None, rep_lev=""):
-  if not write_to_file and (rep_feat_index == None or test_data == None or repaired_data == None or headers == None or rep_lev == ""):
+  if not write_to_file and (rep_feat_index == None or test_data == None or repaired_data == None or headers == None):
     raise Exception("if write_to_file is False, additional data must be provided")
 
   # gest the test and repaired data, and the repaired feature index

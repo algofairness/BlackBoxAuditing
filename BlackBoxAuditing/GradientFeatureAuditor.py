@@ -18,7 +18,7 @@ shared_all = None
 shared_train = None
 shared_test = None
 
-def _audit_worker(params, write_to_file=True, print_all_data=False):
+def _audit_worker(params, write_to_file=True, print_all_data=False, repair_mode="Orig"):
   global shared_all
   global shared_train
   global shared_test
@@ -27,7 +27,7 @@ def _audit_worker(params, write_to_file=True, print_all_data=False):
   index_to_repair = headers.index(feature_to_repair)
 
   repairer = Repairer(shared_all, index_to_repair,
-                      repair_level, kdd, features_to_ignore=ignored_features)
+                      repair_level, kdd, features_to_ignore=ignored_features, repair_mode=repair_mode)
 
   # Build a model on repaired training data if specified.
   if isinstance(model_or_factory, AbstractModelFactory):
@@ -130,7 +130,7 @@ class GradientFeatureAuditor(object):
     os.makedirs(directory)
 
 
-  def audit_feature(self, feature_to_repair, output_file, write_to_file=True, print_all_data=False):
+  def audit_feature(self, feature_to_repair, output_file, write_to_file=True, print_all_data=False, repair_mode="Orig"):
     repair_increase_per_step = 1.0/self.repair_steps
     repair_level = 0.0
 
@@ -151,7 +151,7 @@ class GradientFeatureAuditor(object):
       pool.join()
       del pool
     else:
-      conf_table_tuples = [_audit_worker(params, write_to_file=write_to_file, print_all_data=print_all_data) for params in worker_params]
+      conf_table_tuples = [_audit_worker(params, write_to_file=write_to_file, print_all_data=print_all_data, repair_mode=repair_mode) for params in worker_params]
       if not write_to_file:
         for i, ctt in enumerate(conf_table_tuples):
           repaired_data[i*0.1] = ctt.pop(0)
@@ -178,7 +178,7 @@ class GradientFeatureAuditor(object):
       return repaired_data, conf_table_tuples
 
 
-  def audit(self, verbose=False, write_to_file=True, print_all_data=False):
+  def audit(self, verbose=False, write_to_file=True, print_all_data=False, repair_mode="Orig"):
     features_to_audit = [h for i, h in enumerate(self.headers) if i not in self.features_to_ignore] if self.features_to_audit is None else self.features_to_audit
     
     if write_to_file:
@@ -192,7 +192,7 @@ class GradientFeatureAuditor(object):
         full_filepath = self.OUTPUT_DIR + "/" + output_file
         output_files.append(full_filepath)
 
-        self.audit_feature(feature, full_filepath)
+        self.audit_feature(feature, full_filepath, repair_mode=repair_mode)
 
       audit_msg1 = "Audit file dump set to {}".format(self.dump_all)
       audit_msg2 = "All audit files have been saved." if self.dump_all else "Only mininal audit files have been saved."
@@ -208,7 +208,7 @@ class GradientFeatureAuditor(object):
         message = "Auditing: '{}' ({}/{}).".format(feature,i+1,len(features_to_audit))
         vprint(message, verbose)
 
-        all_repaired_data[feature], conf_table_tuples_for_all_features[feature] = self.audit_feature(feature, None, write_to_file=write_to_file, print_all_data=print_all_data)
+        all_repaired_data[feature], conf_table_tuples_for_all_features[feature] = self.audit_feature(feature, None, write_to_file=write_to_file, print_all_data=print_all_data, repair_mode=repair_mode)
       return all_repaired_data, conf_table_tuples_for_all_features
 
 
