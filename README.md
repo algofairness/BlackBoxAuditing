@@ -137,7 +137,7 @@ After initializing the auditor `auditor = BlackBoxAuditor.Auditor()`, there are 
 `auditor.ModelFactory`: (*default = SVM*) Available machine learning options: SVM, DecisionTree, NeuralNetwork
 
 `auditor.kdd`: (*default = False*) 
-`auditor.reapir_mode`: (*default = "Orig"*) Available repair methods: "Orig", "AllMed", "UMed", "Mode"
+`auditor.reapir_mode`: (*default = "Orig"*) Available repair methods: "Orig", "AllMed": repairs the data towards the median, "UMed": repairs the data towards the median only considering unique values, "Mode": repairs the data towards the mode
 
 #### Auditor call options
 

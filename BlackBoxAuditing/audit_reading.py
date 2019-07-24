@@ -47,6 +47,7 @@ def load_audit_confusion_matrices(filename):
 
 
 def graph_audit(filename, measurers, output_image_file, write_to_file=True, print_all_data=False, feature=None, confusion_matrices=None):
+  # Ensures that if write_to_file is False, the necessary data is given
   if not write_to_file and (feature == None or confusion_matrices == None):
     raise Exception("if write_to_file is False, additional data must be provided")
 
@@ -92,13 +93,12 @@ def graph_audit(filename, measurers, output_image_file, write_to_file=True, prin
 
 
 def get_data_from_file(file_dir):
+  #gets data and headers
   with open(file_dir) as f:
     reader = csv.reader(f)
     data = [row for row in reader]
     headers = data.pop(0)
-
-  numerical_features = []
-  categorical_features = {}
+  #changes the data from all strings to the correct types
   for i, row in enumerate(data):
     for j, val in enumerate(row):
       try:
@@ -113,17 +113,20 @@ def get_data_from_file(file_dir):
 
   return data, headers
 
+
 def get_num_and_cat_feats(data):
   numerical_features = []
   categorical_features = {}
   for i, row in enumerate(data):
     for j, val in enumerate(row):
       if i == 0:
+        #gets indexes of numerical and categorical features
         if type(val) == int or type(val) == float:
           numerical_features.append(j)
         else:
           categorical_features[j] = [val]
       else:
+        #gets groups for all categorical features
         if j in categorical_features and not val in categorical_features[j]:
           categorical_features[j].append(val)
 
@@ -131,6 +134,7 @@ def get_num_and_cat_feats(data):
 
 # Graphs Distributions for all combinations of categorical and numerical features
 def graph_distributions(directory, file, response_header, write_to_file=True, rep_feat_index=None, test_data=None, repaired_data=None, headers=None, rep_lev=""):
+  # Ensures that if write_to_file is False, the necessary data is given
   if not write_to_file and (rep_feat_index == None or test_data == None or repaired_data == None or headers == None):
     raise Exception("if write_to_file is False, additional data must be provided")
 
@@ -183,80 +187,28 @@ def graph_distributions(directory, file, response_header, write_to_file=True, re
 
 
 # Graphs Distributions for a particular repaired and numerical feature, only showing some groups if desired
-def graph_particular_distribution(directory, file, num_feat_index, only_groups=None, rfi=None):
-  #only_groups should be in the form of ["group1", "group2", ect] or [("group1", repaired?), ("group2", repaired?), ect]
+def graph_particular_distribution(directory, file, num_feat_index, only_groups=None):
+  #only_groups should be in the form of ["group1", "group2", ect] or [("group1", graph repaired?), ("group2", graph repaired?), ect]
   #rfi is the index of the repaired feature, to be used if the data isnt 100% repaired
 
-  if not "1.0.data" in file and rfi == None:
-    print("If data is not completely repaired, you must specify the repaired index")
-    return
-  if "1.0.data" in file:
-    rfi = None
+  test_data, headers = get_data_from_file(directory + "/" + "original_test_data.csv")
+  repaired_data, _ = get_data_from_file(directory + "/" + file)
+  rep_feat_index = headers.index(file.split(".")[0])
 
-  #fill test_data with the data in the file
-  test_data_filename = directory + "/" + "unrepaired_test_data"    
-  with open(test_data_filename) as f:
-    reader = csv.reader(f)
-    test_data = [row for row in reader]
-  
-  #fill repaired_data with the data in the file
-  repaired_data_filename = directory + "/" + file
-  with open(repaired_data_filename) as f:
-    reader = csv.reader(f)
-    repaired_data = [row for row in reader]
-    headers = repaired_data.pop(0)
-
-  #set the values to the correct types
-  for i, row in enumerate(repaired_data):
-    for j, val in enumerate(row):
-      try:
-        repaired_data[i][j] = int(val)
-      except:
-        try:
-          repaired_data[i][j] = float(val)
-        except:
-          pass
-
-  if rfi == None:
-    #find the feature the file is repaired for 
-    rep_feat_TF  = [True]*len(repaired_data[0])
-    for i, row in enumerate(repaired_data):
-      if i == 0:
-        last_vals = row
-      for j, val in enumerate(row):
-        if last_vals[j] != val:
-          rep_feat_TF[j] = False
-      last_vals = row
-    rep_feat_index = rep_feat_TF.index(True)
-  else:
-    rep_feat_index = rfi
-
-  #set the values to the correct types and get the groups for the repaired feature
+  #get the categorical featues
+  _, cat_feats = get_num_and_cat_feats(test_data)
+  #set groups and no_repaired based on user input
   groups = []
   no_repaired = []
-  for i, row in enumerate(test_data):
-    for j, val in enumerate(row):
-      try:
-        val = int(val)
-        test_data[i][j] = val
-      except:
-        try:
-          val = float(val)
-          test_data[i][j] = val
-        except:
-          pass
-      if only_groups == None:
-        if j == rep_feat_index and not val in groups:
-          groups.append(val)
-      elif not type(only_groups[0]) == type((0, 0)):
-        groups = only_groups
-      else:
-        for g in only_groups:
-          if not g[0] in groups:
-            groups.append(g[0])
-          if g[1] == False:
-            no_repaired.append(g[0])
-      #print(groups)
+  if only_groups == None:
+    groups = cat_feats[rep_feat_index]
+  elif not type(only_groups[0]) == type((0, 0)):
+    groups = only_groups
+  else:
+    for g in only_groups:
+      groups.append(g[0])
+      if g[1] == False:
+        no_repaired.append(g[0])
 
   #initialize test_to_graph and repaired_to_graph, which will hold the data that will be graphed
   test_to_graph = {i:[] for i, _ in enumerate(groups)}

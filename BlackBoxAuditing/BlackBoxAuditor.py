@@ -31,9 +31,10 @@ class Auditor():
 
   def __call__(self, data, output_dir=None, dump_all=False, features_to_audit=None, print_all_data=False, make_all_graphs=False):
     start_time = datetime.now()
+    print("repair_mode = " + self.repair_mode)
+
     if output_dir == None:
       write_to_file = False
-      #dump_all = False
     else:
       write_to_file = True
       print_all_data = False

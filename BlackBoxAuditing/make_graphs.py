@@ -18,27 +18,33 @@ def audit_directory(directory, response_header, write_to_file=True, print_all_da
     
   measurers = [accuracy, BCR]
   if write_to_file:
+    # gets the audit files to graph
     only_files = [f for f in listdir(directory) if isfile(join(directory, f))]
     audits = ["{}/{}".format(directory, f) for f in only_files if f[-6:]==".audit"]
 
+    #graphs each audit file
     for audit in audits:
       audit_image_filename = audit + ".png"
       graph_audit(audit, measurers, audit_image_filename)
 
+    #graphs each measure
     for measurer in measurers:
       ranked_graph_filename = "{}/{}.png".format(directory, measurer.__name__)
       graph_audits(audits, measurer, ranked_graph_filename)
       ranks = rank_audit_files(audits, measurer)
       print(measurer.__name__, ranks)
 
+    #graphs each distribution
     for file_name in only_files:
       for g in list(range(0, 10)):
         if "{}.data".format(g) in file_name:
           graph_distributions(directory, file_name, response_header)
   else:
+    #graphs each audit file and measure
     for i, feature in enumerate(conf_matrices_for_all_features):
       graph_audit(None, measurers, None, write_to_file=write_to_file, print_all_data=print_all_data, feature=feature, confusion_matrices=conf_matrices_for_all_features[feature])
 
+    #graphs each distribution
     for feature in all_repaired_data:
       rfi = headers.index(feature)
       if not dump_all:
