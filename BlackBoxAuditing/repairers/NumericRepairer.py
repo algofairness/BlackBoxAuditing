@@ -11,14 +11,7 @@ from BlackBoxAuditing.repairers.calculators import get_median
 class Repairer(AbstractRepairer):
   def __init__(self, *args, **kwargs):
     super(Repairer, self).__init__(*args, **kwargs)
-    if self.repair_mode == "AllMed":
-      self.categoric_repairer = CategoricRepairerAllMed.Repairer(*args,**kwargs)
-    elif self.repair_mode == "UMed":
-      self.categoric_repairer = CategoricRepairerUMed.Repairer(*args,**kwargs)
-    elif self.repair_mode == "Mode":
-      self.categoric_repairer = CategoricRepairerMode.Repairer(*args,**kwargs)
-    else:
-      self.categoric_repairer = CategoricRepairer.Repairer(*args,**kwargs)
+    self.categoric_repairer = CategoricRepairer.Repairer(*args,**kwargs)
 
   def repair(self, data_to_repair):
 

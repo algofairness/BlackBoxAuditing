@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from BlackBoxAuditing.repairers.AbstractRepairer import AbstractRepairer
 from BlackBoxAuditing.repairers.CategoricalFeature import CategoricalFeature
+from BlackBoxAuditing.repairers.CategoricRepairer import *
 from BlackBoxAuditing.repairers.calculators import get_median
 from BlackBoxAuditing.repairers.SparseList import SparseList
 
@@ -80,45 +81,81 @@ class Repairer(AbstractRepairer):
     # look up a stratified group, and get a list of indices corresponding to that group in the data
     stratified_group_indices = defaultdict(list)
 
-    # Find the number of unique values for each strat-group, organized per column.
-    val_sets = {group: {col_id:set() for col_id in cols_to_repair}
+    if self.repair_mode == "Orig":
+      # Find the number of unique values for each strat-group, organized per column.
+      val_sets = {group: {col_id:set() for col_id in cols_to_repair}
                                      for group in all_stratified_groups}
-    for i, row in enumerate(data_to_repair):
-      group = tuple(row[col] for col in safe_stratify_cols)
+      for i, row in enumerate(data_to_repair):
+        group = tuple(row[col] for col in safe_stratify_cols)
+        for col_id in cols_to_repair:
+          val_sets[group][col_id].add(row[col_id])
+
+        # Also remember that this row pertains to this strat-group.
+        stratified_group_indices[group].append(i)
+      stratified_group_data = {group: {} for group in all_stratified_groups}
+
+      for group in all_stratified_groups:
+        for col_id, col_dict in list(data_dict.items()):
+          # Get the indices at which each value occurs.
+          indices = {}
+          for i in stratified_group_indices[group]:
+            value = col_dict[i]
+            if value not in indices:
+              indices[value] = []
+            indices[value].append(i)
+
+          stratified_col_values = [(occurs, val) for val, occurs in list(indices.items())]
+          stratified_col_values.sort(key=lambda tup: tup[1])
+          stratified_group_data[group][col_id] = stratified_col_values
+    else:
+      stratified_group_data = {group: {col_id: {} for col_id in cols_to_repair} for group in all_stratified_groups}
+      sorted_data_dict = {col_id: [] for col_id in cols_to_repair}
+      for i, row in enumerate(data_to_repair):
+        group = tuple(row[col] for col in safe_stratify_cols)
+        for col_id in cols_to_repair:
+          value = data_dict[col_id][i]
+          if value not in stratified_group_data[group][col_id]:
+            stratified_group_data[group][col_id][value] = []
+          stratified_group_data[group][col_id][value].append(i)
+          sorted_data_dict[col_id].append(value)
+        stratified_group_indices[group].append(i)
+      for group in all_stratified_groups:
+        for col_id in cols_to_repair:
+          stratified_group_data[group][col_id] = [(occurs, val) for val, occurs in list(stratified_group_data[group][col_id].items())]
+          stratified_group_data[group][col_id].sort()
+
+    if self.repair_mode == "AllMed":
+      all_index_lookup = {}
       for col_id in cols_to_repair:
-        val_sets[group][col_id].add(row[col_id])
-
-      # Also remember that this row pertains to this strat-group.
-      stratified_group_indices[group].append(i)
-
-
-    """
-     Separate data by stratified group to perform repair on each Y column's values given that their corresponding protected attribute is a particular stratified group. We need to keep track of each Y column's values corresponding to each particular stratified group, as well as each value's index, so that when we repair the data, we can modify the correct value in the original data. Example: Supposing there is a Y column, "Score1", in which the 3rd and 5th scores, 70 and 90 respectively, belonged to black women, the data structure would look like: {("Black", "Woman"): {Score1: [(70,2),(90,4)]}}
-    """
-    stratified_group_data = {group: {} for group in all_stratified_groups}
-    for group in all_stratified_groups:
-      for col_id, col_dict in list(data_dict.items()):
-        # Get the indices at which each value occurs.
-        indices = {}
-        for i in stratified_group_indices[group]:
-          value = col_dict[i]
-          if value not in indices:
-            indices[value] = []
-          indices[value].append(i)
-
-        stratified_col_values = [(occurs, val) for val, occurs in list(indices.items())]
-        stratified_col_values.sort(key=lambda tup: tup[1])
-        stratified_group_data[group][col_id] = stratified_col_values
+        sorted_data_dict[col_id].sort()
+        all_index_lookup[col_id] = {}
+        for i in range(len(sorted_data_dict[col_id])):
+          if sorted_data_dict[col_id][i] not in all_index_lookup[col_id]:
+            all_index_lookup[col_id][sorted_data_dict[col_id][i]] = []
+            all_index_lookup[col_id][sorted_data_dict[col_id][i]].append(i)
+            if sorted_data_dict[col_id][i-1] in all_index_lookup[col_id]:
+              all_index_lookup[col_id][sorted_data_dict[col_id][i-1]].append(i-1)
+        all_index_lookup[col_id][sorted_data_dict[col_id][i]].append(i)
 
     mode_feature_to_repair = get_mode(data_dict[self.feature_to_repair])
+    
+    if self.repair_mode == "Mode":
+      group_size = []
+      for group in stratified_group_indices:
+        group_size.append((group,len(stratified_group_indices[group])))
+      group_size.sort(key=lambda tup: tup[1])
+      mode_group = group_size[-1][0]
 
     # Repair Data and retrieve the results
     for col_id in cols_to_repair:
       # which bucket value we're repairing
       group_offsets = {group: 0 for group in all_stratified_groups}
       col = data_dict[col_id]
-
-      num_quantiles = min(len(val_sets[group][col_id]) for group in all_stratified_groups)
+      
+      if self.repair_mode == "Orig":
+        num_quantiles = min(len(val_sets[group][col_id]) for group in all_stratified_groups)
+      else:
+        num_quantiles = min(len(stratified_group_data[group][col_id]) for group in all_stratified_groups)
       quantile_unit = 1.0/num_quantiles
 
       if repair_types[col_id] in {int, float}:
@@ -138,25 +175,63 @@ class Repairer(AbstractRepairer):
               # Get data at this quantile from this Y column such that stratified X = group
               offset_data = group_data_at_col[offset:offset+number_to_get]
               indices_per_group[group] = [i for val_indices, _ in offset_data for i in val_indices]
-              values = sorted([float(val) for _, val in offset_data])
+              if not self.repair_mode == "Mode":
+                values = sorted([float(val) for _, val in offset_data])
+              else:
+                if group==mode_group:
+                  values = sorted([float(val) for _, val in offset_data])
+                  median_mode_group = get_median(values, self.kdd)
 
               # Find this group's median value at this quantile
               median_at_quantiles.append( get_median(values, self.kdd) )
 
-          # Find the median value of all groups at this quantile (chosen from each group's medians)
-          median = get_median(median_at_quantiles, self.kdd)
-          median_val_pos = index_lookup[col_id][median]
+          if self.repair_mode == "Orig":
+            # Find the median value of all groups at this quantile (chosen from each group's medians)
+            median = get_median(median_at_quantiles, self.kdd)
+            median_val_pos = index_lookup[col_id][median]
+          elif self.repair_mode == "UMed":
+            min_median = min(median_at_quantiles)
+            max_median = max(median_at_quantiles)
+            median_list = unique_col_vals[col_id][unique_col_vals[col_id].index(min_median):(unique_col_vals[col_id].index(max_median)+1)]
+
+            # Find the median value of all groups at this quantile (chosen from each group's medians)
+            median = get_median(median_list, self.kdd)
+            median_val_pos = index_lookup[col_id][median]
+          elif self.repair_mode == "AllMed":
+            min_median = min(median_at_quantiles)
+            max_median = max(median_at_quantiles)
+            median_list = sorted_data_dict[col_id][all_index_lookup[col_id][min_median][0]:(all_index_lookup[col_id][max_median][1]+1)]
+
+            # Find the median value of all groups at this quantile (chosen from each group's medians)
+            median = get_median(median_list, self.kdd)
+            median_val_pos = all_index_lookup[col_id][median][0]
+          elif self.repair_mode == "Mode":
+            median_val_pos = index_lookup[col_id][median_mode_group]
+
+
+
+
+
+
+
 
           # Update values to repair the dataset.
           for group in all_stratified_groups:
             for index in indices_per_group[group]:
               original_value = col[index]
-
-              current_val_pos = index_lookup[col_id][original_value]
-              distance = median_val_pos - current_val_pos # distance between indices
-              distance_to_repair = int(round(distance * self.repair_level))
-              index_of_repair_value = current_val_pos + distance_to_repair
-              repaired_value = unique_col_vals[col_id][index_of_repair_value]
+              
+              if not self.repair_mode == "AllMed":
+                current_val_pos = index_lookup[col_id][original_value]
+                distance = median_val_pos - current_val_pos # distance between indices
+                distance_to_repair = int(round(distance * self.repair_level))
+                index_of_repair_value = current_val_pos + distance_to_repair
+                repaired_value = unique_col_vals[col_id][index_of_repair_value]
+              else:
+                current_val_pos = all_index_lookup[col_id][original_value][0]
+                distance = median_val_pos - current_val_pos # distance between indices
+                distance_to_repair = int(round(distance * self.repair_level))
+                index_of_repair_value = current_val_pos + distance_to_repair
+                repaired_value = sorted_data_dict[col_id][index_of_repair_value]
 
               # Update data to repaired valued
               data_dict[col_id][index] = repaired_value
