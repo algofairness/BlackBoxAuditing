@@ -1,8 +1,5 @@
 from BlackBoxAuditing.repairers.AbstractRepairer import AbstractRepairer
 from BlackBoxAuditing.repairers.CategoricRepairer import Repairer as CategoricRepairer
-from BlackBoxAuditing.repairers.CategoricRepairerAllMedian import Repairer as CategoricRepairerAllMed
-from BlackBoxAuditing.repairers.CategoricRepairerUniqueMedian import Repairer as CategoricRepairerUMed
-from BlackBoxAuditing.repairers.CategoricRepairerMode import Repairer as CategoricRepairerMode
 from BlackBoxAuditing.repairers.NumericRepairer import Repairer as NumericRepairer
 
 class Repairer(AbstractRepairer):

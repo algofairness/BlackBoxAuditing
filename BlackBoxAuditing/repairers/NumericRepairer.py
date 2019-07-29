@@ -1,8 +1,5 @@
 from BlackBoxAuditing.repairers.AbstractRepairer import AbstractRepairer
 import BlackBoxAuditing.repairers.CategoricRepairer as CategoricRepairer
-import BlackBoxAuditing.repairers.CategoricRepairerAllMedian as CategoricRepairerAllMed
-import BlackBoxAuditing.repairers.CategoricRepairerUniqueMedian as CategoricRepairerUMed
-import BlackBoxAuditing.repairers.CategoricRepairerMode as CategoricRepairerMode
 from BlackBoxAuditing.repairers.binning.Binner import make_histogram_bins
 from BlackBoxAuditing.repairers.binning.BinSizes import FreedmanDiaconisBinSize as bin_calculator
 from BlackBoxAuditing.repairers.calculators import get_median

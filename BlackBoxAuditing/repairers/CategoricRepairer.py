@@ -4,7 +4,6 @@ from collections import defaultdict
 
 from BlackBoxAuditing.repairers.AbstractRepairer import AbstractRepairer
 from BlackBoxAuditing.repairers.CategoricalFeature import CategoricalFeature
-from BlackBoxAuditing.repairers.CategoricRepairer import *
 from BlackBoxAuditing.repairers.calculators import get_median
 from BlackBoxAuditing.repairers.SparseList import SparseList
 
@@ -14,7 +13,7 @@ from copy import deepcopy
 
 
 class Repairer(AbstractRepairer):
-  def repair(self, data_to_repair):
+  def repair(self, data_to_repair): 
     num_cols = len(data_to_repair[0])
     col_ids = list(range(num_cols))
     
