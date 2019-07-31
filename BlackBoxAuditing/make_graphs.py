@@ -53,6 +53,10 @@ def audit_directory(directory, response_header, write_to_file=True, print_all_da
         for rep_lev in sorted(all_repaired_data[feature].keys()):
           graph_distributions(None, None, response_header, write_to_file=write_to_file, rep_feat_index=rfi, test_data=test_data, repaired_data=all_repaired_data[feature][rep_lev], headers=headers, rep_lev=rep_lev)
 
+def graph_particular_distribution(directory, file, response_header, num_feat_index, only_groups=None):
+  repair_level = (file.split("_")[1]).split(".")[0] + "." + (file.split("_")[1]).split(".")[1]
+  graph_distributions(directory, file, response_header, rep_lev=repair_level, particular=True, num_feat_index=num_feat_index, only_groups=only_groups)
+
 
 if __name__=="__main__":
   try:

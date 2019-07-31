@@ -133,10 +133,18 @@ def get_num_and_cat_feats(data):
   return numerical_features, categorical_features
 
 # Graphs Distributions for all combinations of categorical and numerical features
-def graph_distributions(directory, file, response_header, write_to_file=True, rep_feat_index=None, test_data=None, repaired_data=None, headers=None, rep_lev=""):
+def graph_distributions(directory, file, response_header, write_to_file=True, rep_feat_index=None, test_data=None, repaired_data=None, headers=None, rep_lev="", particular=False, num_feat_index=None, only_groups=None):
+  if particular == True and write_to_file == False:
+    print("write_to_file must be True to graph a particular distribution")
+    particular = False
+
   # Ensures that if write_to_file is False, the necessary data is given
   if not write_to_file and (rep_feat_index == None or test_data == None or repaired_data == None or headers == None):
     raise Exception("if write_to_file is False, additional data must be provided")
+
+  # Ensures that if particular is False, the necessary data is given
+  if particular and (num_feat_index == None):
+    raise Exception("if particular is True, additional data must be provided")
 
   # gest the test and repaired data, and the repaired feature index
   if write_to_file:
@@ -151,6 +159,12 @@ def graph_distributions(directory, file, response_header, write_to_file=True, re
   # if its repaired for a numerical feature, exit and move on to the next file
   if not rep_feat_index in categorical_features:
     return
+
+  if particular:
+    numerical_features = [num_feat_index]
+    categorical_features = {rep_feat_index: categorical_features[rep_feat_index]}
+  if only_groups == None:
+    only_groups = categorical_features[rep_feat_index]
 
   # create distributions for the different groups and their repaired variants
   for num_feat in numerical_features:
@@ -167,7 +181,7 @@ def graph_distributions(directory, file, response_header, write_to_file=True, re
           repaired_to_graph[group].append(repaired_data[i][num_feat])
 
     #create and save/show graph
-    for group in test_to_graph:
+    for group in only_groups:
       test_final = test_to_graph[group]
       repaired_final = repaired_to_graph[group]
       #Add a bit of noise to keep seaborn from breaking
@@ -180,72 +194,14 @@ def graph_distributions(directory, file, response_header, write_to_file=True, re
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.title("{} vs {} Distribution {}".format(headers[rep_feat_index], headers[num_feat], rep_lev))
     if write_to_file:
-      plt.savefig(directory + "/" + headers[num_feat] + "_" + (str(file)).replace(".","_") + "_Distribution", bbox_inches='tight')
+      file_title = headers[num_feat] + "_" + (str(file)).replace(".","_") + "_Distribution"
+      if not only_groups == categorical_features[rep_feat_index]:
+        for group in only_groups:
+          file_title += "_" + group 
+      plt.savefig(directory + "/" + file_title, bbox_inches='tight')
     else:
       plt.show()
     plt.clf()
-
-
-# Graphs Distributions for a particular repaired and numerical feature, only showing some groups if desired
-def graph_particular_distribution(directory, file, num_feat_index, only_groups=None):
-  #only_groups should be in the form of ["group1", "group2", ect] or [("group1", graph repaired?), ("group2", graph repaired?), ect]
-  #rfi is the index of the repaired feature, to be used if the data isnt 100% repaired
-
-  test_data, headers = get_data_from_file(directory + "/" + "original_test_data.csv")
-  repaired_data, _ = get_data_from_file(directory + "/" + file)
-  rep_feat_index = headers.index(file.split(".")[0])
-
-  #get the categorical featues
-  _, cat_feats = get_num_and_cat_feats(test_data)
-  #set groups and no_repaired based on user input
-  groups = []
-  no_repaired = []
-  if only_groups == None:
-    groups = cat_feats[rep_feat_index]
-  elif not type(only_groups[0]) == type((0, 0)):
-    groups = only_groups
-  else:
-    for g in only_groups:
-      groups.append(g[0])
-      if g[1] == False:
-        no_repaired.append(g[0])
-
-  #initialize test_to_graph and repaired_to_graph, which will hold the data that will be graphed
-  test_to_graph = {i:[] for i, _ in enumerate(groups)}
-  repaired_to_graph = {i:[] for i, _ in enumerate(groups)}
-  #goes through each row, adding the data to the correct group for both repaired and test data
-  for i, row in enumerate(test_data):
-    for group in groups:
-      if row[rep_feat_index] == group:
-        test_to_graph[groups.index(group)].append(row[num_feat_index])
-        repaired_to_graph[groups.index(group)].append(repaired_data[i][num_feat_index])
-
-  #create and save graph
-  i = 0
-  while i < len(test_to_graph):
-    t = test_to_graph[i]
-    r = repaired_to_graph[i]
-    #Add a bit of noise to keep seaborn from breaking
-    t = [float(n) for n in t]
-    t = [(n + 0.00001*random.randint(1, 1000)) for n in t]
-    r = [float(n) for n in r]
-    r = [(n + 0.00001*random.randint(1, 1000)) for n in r]
-    sns.distplot(t, hist=False, label=groups[i], axlabel = headers[num_feat_index])
-    if not groups[i] in no_repaired:
-      sns.distplot(r, hist=False, label=("Repaired " + groups[i]))
-    i += 1
-  #generate figname
-  figname = directory + "/" + (str(file)).replace(".","_") + ":" + headers[rep_feat_index] + "_" + headers[num_feat_index]
-  if not only_groups == None:
-    for g in groups:
-      figname += "_" + g
-      if g in no_repaired:
-        figname += "-no_rep"
-  figname += "_Distribution"
-  plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-  plt.title("{} vs {} Distribution".format(headers[rep_feat_index], headers[num_feat_index]))
-  plt.savefig(figname, bbox_inches='tight')
-  plt.clf()
 
 
 def graph_audits(filenames_or_cm_all_feat, measurer, output_image_file, write_to_file=True, print_all_data=False):

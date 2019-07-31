@@ -77,7 +77,7 @@ auditor.find_contexts("age_cat", output_dir="german_context_output")
 ## Outputs of the Auditor
 ### Auditing with Repair Steps
 
-Calling the auditor on a dataset will evaluate the predictive ability of a model at different repair steps for each feature. The auditor will create a subdirectory "<your data>_audit_output" in the directory from which you run the auditor. This directory will contain three summary files: accuracy.png, BCR.png, and summary.txt. The two graphical summaries, accuracy.png and BCR.png, show the predictive ability of the model at different repair levels for each repaired feature, using accuracy and BCR respectively as metrics. Non-graphical summaries of the audit are included in the summary.txt file. This file includes the model options used, which features were repaired, and ranks the features by the amount repair with respect to each feature affects the accuracy of the model. Approximate trend groups are also included in the summary.txt file, indicating the groups of features with similar trends in the repair steps. More detailed reports of the repair with respect to each of the features are included in the remaining files of the output. 
+Calling the auditor on a dataset will evaluate the predictive ability of a model at different repair steps for each feature. The auditor will create a subdirectory "<your data>_audit_output" in the directory from which you run the auditor. This directory will contain three summary files: accuracy.png, BCR.png, and summary.txt. The two graphical summaries, accuracy.png and BCR.png, show the predictive ability of the model at different repair levels for each repaired feature, using accuracy and BCR respectively as metrics. Non-graphical summaries of the audit are included in the summary.txt file. This file includes the model options used, which features were repaired, and ranks the features by the amount repair with respect to each feature affects the accuracy of the model. Approximate trend groups are also included in the summary.txt file, indicating the groups of features with similar trends in the repair steps. More detailed reports of the repair with respect to each of the features are included in the remaining files of the output.
 
 ### Finding Contexts
 
@@ -137,6 +137,7 @@ After initializing the auditor `auditor = BlackBoxAuditor.Auditor()`, there are 
 `auditor.ModelFactory`: (*default = SVM*) Available machine learning options: SVM, DecisionTree, NeuralNetwork
 
 `auditor.kdd`: (*default = False*) 
+
 `auditor.reapir_mode`: (*default = "Orig"*) Available repair methods: "Orig", "AllMed": repairs the data towards the median, "UMed": repairs the data towards the median only considering unique values, "Mode": repairs the data towards the mode
 
 #### Auditor call options
@@ -171,6 +172,20 @@ find_contexts(removed_attr, output_dir, beam_width=10, min_covered_examples=1, m
 * *max_rule_length*: the maximum number of conditions that found rules may combine.
 * *by_original*: consider the best expanded rule within epsilon of original quality (True) or best quality of expanded rules (False).
 * *epsilon*: Number within which we consider best expanded rule of the original quality.
+
+#### Making Distributions
+
+Setting make_all_graphs to True or running audit_directory on an output directory will create graphs comparing the accuracy and BCR or different features as well as the distributions for all possible combinations of features with the given data. In order to graph a specific distribution, one can call `graph_particular_distribution`:
+
+```
+graph_particular_distribution(directory, file, response_header, num_feat_index, only_groups=None)
+```
+
+* *directory*: name of the output directory that contains the files to be graphed.
+* *file*: name of the file for the repaired data.
+* *response_header*: the header for the response feature.
+* *num_feat_index*: the index of the numerical feature to be graphed.
+* *only_groups*: a list of the names of the groups to be graphed. If left blank, all groups will be graphed.
 
 ## Testing Code Changes
 
