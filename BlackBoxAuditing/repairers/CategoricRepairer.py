@@ -180,9 +180,24 @@ class Repairer(AbstractRepairer):
                 if group==mode_group:
                   values = sorted([float(val) for _, val in offset_data])
                   median_mode_group = get_median(values, self.kdd)
+              
+              if self.repair_mode == "AllMed":
+                min_values = min(values)
+                max_values = max(values)
+                values_list = sorted_data_dict[col_id][all_index_lookup[col_id][min_values][0]:(all_index_lookup[col_id][max_values][1]+1)]
 
-              # Find this group's median value at this quantile
-              median_at_quantiles.append( get_median(values, self.kdd) )
+                # Find this group's median value at this quantile
+                median_at_quantiles.append( get_median(values_list, self.kdd) )
+              elif self.repair_mode == "UMed":
+                min_values = min(values)
+                max_values = max(values)
+                values_list = unique_col_vals[col_id][unique_col_vals[col_id].index(min_values):(unique_col_vals[col_id].index(max_values)+1)]
+
+                # Find this group's median value at this quantile
+                median_at_quantiles.append( get_median(values_list, self.kdd) )
+              else:
+                # Find this group's median value at this quantile
+                median_at_quantiles.append( get_median(values, self.kdd) )
 
           if self.repair_mode == "Orig":
             # Find the median value of all groups at this quantile (chosen from each group's medians)
@@ -206,13 +221,6 @@ class Repairer(AbstractRepairer):
             median_val_pos = all_index_lookup[col_id][median][0]
           elif self.repair_mode == "Mode":
             median_val_pos = index_lookup[col_id][median_mode_group]
-
-
-
-
-
-
-
 
           # Update values to repair the dataset.
           for group in all_stratified_groups:
