@@ -28,10 +28,11 @@ class Auditor():
     self.kdd = False
     self._audits_data = {}
     self.repair_mode = "Orig"
+    self.spec_group = None
 
   def __call__(self, data, output_dir=None, dump_all=False, features_to_audit=None, print_all_data=False, make_all_graphs=False):
     start_time = datetime.now()
-    if not self.repair_mode in ["Orig", "AllMed", "UMed", "Mode"]:
+    if not self.repair_mode in ["Orig", "AllMed", "UMed", "Mode", "Spec"]:
       print("\"{}\" is not a valid repair mode".format(self.repair_mode))
       self.repair_mode = "Orig"
     print("repair_mode = " + self.repair_mode)
@@ -106,9 +107,9 @@ class Auditor():
 
     # Perform the Gradient Feature Audit and dump the audit results into files.
     if write_to_file:
-      audit_filenames = auditor.audit(verbose=self.verbose, repair_mode=self.repair_mode)
+      audit_filenames = auditor.audit(verbose=self.verbose, repair_mode=self.repair_mode, spec_group=self.spec_group)
     else:
-      all_repaired_data, conf_tables = auditor.audit(verbose=self.verbose, write_to_file=write_to_file, print_all_data=print_all_data, repair_mode=self.repair_mode)
+      all_repaired_data, conf_tables = auditor.audit(verbose=self.verbose, write_to_file=write_to_file, print_all_data=print_all_data, repair_mode=self.repair_mode, spec_group=self.spec_group)
 
     # Retrieve repaired data from audit
     self._audits_data["rep_test"] = auditor._rep_test

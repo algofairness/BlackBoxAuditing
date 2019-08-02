@@ -138,7 +138,9 @@ After initializing the auditor `auditor = BlackBoxAuditor.Auditor()`, there are 
 
 `auditor.kdd`: (*default = False*) 
 
-`auditor.reapir_mode`: (*default = "Orig"*) Available repair methods: "Orig": when getting the median within buckets, only considers the values within the bucket, only considers said medians when getting the medians between buckets. "AllMed": when getting the median within buckets, considers all values of that feature between the minimum and maximum in the bucket, and does the same when getting the medians between buckets. "UMed": same as AllMed except it only considers unique values. "Mode": within buckets, is identical to "Orig", but between buckets, gets the mode of the medians
+`auditor.reapir_mode`: (*default = "Orig"*) Available repair methods: "Orig": when getting the median within buckets, only considers the values within the bucket, only considers said medians when getting the medians between buckets. "AllMed": when getting the median within buckets, considers all values of that feature between the minimum and maximum in the bucket, and does the same when getting the medians between buckets. "UMed": same as AllMed except it only considers unique values. "Mode": within buckets, is identical to "Orig", but between buckets, gets the mode of the medians. "Spec": spec allows you to choose whether to repair the data to the group with the highest median or the one with the loweat median by changing self.spec_group to "high" or "low"
+
+`auditor.spec_group`: (*default = None) If repair_mode is "Spec", must be set to "high" or "low". If not set, will default to "high".
 
 #### Auditor call options
 
