@@ -10,7 +10,6 @@ import random
 import math
 from copy import deepcopy
 
-
 class Repairer(AbstractRepairer):
   def repair(self, data_to_repair):
     num_cols = len(data_to_repair[0])
@@ -56,68 +55,84 @@ class Repairer(AbstractRepairer):
         repair_types[col_id] = str
 
     """
-     Create unique value structures: When performing repairs, we choose median values. If repair is partial, then values will be modified to some intermediate value between the original and the median value. However, the partially repaired value will only be chosen out of values that exist in the data set.  This prevents choosing values that might not make any sense in the data's context.  To do this, for each column, we need to sort all unique values and create two data structures: a list of values, and a dict mapping values to their positions in that list. Example: There are unique_col_vals[col] = [1, 2, 5, 7, 10, 14, 20] in the column. A value 2 must be repaired to 14, but the user requests that data only be repaired by 50%. We do this by finding the value at the right index:
-       index_lookup[col][2] = 1
+     Create some value structures depending on the repair_mode: When performing repairs, we choose median values. If repair is partial, then values will be modified to some intermediate value between the original and the median value. However, the partially repaired value will only be chosen out of values that exist in the data set.  This prevents choosing values that might not make any sense in the data's context.  
+     To do this, if the repair_mode is MedianAll, for each column, we need to sort all values and create two data structures: a list of values, and a dict mapping values to their first and last positions in that list. Example: There are col_vals[col] = [1, 2, 2, 5, 7, 10, 14, 14, 20] in the column. A value 2 must be repaired to 14, but the user requests that data only be repaired by 50%. We do this by finding the value at the right index:
+       index_lookup[col][2] = 1 (its first position in the list)
+       index_lookup[col][14] = 7 (its last position in the list)
+       this tells us that col_vals[col][3] = 7 is 50% of the way from 2 to 14.
+
+     Otherwise, for each column, we need to sort unique values and create two data structures: a list of values, and a dict mapping values to their positions in that list. Example: There are col_vals[col] = [1, 2, 5, 7, 10, 14, 20] in the column. A value 2 must be repaired to 14, but the user requests that data only be repaired by 50%. We do this by finding the value at the right index:
+       index_lookup[col][2] = 1 
        index_lookup[col][14] = 5
-       this tells us that unique_col_vals[col][3] = 7 is 50% of the way from 2 to 14.
+       this tells us that col_vals[col][3] = 7 is 50% of the way from 2 to 14.
     """
-    unique_col_vals = {}
-    index_lookup = {}
-    for col_id in not_I_col_ids:
+    if self.repair_mode == "AllMed":
+      value_structure = get_all_value_structure(data_dict, not_I_col_ids)
+    else:
+      value_structure = get_unique_value_structure(data_dict, not_I_col_ids)
+    col_vals = value_structure[0]
+    index_lookup = value_structure[1]
+
+    """
+     Make a list of unique values per each stratified column.  Then make a list of combinations of stratified groups. Example: race and gender cols are stratified: [(white, female), (white, male), (black, female), (black, male)] The combinations are tuples because they can be hashed and used as dictionary keys. 
+    """
+    unique_stratify_values = []
+    for col_id in safe_stratify_cols:
       col_values = data_dict[col_id]
-      # extract unique values from column and sort
       col_values = sorted(list(set(col_values)))
-      unique_col_vals[col_id] = col_values
-      # look up a value, get its position
-      index_lookup[col_id] = {col_values[i]: i for i in range(len(col_values))}
-
-    """
-     Make a list of unique values per each stratified column.  Then make a list of combinations of stratified groups. Example: race and gender cols are stratified: [(white, female), (white, male), (black, female), (black, male)] The combinations are tuples because they can be hashed and used as dictionary keys.  From these, find the sizes of these groups.
-    """
-    unique_stratify_values = [unique_col_vals[i] for i in safe_stratify_cols]
+      unique_stratify_values.append(col_values)
     all_stratified_groups = list(product(*unique_stratify_values))
-    # look up a stratified group, and get a list of indices corresponding to that group in the data
-    stratified_group_indices = defaultdict(list)
-
-    # Find the number of unique values for each strat-group, organized per column.
-    val_sets = {group: {col_id:set() for col_id in cols_to_repair}
-                                     for group in all_stratified_groups}
-    for i, row in enumerate(data_to_repair):
-      group = tuple(row[col] for col in safe_stratify_cols)
-      for col_id in cols_to_repair:
-        val_sets[group][col_id].add(row[col_id])
-
-      # Also remember that this row pertains to this strat-group.
-      stratified_group_indices[group].append(i)
-
 
     """
      Separate data by stratified group to perform repair on each Y column's values given that their corresponding protected attribute is a particular stratified group. We need to keep track of each Y column's values corresponding to each particular stratified group, as well as each value's index, so that when we repair the data, we can modify the correct value in the original data. Example: Supposing there is a Y column, "Score1", in which the 3rd and 5th scores, 70 and 90 respectively, belonged to black women, the data structure would look like: {("Black", "Woman"): {Score1: [(70,2),(90,4)]}}
     """
-    stratified_group_data = {group: {} for group in all_stratified_groups}
-    for group in all_stratified_groups:
-      for col_id, col_dict in list(data_dict.items()):
-        # Get the indices at which each value occurs.
-        indices = {}
-        for i in stratified_group_indices[group]:
-          value = col_dict[i]
-          if value not in indices:
-            indices[value] = []
-          indices[value].append(i)
+    stratified_group_data = {group: {col_id: {} for col_id in cols_to_repair} for group in all_stratified_groups}
+    # look up a stratified group, and get a list of indices corresponding to that group in the data
+    stratified_group_indices = defaultdict(list)
+    for i, row in enumerate(data_to_repair):
+      group = tuple(row[col] for col in safe_stratify_cols)
+      for col_id in cols_to_repair:
+        value = data_dict[col_id][i]
+        if value not in stratified_group_data[group][col_id]:
+          stratified_group_data[group][col_id][value] = []
+        stratified_group_data[group][col_id][value].append(i)
+      # Also remember that this row pertains to this strat-group.
+      stratified_group_indices[group].append(i)
 
-        stratified_col_values = [(occurs, val) for val, occurs in list(indices.items())]
-        stratified_col_values.sort(key=lambda tup: tup[1])
-        stratified_group_data[group][col_id] = stratified_col_values
+    for group in all_stratified_groups:
+      for col_id in cols_to_repair:
+        stratified_group_data[group][col_id] = [(occurs, val) for val, occurs in list(stratified_group_data[group][col_id].items())]
+        stratified_group_data[group][col_id].sort()
 
     mode_feature_to_repair = get_mode(data_dict[self.feature_to_repair])
+    
+    # find the group with largest size and set it to be the mode for RepairMode
+    group_size = []
+    for group in stratified_group_indices:
+      group_size.append((group,len(stratified_group_indices[group])))
+    group_size.sort(key=lambda tup: tup[1])
+    mode_group = group_size[-1][0]
 
     # Repair Data and retrieve the results
     for col_id in cols_to_repair:
+
+      # Find the target distribution to move to for MedianSpec
+      group_medians = []
+      for group in all_stratified_groups:
+        group_data_at_col = stratified_group_data[group][col_id]
+        group_medians.append((group, get_median(group_data_at_col,self.kdd)))
+      group_medians = sorted(group_medians)
+      if self.spec_group == "low":
+        mode_group = group_medians[0][0]
+      else:
+        mode_group = group_medians[-1][0]
+
+
       # which bucket value we're repairing
       group_offsets = {group: 0 for group in all_stratified_groups}
       col = data_dict[col_id]
 
-      num_quantiles = min(len(val_sets[group][col_id]) for group in all_stratified_groups)
+      num_quantiles = min(len(stratified_group_data[group][col_id]) for group in all_stratified_groups)
       quantile_unit = 1.0/num_quantiles
 
       if repair_types[col_id] in {int, float}:
@@ -139,23 +154,34 @@ class Repairer(AbstractRepairer):
               indices_per_group[group] = [i for val_indices, _ in offset_data for i in val_indices]
               values = sorted([float(val) for _, val in offset_data])
 
-              # Find this group's median value at this quantile
-              median_at_quantiles.append( get_median(values, self.kdd) )
+              # Find this group's median value at this quantile depending on the repair_mode
+              median = get_median_flexible(self, group, mode_group, values, col_vals, index_lookup,col_id)
+              if median != []:
+                median_at_quantiles.append(median)
 
-          # Find the median value of all groups at this quantile (chosen from each group's medians)
-          median = get_median(median_at_quantiles, self.kdd)
-          median_val_pos = index_lookup[col_id][median]
+          # Find the median value of all groups at this quantile depending on repaired_mode
+          median = get_median_flexible(self, mode_group, mode_group, median_at_quantiles, col_vals, index_lookup,col_id)
 
           # Update values to repair the dataset.
           for group in all_stratified_groups:
             for index in indices_per_group[group]:
               original_value = col[index]
 
-              current_val_pos = index_lookup[col_id][original_value]
+              if self.repair_mode == "AllMed":
+                if original_value < median:
+                  median_val_pos = index_lookup[col_id][median][1]
+                  current_val_pos = index_lookup[col_id][original_value][0]
+                else:
+                  median_val_pos = index_lookup[col_id][median][0]
+                  current_val_pos = index_lookup[col_id][original_value][1]
+              else:
+                median_val_pos = index_lookup[col_id][median]
+                current_val_pos = index_lookup[col_id][original_value]
+
               distance = median_val_pos - current_val_pos # distance between indices
               distance_to_repair = int(round(distance * self.repair_level))
               index_of_repair_value = current_val_pos + distance_to_repair
-              repaired_value = unique_col_vals[col_id][index_of_repair_value]
+              repaired_value = col_vals[col_id][index_of_repair_value]
 
               # Update data to repaired valued
               data_dict[col_id][index] = repaired_value
@@ -194,7 +220,69 @@ class Repairer(AbstractRepairer):
     for i, orig_row in enumerate(data_to_repair):
       new_row = [orig_row[j] if j not in cols_to_repair else data_dict[j][i] for j in col_ids]
       repaired_data.append(new_row)
+
     return repaired_data
+
+# Different get_median techniques depending on repaired_mode
+def get_median_flexible(self, group, mode_group, lst, col_vals, index_lookup, col_id):
+  median = []
+  if self.repair_mode == "Orig":
+    median = get_median(lst, self.kdd)
+  elif self.repair_mode == "Mode" or self.repair_mode == "Spec":
+  # only needs to find the median_at_quantiles for mode_group
+    if group == mode_group:
+      median = get_median(lst, self.kdd)
+  else:
+    # take the median over all values in the dataset between min_lst and max_lst
+    min_lst = min(lst)
+    max_lst = max(lst)
+    if self.repair_mode == "AllMed":
+      lst_list = col_vals[col_id][index_lookup[col_id][min_lst][0]:(index_lookup[col_id][max_lst][1]+1)]
+    elif self.repair_mode == "UMed":
+      lst_list = col_vals[col_id][col_vals[col_id].index(min_lst):(col_vals[col_id].index(max_lst)+1)]
+    median = get_median(lst_list, self.kdd)
+  return median
+
+"""
+Create unique value strcture:, for each column, we sort all unique values and create two data structures: a list of values, and a dict mapping values to their positions in that list.
+"""
+def get_unique_value_structure(data_dict, not_I_col_ids):
+  unique_col_vals = {}
+  index_lookup = {}
+  for col_id in not_I_col_ids:
+    col_values = data_dict[col_id]
+    # extract unique values from column and sort
+    col_values = sorted(list(set(col_values)))
+    unique_col_vals[col_id] = col_values
+    # look up a value, get its position
+    index_lookup[col_id] = {col_values[i]: i for i in range(len(col_values))}
+  return (unique_col_vals, index_lookup)
+
+"""
+Create all value strcture:, for each column, we sort all values and create two data structures: a list of values, and a dict mapping values to their first and last positions in that list.
+"""
+def get_all_value_structure(data_dict, not_I_col_ids):
+  all_col_vals = {}
+  all_index_lookup = {}
+  for col_id in not_I_col_ids:
+    col_values = data_dict[col_id]
+    # extract unique values from column and sort
+    col_values = sorted(list(col_values))
+    all_col_vals[col_id] = col_values
+
+  # look up a value, get its position. Note that we need to get both its first and last position
+  for col_id in not_I_col_ids:
+    all_index_lookup[col_id] = {}
+    for i in range(len(all_col_vals[col_id])):
+      if all_col_vals[col_id][i] not in all_index_lookup[col_id]:
+        all_index_lookup[col_id][all_col_vals[col_id][i]] = []
+        all_index_lookup[col_id][all_col_vals[col_id][i]].append(i)
+        if all_col_vals[col_id][i-1] in all_index_lookup[col_id]:
+          all_index_lookup[col_id][all_col_vals[col_id][i-1]].append(i-1)
+    all_index_lookup[col_id][all_col_vals[col_id][i]].append(i)
+
+  return (all_col_vals, all_index_lookup)
+
 
 def get_group_data(all_stratified_groups,stratified_group_data, col_id):
   group_features={}

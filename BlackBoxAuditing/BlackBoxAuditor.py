@@ -8,10 +8,11 @@ from BlackBoxAuditing.model_factories import SVM, DecisionTree, NeuralNetwork
 from BlackBoxAuditing.model_factories.SKLearnModelVisitor import SKLearnModelVisitor
 from BlackBoxAuditing.loggers import vprint
 from BlackBoxAuditing.GradientFeatureAuditor import GradientFeatureAuditor
-from BlackBoxAuditing.audit_reading import graph_audit, graph_audits, rank_audit_files, group_audit_ranks
+from BlackBoxAuditing.audit_reading import graph_audit, graph_audits, rank_audit_files, group_audit_ranks, group_audit_ranks
 from BlackBoxAuditing.consistency_graph import graph_prediction_consistency
 from BlackBoxAuditing.measurements import get_conf_matrix, accuracy, BCR
 from BlackBoxAuditing.data import load_data, load_from_file, load_testdf_only
+from BlackBoxAuditing.make_graphs import audit_directory
 
 
 class Auditor():
@@ -26,9 +27,21 @@ class Auditor():
     self.trained_model = None
     self.kdd = False
     self._audits_data = {}
+    self.repair_mode = "Orig"
+    self.spec_group = None
 
-  def __call__(self, data, output_dir=None, dump_all=False, features_to_audit=None):
+  def __call__(self, data, output_dir=None, dump_all=False, features_to_audit=None, print_all_data=False, make_all_graphs=False):
     start_time = datetime.now()
+    if not self.repair_mode in ["Orig", "AllMed", "UMed", "Mode", "Spec"]:
+      print("\"{}\" is not a valid repair mode".format(self.repair_mode))
+      self.repair_mode = "Orig"
+    print("repair_mode = " + self.repair_mode)
+
+    if output_dir == None:
+      write_to_file = False
+    else:
+      write_to_file = True
+      print_all_data = False
 
     headers, train_set, test_set, response_header, features_to_ignore, correct_types = data
 
@@ -93,7 +106,10 @@ class Auditor():
                                      output_dir=output_dir,dump_all=dump_all)
 
     # Perform the Gradient Feature Audit and dump the audit results into files.
-    audit_filenames = auditor.audit(verbose=self.verbose)
+    if write_to_file:
+      audit_filenames = auditor.audit(verbose=self.verbose, repair_mode=self.repair_mode, spec_group=self.spec_group)
+    else:
+      all_repaired_data, conf_tables = auditor.audit(verbose=self.verbose, write_to_file=write_to_file, print_all_data=print_all_data, repair_mode=self.repair_mode, spec_group=self.spec_group)
 
     # Retrieve repaired data from audit
     self._audits_data["rep_test"] = auditor._rep_test
@@ -102,7 +118,10 @@ class Auditor():
     for measurer in self.measurers:
       vprint("Ranking audit files by {}.".format(measurer.__name__),self.verbose)
       #ranked_graph_filename = "{}/{}.png".format(auditor.OUTPUT_DIR, measurer.__name__)
-      ranks = rank_audit_files(audit_filenames, measurer)
+      if write_to_file:
+        ranks = rank_audit_files(audit_filenames, measurer)
+      else:
+        ranks = rank_audit_files(conf_tables, measurer, write_to_file=write_to_file)
       vprint("\t{}".format(ranks), self.verbose)
       ranked_features.append( (measurer, ranks) )
 
@@ -129,77 +148,90 @@ class Auditor():
 
     for ranker, ranks in ranked_features:
       print("Ranked Features by {}: {}".format(ranker.__name__, ranks))
-      groups = group_audit_ranks(audit_filenames, ranker)
+      if write_to_file:
+        groups = group_audit_ranks(audit_filenames, ranker)
+      else:
+        groups = group_audit_ranks(conf_tables, ranker, write_to_file=write_to_file)
       print("\tApprox. Trend Groups: {}\n".format(groups))
 
       if ranker.__name__ == "accuracy":
         self._audits_data["ranks"] = ranks
 
-    # Dump all experiment results if opted
-    if dump_all:
-      vprint("Dumping original training data.", self.verbose)
-      # Dump the train data to the log.
-      train_dump = "{}/original_train_data".format(auditor.OUTPUT_DIR)
-      with open(train_dump + ".csv", "w") as f:
-        writer = csv.writer(f)
-        writer.writerow(headers)
-        for row in train_set:
-          writer.writerow(row)
+    vprint("Dumping original testing data.", self.verbose)
+    # Dump the train data to the log.
+    test_dump = "{}/original_test_data".format(auditor.OUTPUT_DIR)
+    with open(test_dump + ".csv", "w") as f:
+      writer = csv.writer(f)
+      writer.writerow(headers)
+      for row in test_set:
+        writer.writerow(row)
 
-      if self.WRITE_ORIGINAL_PREDICTIONS:
-        # Dump the predictions on the test data.
-        with open(train_dump + ".predictions", "w") as f:
+    if write_to_file:
+      # Dump all experiment results if opted
+      if dump_all:
+        vprint("Dumping original training data.", self.verbose)
+        # Dump the train data to the log.
+        train_dump = "{}/original_train_data".format(auditor.OUTPUT_DIR)
+        with open(train_dump + ".csv", "w") as f:
           writer = csv.writer(f)
-          file_headers = ["Response", "Prediction"]
-          writer.writerow(file_headers)
-          for response, guess in train_pred_tuples:
-            writer.writerow([response, guess])
+          writer.writerow(headers)
+          for row in train_set:
+            writer.writerow(row)
 
-      vprint("Dumping original testing data.", self.verbose)
-      # Dump the train data to the log.
-      test_dump = "{}/original_test_data".format(auditor.OUTPUT_DIR)
-      with open(test_dump + ".csv", "w") as f:
-        writer = csv.writer(f)
-        writer.writerow(headers)
-        for row in test_set:
-          writer.writerow(row)
+        if self.WRITE_ORIGINAL_PREDICTIONS:
+          # Dump the predictions on the test data.
+          with open(train_dump + ".predictions", "w") as f:
+            writer = csv.writer(f)
+            file_headers = ["Response", "Prediction"]
+            writer.writerow(file_headers)
+            for response, guess in train_pred_tuples:
+              writer.writerow([response, guess])
 
-      if self.WRITE_ORIGINAL_PREDICTIONS:
-        # Dump the predictions on the test data.
-        with open(test_dump + ".predictions", "w") as f:
-          writer = csv.writer(f)
-          file_headers = ["Response", "Prediction"]
-          writer.writerow(file_headers)
-          for response, guess in test_pred_tuples:
-            writer.writerow([response, guess])
+        if self.WRITE_ORIGINAL_PREDICTIONS:
+          # Dump the predictions on the test data.
+          with open(test_dump + ".predictions", "w") as f:
+            writer = csv.writer(f)
+            file_headers = ["Response", "Prediction"]
+            writer.writerow(file_headers)
+            for response, guess in test_pred_tuples:
+              writer.writerow([response, guess])
 
-      # Graph the audit files.
-      vprint("Graphing audit files.",self.verbose)
-      for audit_filename in audit_filenames:
-        audit_image_filename = audit_filename + ".png"
-        graph_audit(audit_filename, self.measurers, audit_image_filename)
+        # Graph the audit files.
+        vprint("Graphing audit files.",self.verbose)
+        for audit_filename in audit_filenames:
+          audit_image_filename = audit_filename + ".png"
+          graph_audit(audit_filename, self.measurers, audit_image_filename)
 
-      # Store a graph of how many predictions change as features are repaired.
-      vprint("Graphing prediction changes throughout repair.",self.verbose)
-      output_image = auditor.OUTPUT_DIR + "/similarity_to_original_predictions.png"
-      graph_prediction_consistency(auditor.OUTPUT_DIR, output_image)
+        # Store a graph of how many predictions change as features are repaired.
+        vprint("Graphing prediction changes throughout repair.",self.verbose)
+        output_image = auditor.OUTPUT_DIR + "/similarity_to_original_predictions.png"
+        graph_prediction_consistency(auditor.OUTPUT_DIR, output_image)
 
-    for measurer in self.measurers:
-       ranked_graph_filename = "{}/{}.png".format(auditor.OUTPUT_DIR, measurer.__name__)
-       graph_audits(audit_filenames, measurer, ranked_graph_filename)
+      for measurer in self.measurers:
+        ranked_graph_filename = "{}/{}.png".format(auditor.OUTPUT_DIR, measurer.__name__)
+        graph_audits(audit_filenames, measurer, ranked_graph_filename)
 
-    # Store a summary of this experiment to file.
-    summary_file = "{}/summary.txt".format(auditor.OUTPUT_DIR)
-    with open(summary_file, "w") as f:
-      for line in summary:
-        f.write(line+'\n')
+      # Store a summary of this experiment to file.
+      summary_file = "{}/summary.txt".format(auditor.OUTPUT_DIR)
+      with open(summary_file, "w") as f:
+        for line in summary:
+          f.write(line+'\n')
 
-      for ranker, ranks in ranked_features:
-        f.write("Ranked Features by {}: {}\n".format(ranker.__name__, ranks))
-        groups = group_audit_ranks(audit_filenames, ranker)
-        f.write("\tApprox. Trend Groups: {}\n".format(groups))
+        for ranker, ranks in ranked_features:
+          f.write("Ranked Features by {}: {}\n".format(ranker.__name__, ranks))
+          groups = group_audit_ranks(audit_filenames, ranker)
+          f.write("\tApprox. Trend Groups: {}\n".format(groups))
 
-    vprint("Summary file written to: {}\n".format(summary_file), self.verbose)
+      vprint("Summary file written to: {}\n".format(summary_file), self.verbose)
+      if make_all_graphs:
+        audit_directory(output_dir, response_header)
+    else:
+      for measurer in self.measurers:
+        graph_audits(conf_tables, measurer, None, write_to_file=write_to_file, print_all_data=print_all_data)
+      if make_all_graphs:
+        audit_directory(None, response_header, write_to_file=write_to_file, print_all_data=print_all_data, dump_all=dump_all, conf_matrices_for_all_features=conf_tables, test_data=test_set, all_repaired_data=all_repaired_data, headers=headers)
+        
+
 
   def find_contexts(self, removed_attr, output_dir, beam_width=10, min_covered_examples=1, max_rule_length=5, by_original=True, epsilon=0.05):
     # import done here so that Orange install is optional
@@ -303,3 +335,4 @@ class MockModelPredict1234():
 if __name__ == "__main__":
 #    german_example_audit()
     test()
+

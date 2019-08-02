@@ -54,6 +54,13 @@ preloaded = {
                 "correct_types": [float]*2+[str,float,str]+[float]*162+[str]*58+[float]*48+[str],
                 "train_percentage": 2.0/3.0,
                 "response_header": "outcome",
-                "features_to_ignore": []}
+                "features_to_ignore": []},
+
+   "SAT":      {"filepath": datasets_dir+"/SAT.csv",
+                "testdata": None,
+                "correct_types": [str,float, int],
+                "train_percentage": 1.0/2.0,
+                "response_header": "Class",
+                "features_to_ignore":[]}
 
   }

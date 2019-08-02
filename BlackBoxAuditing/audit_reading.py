@@ -1,8 +1,14 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from scipy import stats
 import json
 import os, shutil
 import random
 import csv
-
+from os import listdir
+from os.path import isfile, join
 import matplotlib
 matplotlib.use('Agg') # Set the back-end
 import matplotlib.pyplot as plt
@@ -40,11 +46,17 @@ def load_audit_confusion_matrices(filename):
   return confusion_matrices
 
 
-def graph_audit(filename, measurers, output_image_file):
-  with open(filename) as audit_file:
-    header_line = audit_file.readline()[:-1] # Remove the trailing endline.
+def graph_audit(filename, measurers, output_image_file, write_to_file=True, print_all_data=False, feature=None, confusion_matrices=None):
+  # Ensures that if write_to_file is False, the necessary data is given
+  if not write_to_file and (feature == None or confusion_matrices == None):
+    raise Exception("if write_to_file is False, additional data must be provided")
 
-  confusion_matrices = load_audit_confusion_matrices(filename)
+  if write_to_file:
+    with open(filename) as audit_file:
+      header_line = audit_file.readline()[:-1] # Remove the trailing endline.
+    confusion_matrices = load_audit_confusion_matrices(filename)
+  else:
+    header_line = "GFA Audit for: " + feature
 
   x_axis = [repair_level for repair_level, _ in confusion_matrices]
   y_axes = []
@@ -60,26 +72,152 @@ def graph_audit(filename, measurers, output_image_file):
   plt.axis([0,1,0,1.1]) # Make all the plots consistently sized.
   plt.xlabel("Repair Level")
   plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-  plt.savefig(output_image_file, bbox_inches='tight')
+  if write_to_file:
+    plt.savefig(output_image_file, bbox_inches='tight')
+  else:
+    plt.show()
   plt.clf() # Clear the entire figure so future plots are empty.
 
   # Save the data used to generate that image file.
-  with open(output_image_file + ".data", "w") as f:
-    writer = csv.writer(f)
-    headers = ["Repair Level"] + [calc.__name__ for calc in measurers]
-    writer.writerow(headers)
+  if write_to_file:
+    with open(output_image_file + ".data", "w") as f:
+      writer = csv.writer(f)
+      headers = ["Repair Level"] + [calc.__name__ for calc in measurers]
+      writer.writerow(headers)
+      for i, repair_level in enumerate(x_axis):
+        writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
+  elif print_all_data:
+    print(feature + "Data")
     for i, repair_level in enumerate(x_axis):
-      writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
+      print([repair_level] + [y_vals[i] for y_vals in y_axes])
 
-def graph_audits(filenames, measurer, output_image_file):
+
+def get_data_from_file(file_dir):
+  #gets data and headers
+  with open(file_dir) as f:
+    reader = csv.reader(f)
+    data = [row for row in reader]
+    headers = data.pop(0)
+  #changes the data from all strings to the correct types
+  for i, row in enumerate(data):
+    for j, val in enumerate(row):
+      try:
+        val = int(val)
+        data[i][j] = val
+      except:
+        try:
+          val = float(val)
+          data[i][j] = val
+        except:
+          pass
+
+  return data, headers
+
+
+def get_num_and_cat_feats(data):
+  numerical_features = []
+  categorical_features = {}
+  for i, row in enumerate(data):
+    for j, val in enumerate(row):
+      if i == 0:
+        #gets indexes of numerical and categorical features
+        if type(val) == int or type(val) == float:
+          numerical_features.append(j)
+        else:
+          categorical_features[j] = [val]
+      else:
+        #gets groups for all categorical features
+        if j in categorical_features and not val in categorical_features[j]:
+          categorical_features[j].append(val)
+
+  return numerical_features, categorical_features
+
+# Graphs Distributions for all combinations of categorical and numerical features
+def graph_distributions(directory, file, response_header, write_to_file=True, rep_feat_index=None, test_data=None, repaired_data=None, headers=None, rep_lev="", particular=False, num_feat_index=None, only_groups=None):
+  if particular == True and write_to_file == False:
+    print("write_to_file must be True to graph a particular distribution")
+    particular = False
+
+  # Ensures that if write_to_file is False, the necessary data is given
+  if not write_to_file and (rep_feat_index == None or test_data == None or repaired_data == None or headers == None):
+    raise Exception("if write_to_file is False, additional data must be provided")
+
+  # Ensures that if particular is False, the necessary data is given
+  if particular and (num_feat_index == None):
+    raise Exception("if particular is True, additional data must be provided")
+
+  # gest the test and repaired data, and the repaired feature index
+  if write_to_file:
+    test_data, headers = get_data_from_file(directory + "/" + "original_test_data.csv")
+    repaired_data, _ = get_data_from_file(directory + "/" + file)
+    # uses the filename to get the repaired feature index
+    rep_feat_index = headers.index(file.split(".")[0])
+
+  # gets numerical and categorical features
+  numerical_features, categorical_features = get_num_and_cat_feats(test_data)
+
+  # if its repaired for a numerical feature, exit and move on to the next file
+  if not rep_feat_index in categorical_features:
+    return
+
+  if particular:
+    numerical_features = [num_feat_index]
+    categorical_features = {rep_feat_index: categorical_features[rep_feat_index]}
+  if only_groups == None:
+    only_groups = categorical_features[rep_feat_index]
+
+  # create distributions for the different groups and their repaired variants
+  for num_feat in numerical_features:
+    if headers[num_feat] == response_header:
+      return
+    #initialize test_to_graph and repaired_to_graph, which will hold the data to be graphed for each group
+    test_to_graph = {group:[] for group in categorical_features[rep_feat_index]}
+    repaired_to_graph = {group:[] for group in categorical_features[rep_feat_index]}
+    #goes through each row, adding the data to the correct group for both repaired and test data
+    for i, row in enumerate(test_data):
+      for group in categorical_features[rep_feat_index]:
+        if row[rep_feat_index] == group:
+          test_to_graph[group].append(row[num_feat])
+          repaired_to_graph[group].append(repaired_data[i][num_feat])
+
+    #create and save/show graph
+    for group in only_groups:
+      test_final = test_to_graph[group]
+      repaired_final = repaired_to_graph[group]
+      #Add a bit of noise to keep seaborn from breaking
+      test_final = [float(val) for val in test_final]
+      test_final = [(val + 0.00001*random.randint(1, 1000)) for val in test_final]
+      repaired_final = [float(val) for val in repaired_final]
+      repaired_final = [(val + 0.00001*random.randint(1, 1000)) for val in repaired_final]
+      sns.distplot(test_final, hist=False, label=group, axlabel = headers[num_feat])
+      sns.distplot(repaired_final, hist=False, label=("Reapired " + group))
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.title("{} vs {} Distribution {}".format(headers[rep_feat_index], headers[num_feat], rep_lev))
+    if write_to_file:
+      file_title = headers[num_feat] + "_" + (str(file)).replace(".","_") + "_Distribution"
+      if not only_groups == categorical_features[rep_feat_index]:
+        for group in only_groups:
+          file_title += "_" + group 
+      plt.savefig(directory + "/" + file_title, bbox_inches='tight')
+    else:
+      plt.show()
+    plt.clf()
+
+
+def graph_audits(filenames_or_cm_all_feat, measurer, output_image_file, write_to_file=True, print_all_data=False):
+  # if write_to_file is True, filenames_or_cm_all_feat will be a list of filenames to rank. otherwise, it will be a list of the conf matrices for all features
   features = []
   y_axes = []
-  for filename in filenames:
-    with open(filename) as audit_file:
-      header_line = audit_file.readline()[:-1] # Remove the trailing endline.
-      feature = header_line[header_line.index(":")+1:]
+  for filename_or_feature in filenames_or_cm_all_feat:
+    if write_to_file:
+      with open(filename_or_feature) as audit_file:
+        header_line = audit_file.readline()[:-1] # Remove the trailing endline.
+        feature = header_line[header_line.index(":")+1:]
+      confusion_matrices = load_audit_confusion_matrices(filename_or_feature)
+    else:
+      feature = filename_or_feature
+      confusion_matrices = filenames_or_cm_all_feat[feature]
 
-    confusion_matrices = load_audit_confusion_matrices(filename)
     x_axis = [repair_level for repair_level, _ in confusion_matrices]
     y_axis = [measurer(matrix) for _, matrix in confusion_matrices]
     plt.plot(x_axis, y_axis, label=feature)
@@ -92,26 +230,41 @@ def graph_audits(filenames, measurer, output_image_file):
   plt.axis([0,1,0,1.1]) # Make all the plots consistently sized.
   plt.xlabel("Repair Level")
   plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-  plt.savefig(output_image_file, bbox_inches='tight')
+  if write_to_file:
+    plt.savefig(output_image_file, bbox_inches='tight')
+  else:
+    plt.show()
   plt.clf() # Clear the entire figure so future plots are empty.
 
   # Save the data used to generate that image file.
-  with open(output_image_file + ".data", "w") as f:
-    writer = csv.writer(f)
+  if write_to_file:
+    with open(output_image_file + ".data", "w") as f:
+      writer = csv.writer(f)
+      headers = ["Repair Level"] + features
+      writer.writerow(headers)
+      for i, repair_level in enumerate(x_axis):
+        writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
+  elif print_all_data:
+    print(measurer.__name__ + " Data")
     headers = ["Repair Level"] + features
-    writer.writerow(headers)
+    print(headers)
     for i, repair_level in enumerate(x_axis):
-      writer.writerow([repair_level] + [y_vals[i] for y_vals in y_axes])
+      print([repair_level] + [y_vals[i] for y_vals in y_axes])
 
 
-def rank_audit_files(filenames, measurer):
+def rank_audit_files(filenames_or_cm_all_feat, measurer, write_to_file=True):
+  # if write_to_file is True, filenames_or_cm_all_feat will be a list of filenames to rank. otherwise, it will be a list of the conf matrices for all features
   scores = []
-  for filename in filenames:
-    with open(filename) as audit_file:
-      header_line = audit_file.readline()[:-1] # Remove the trailing endline.
-      feature = header_line[header_line.index(":")+1:]
-
-    confusion_matrices = load_audit_confusion_matrices(filename)
+  for filename_or_feature in filenames_or_cm_all_feat:
+    if write_to_file:
+      with open(filename_or_feature) as audit_file:
+        header_line = audit_file.readline()[:-1] # Remove the trailing endline.
+        feature = header_line[header_line.index(":")+1:]
+        confusion_matrices = load_audit_confusion_matrices(filename_or_feature)
+    else:
+      feature = filename_or_feature
+      confusion_matrices = filenames_or_cm_all_feat[feature]
+    
     _, start_matrix = confusion_matrices[0]
     _, end_matrix = confusion_matrices[-1]
     score_difference = measurer(start_matrix)-measurer(end_matrix)
@@ -120,8 +273,9 @@ def rank_audit_files(filenames, measurer):
   scores.sort(key = lambda score_tup: score_tup[1], reverse=True)
   return scores
 
+def group_audit_ranks(filenames_or_cm_all_feat, measurer, similarity_bound=0.05, write_to_file=True):
+  # if write_to_file is True, filenames_or_cm_all_feat will be a list of filenames to rank. otherwise, it will be a list of the conf matrices for all features
 
-def group_audit_ranks(filenames, measurer, similarity_bound=0.05):
   """
   Given a list of audit files, rank them using the `measurer` and
   return the features that never deviate more than `similarity_bound`
@@ -154,13 +308,18 @@ def group_audit_ranks(filenames, measurer, similarity_bound=0.05):
 
   score_dict = {}
   features = []
-  for filename in filenames:
-    with open(filename) as audit_file:
-      header_line = audit_file.readline()[:-1] # Remove the trailing endline.
-      feature = header_line[header_line.index(":")+1:]
-      features.append(feature)
-
-    confusion_matrices = load_audit_confusion_matrices(filename)
+  for filename_or_feature in filenames_or_cm_all_feat:
+    if write_to_file:
+      with open(filename_or_feature) as audit_file:
+        header_line = audit_file.readline()[:-1] # Remove the trailing endline.
+        feature = header_line[header_line.index(":")+1:]
+        features.append(feature)
+      confusion_matrices = load_audit_confusion_matrices(filename_or_feature)
+    else:
+      feature = filename_or_feature
+      features.append(filename_or_feature)
+      confusion_matrices = filenames_or_cm_all_feat[filename_or_feature]
+    
     for rep_level, matrix in confusion_matrices:
       score = measurer(matrix)
       if rep_level not in score_dict:
@@ -169,7 +328,6 @@ def group_audit_ranks(filenames, measurer, similarity_bound=0.05):
 
   # Sort by repair level increasing repair level.
   score_keys = sorted(score_dict.keys())
-
   groups = [features]
   while score_keys:
     key = score_keys.pop()
@@ -224,3 +382,6 @@ def test():
 
 if __name__=="__main__":
   test()
+
+
+
