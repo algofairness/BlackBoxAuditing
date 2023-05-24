@@ -8,7 +8,7 @@ class SKLearnModelVisitor(AbstractModelVisitor):
         self.label_index = label_index
 
     def get_Xy(self, test_set):
-        X = np.matrix([row[:self.label_index] + row[self.label_index+1:] for row in test_set])
+        X = np.array([row[:self.label_index] + row[self.label_index+1:] for row in test_set])
         y = np.asarray([row[self.label_index] for row in test_set])
         return X, y
 
