@@ -133,7 +133,7 @@ def list_to_tf_input(data, response_index, num_outcomes):
   """
   Separates the outcome feature from the data and creates the onehot vector for each row.
   """
-  matrix = np.matrix([row[:response_index] + row[response_index+1:] for row in data])
+  matrix = np.array([row[:response_index] + row[response_index+1:] for row in data])
   outcomes = np.asarray([row[response_index] for row in data], dtype=np.uint8)
   outcomes_onehot = (np.arange(num_outcomes) == outcomes[:, None]).astype(np.float32)
 
